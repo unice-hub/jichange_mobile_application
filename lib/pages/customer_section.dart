@@ -26,40 +26,52 @@ class _CustomerSectionState extends State<CustomerSection> {
     }).toList();
 
     return Scaffold(
+      resizeToAvoidBottomInset: true, // Ensures content adjusts when the keyboard appears
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: TextField(
-                onChanged: (value) {
-                  setState(() {
-                    searchQuery = value;
-                  });
-                },
-                decoration: InputDecoration(
-                  labelText: 'Search by name, email, or phone number',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.0),
+      body: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus(); // Dismiss the keyboard when tapping outside
+        },
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 16.0,
+              right: 16.0,
+              bottom: MediaQuery.of(context).viewInsets.bottom, // Adjust for the keyboard
+            ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: TextField(
+                    onChanged: (value) {
+                      setState(() {
+                        searchQuery = value;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      labelText: 'Search by name, email, or phone number',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 8.0),
+                filteredCustomers.isEmpty
+                    ? const Center(child: Text("No customers found"))
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(), // Disable scrolling inside the list
+                        itemCount: filteredCustomers.length,
+                        itemBuilder: (context, index) {
+                          return _buildCustomerCard(filteredCustomers[index]);
+                        },
+                      ),
+              ],
             ),
-            const SizedBox(height: 8.0),
-            Expanded(
-              child: filteredCustomers.isEmpty
-                  ? const Center(child: Text("No customers found"))
-                  : ListView.builder(
-                      itemCount: filteredCustomers.length,
-                      itemBuilder: (context, index) {
-                        return _buildCustomerCard(filteredCustomers[index]);
-                      },
-                    ),
-            ),
-          ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -141,87 +153,93 @@ class _CustomerSectionState extends State<CustomerSection> {
   }
 
   void _showAddCustomerSheet(BuildContext context) {
-  final nameController = TextEditingController();
-  final emailController = TextEditingController();
-  final mobileController = TextEditingController();
+    final nameController = TextEditingController();
+    final emailController = TextEditingController();
+    final mobileController = TextEditingController();
 
-  showModalBottomSheet(
-    context: context,
-    builder: (BuildContext context) {
-      return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text(
-              'Add New Customer',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: nameController,
-              decoration: InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16.0),
-                ),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // Allows the sheet to expand when the keyboard appears
+      builder: (BuildContext context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom, // Adjust for keyboard
+          ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    'Add New Customer',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    controller: emailController,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    controller: mobileController,
+                    decoration: InputDecoration(
+                      labelText: 'Mobile Number',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (nameController.text.isNotEmpty &&
+                          emailController.text.isNotEmpty &&
+                          mobileController.text.isNotEmpty) {
+                        setState(() {
+                          customers.add(Customer(
+                            nameController.text,
+                            emailController.text,
+                            mobileController.text,
+                          ));
+                        });
+                        Navigator.pop(context); // Close the bottom sheet
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('All fields are required')),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
+                    child: const Text('Add Customer'),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16.0),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: mobileController,
-              decoration: InputDecoration(
-                labelText: 'Mobile Number',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16.0),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: () {
-                if (nameController.text.isNotEmpty &&
-                    emailController.text.isNotEmpty &&
-                    mobileController.text.isNotEmpty) {
-                  setState(() {
-                    customers.add(Customer(
-                      nameController.text,
-                      emailController.text,
-                      mobileController.text,
-                    ));
-                  });
-                  Navigator.pop(context); // Close the bottom sheet
-                } else {
-                  // Optionally, show an error if fields are empty
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('All fields are required')),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.0),
-                ),
-              ),
-              child: const Text('Add Customer'),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
-
+          ),
+        );
+      },
+    );
+  }
 
   void _showEditCustomerSheet(BuildContext context, Customer customer) {
     final nameController = TextEditingController(text: customer.name);
@@ -230,65 +248,72 @@ class _CustomerSectionState extends State<CustomerSection> {
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true, // Allows the sheet to expand when the keyboard appears
       builder: (BuildContext context) {
         return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text(
-                'Edit Customer',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.0),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom, // Adjust for keyboard
+          ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    'Edit Customer',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.0),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: mobileController,
-                decoration: InputDecoration(
-                  labelText: 'Mobile Number',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.0),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    controller: emailController,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    // Update customer details
-                    customer.name = nameController.text;
-                    customer.email = emailController.text;
-                    customer.mobileNumber = mobileController.text;
-                  });
-                  Navigator.pop(context); // Close the bottom sheet
-                },
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16.0),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    controller: mobileController,
+                    decoration: InputDecoration(
+                      labelText: 'Mobile Number',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
                   ),
-                ),
-                child: const Text('Save Changes'),
+                  const SizedBox(height: 16.0),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        customer.name = nameController.text;
+                        customer.email = emailController.text;
+                        customer.mobileNumber = mobileController.text;
+                      });
+                      Navigator.pop(context); // Close the bottom sheet
+                    },
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
+                    child: const Text('Save Changes'),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },
@@ -300,9 +325,15 @@ class _CustomerSectionState extends State<CustomerSection> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Confirm Deletion'),
-          content: const Text('Are you sure you want to delete this customer?'),
+          title: const Text('Delete Customer'),
+          content: Text('Are you sure you want to delete ${customer.name}?'),
           actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+              },
+              child: const Text('Cancel'),
+            ),
             TextButton(
               onPressed: () {
                 setState(() {
@@ -310,13 +341,7 @@ class _CustomerSectionState extends State<CustomerSection> {
                 });
                 Navigator.pop(context); // Close the dialog
               },
-              child: const Text('Remove'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close the dialog
-              },
-              child: const Text('Keep'),
+              child: const Text('Delete'),
             ),
           ],
         );
