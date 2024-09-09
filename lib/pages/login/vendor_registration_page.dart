@@ -32,7 +32,7 @@ class _VendorRegistrationPageState extends State<VendorRegistrationPage> {
               const SizedBox(height: 16.0),
 
               // Vendor Name
-              TextField(
+              const TextField(
                 decoration: InputDecoration(
                   labelText: 'Vendor name',
                   border: OutlineInputBorder(),
@@ -43,8 +43,8 @@ class _VendorRegistrationPageState extends State<VendorRegistrationPage> {
               const SizedBox(height: 16.0),
 
               // Mobile Number (non-editable)
-              Row(
-                children: const [
+              const Row(
+                children: [
                   Expanded(
                     flex: 2,
                     child: TextField(
@@ -77,7 +77,7 @@ class _VendorRegistrationPageState extends State<VendorRegistrationPage> {
               const SizedBox(height: 16.0),
 
               // Email Address
-              TextField(
+              const TextField(
                 decoration: InputDecoration(
                   labelText: 'Email Address',
                   border: OutlineInputBorder(),
@@ -89,7 +89,7 @@ class _VendorRegistrationPageState extends State<VendorRegistrationPage> {
 
               // Branch Dropdown
               DropdownButtonFormField<String>(
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Branch',
                   border: OutlineInputBorder(),
                 ),
@@ -105,7 +105,7 @@ class _VendorRegistrationPageState extends State<VendorRegistrationPage> {
               const SizedBox(height: 16.0),
 
               // Account Number
-              TextField(
+              const TextField(
                 decoration: InputDecoration(
                   labelText: 'Account Number',
                   border: OutlineInputBorder(),

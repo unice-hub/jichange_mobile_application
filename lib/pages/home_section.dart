@@ -7,7 +7,7 @@ class HomeSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return const Center(
       child: Text(
         'Home Section',
         style: TextStyle(fontSize: 24.0),

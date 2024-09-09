@@ -26,9 +26,9 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
     setState(() {
       filteredUsers = users.where((user) {
         return user.username.toLowerCase().contains(query.toLowerCase()) ||
-               user.fullName.toLowerCase().contains(query.toLowerCase()) ||
-               user.email.toLowerCase().contains(query.toLowerCase()) ||
-               user.mobileNumber.contains(query);
+            user.fullName.toLowerCase().contains(query.toLowerCase()) ||
+            user.email.toLowerCase().contains(query.toLowerCase()) ||
+            user.mobileNumber.contains(query);
       }).toList();
     });
   }
@@ -36,6 +36,7 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
         children: [
           // Search Bar
@@ -65,56 +66,67 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showAddVendorUserSheet(context);
+        },
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        child: const Icon(Icons.add),
+      ),
     );
   }
 
   Widget _buildUserCard(VendorUser user) {
-    return ExpansionTile(
-      title: Text(user.username, style: Theme.of(context).textTheme.titleLarge),
-      subtitle: Text(user.email, style: Theme.of(context).textTheme.bodyMedium),
-      leading: CircleAvatar(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        child: Text(user.username[0]), // First letter of username
+    return Card(
+      elevation: 4.0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
       ),
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildInfoRow(Icons.person, 'Full Name', user.fullName),
-              const SizedBox(height: 8.0),
-              _buildInfoRow(Icons.phone, 'Mobile Number', user.mobileNumber),
-              const SizedBox(height: 8.0),
-              _buildInfoRow(Icons.badge, 'Role', user.role),
-              const SizedBox(height: 16.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.remove_red_eye_outlined, color: Theme.of(context).colorScheme.primary),
-                    onPressed: () {
-                      // Handle view action
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.edit, color: Theme.of(context).colorScheme.primary),
-                    onPressed: () {
-                      // Handle edit action
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
-                    onPressed: () {
-                      // Handle delete action
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        title: Text(user.username, style: Theme.of(context).textTheme.titleLarge),
+        subtitle: Text(user.email, style: Theme.of(context).textTheme.bodyMedium),
+        leading: CircleAvatar(
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          child: Text(
+            user.username[0].toUpperCase(),
+            style: const TextStyle(color: Colors.white),
+          ), // First letter of username
         ),
-      ],
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildInfoRow(Icons.person, 'Full Name', user.fullName),
+                const SizedBox(height: 8.0),
+                _buildInfoRow(Icons.phone, 'Mobile Number', user.mobileNumber),
+                const SizedBox(height: 8.0),
+                _buildInfoRow(Icons.badge, 'Role', user.role),
+                const SizedBox(height: 16.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.send, color: Theme.of(context).colorScheme.primary),
+                      onPressed: () {
+                        // Handle send action
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.edit, color: Theme.of(context).colorScheme.primary),
+                      onPressed: () {
+                        _showEditVendorUserSheet(context, user);
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -125,6 +137,194 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
         const SizedBox(width: 8.0),
         Text('$label: $value', style: Theme.of(context).textTheme.bodyLarge),
       ],
+    );
+  }
+
+  void _showEditVendorUserSheet(BuildContext context, VendorUser user) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // Ensure the bottom sheet can scroll
+      builder: (BuildContext context) {
+        return Padding(
+          padding: MediaQuery.of(context).viewInsets, // Adjust padding for keyboard
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    'Edit Vendor User',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    controller: TextEditingController(text: user.username),
+                    decoration: InputDecoration(
+                      labelText: 'Username',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      // Handle username change
+                    },
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    controller: TextEditingController(text: user.fullName),
+                    decoration: InputDecoration(
+                      labelText: 'Full Name',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      // Handle full name change
+                    },
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    controller: TextEditingController(text: user.email),
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      // Handle email change
+                    },
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    controller: TextEditingController(text: user.mobileNumber),
+                    decoration: InputDecoration(
+                      labelText: 'Mobile Number',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      // Handle mobile number change
+                    },
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    controller: TextEditingController(text: user.role),
+                    decoration: InputDecoration(
+                      labelText: 'Role',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      // Handle role change
+                    },
+                  ),
+                  const SizedBox(height: 16.0),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Handle save action
+                      Navigator.pop(context); // Close the bottom sheet
+                    },
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
+                    child: const Text('Save Changes'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAddVendorUserSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // Ensure the bottom sheet can scroll
+      builder: (BuildContext context) {
+        return Padding(
+          padding: MediaQuery.of(context).viewInsets, // Adjust padding for keyboard
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    'Add New Vendor User',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Username',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Full Name',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Mobile Number',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Role',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Handle add vendor user action
+                      Navigator.pop(context); // Close the bottom sheet
+                    },
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
+                    child: const Text('Add Vendor User'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
