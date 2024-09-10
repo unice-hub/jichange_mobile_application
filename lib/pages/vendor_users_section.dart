@@ -111,7 +111,7 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
                     IconButton(
                       icon: Icon(Icons.send, color: Theme.of(context).colorScheme.primary),
                       onPressed: () {
-                        // Handle send action
+                        _showResendCredentialsDialog(context, user);
                       },
                     ),
                     IconButton(
@@ -140,13 +140,51 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
     );
   }
 
+  void _showResendCredentialsDialog(BuildContext context, VendorUser user) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Resend credentials'),
+          content: const Text('Choose email or mobile to receive reissued credentials.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                _sendCredentialsByEmail(user); // Send by email
+                Navigator.pop(context); // Close the dialog
+              },
+              child: const Text('Email'),
+            ),
+            TextButton(
+              onPressed: () {
+                _sendCredentialsBySMS(user); // Send by SMS
+                Navigator.pop(context); // Close the dialog
+              },
+              child: const Text('Telephone'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _sendCredentialsByEmail(VendorUser user) {
+    // Logic to send email (you need to implement email functionality here)
+    print('Sending credentials to ${user.email}');
+  }
+
+  void _sendCredentialsBySMS(VendorUser user) {
+    // Logic to send SMS (you need to implement SMS functionality here)
+    print('Sending credentials to ${user.mobileNumber}');
+  }
+
   void _showEditVendorUserSheet(BuildContext context, VendorUser user) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // Ensure the bottom sheet can scroll
+      isScrollControlled: true,
       builder: (BuildContext context) {
         return Padding(
-          padding: MediaQuery.of(context).viewInsets, // Adjust padding for keyboard
+          padding: MediaQuery.of(context).viewInsets,
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -166,9 +204,6 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
                         borderRadius: BorderRadius.circular(16.0),
                       ),
                     ),
-                    onChanged: (value) {
-                      // Handle username change
-                    },
                   ),
                   const SizedBox(height: 16.0),
                   TextField(
@@ -179,9 +214,6 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
                         borderRadius: BorderRadius.circular(16.0),
                       ),
                     ),
-                    onChanged: (value) {
-                      // Handle full name change
-                    },
                   ),
                   const SizedBox(height: 16.0),
                   TextField(
@@ -192,9 +224,6 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
                         borderRadius: BorderRadius.circular(16.0),
                       ),
                     ),
-                    onChanged: (value) {
-                      // Handle email change
-                    },
                   ),
                   const SizedBox(height: 16.0),
                   TextField(
@@ -205,9 +234,6 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
                         borderRadius: BorderRadius.circular(16.0),
                       ),
                     ),
-                    onChanged: (value) {
-                      // Handle mobile number change
-                    },
                   ),
                   const SizedBox(height: 16.0),
                   TextField(
@@ -218,15 +244,11 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
                         borderRadius: BorderRadius.circular(16.0),
                       ),
                     ),
-                    onChanged: (value) {
-                      // Handle role change
-                    },
                   ),
                   const SizedBox(height: 16.0),
                   ElevatedButton(
                     onPressed: () {
-                      // Handle save action
-                      Navigator.pop(context); // Close the bottom sheet
+                      Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
@@ -247,10 +269,10 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
   void _showAddVendorUserSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // Ensure the bottom sheet can scroll
+      isScrollControlled: true,
       builder: (BuildContext context) {
         return Padding(
-          padding: MediaQuery.of(context).viewInsets, // Adjust padding for keyboard
+          padding: MediaQuery.of(context).viewInsets,
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -309,15 +331,14 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
                   const SizedBox(height: 16.0),
                   ElevatedButton(
                     onPressed: () {
-                      // Handle add vendor user action
-                      Navigator.pop(context); // Close the bottom sheet
+                      Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16.0),
                       ),
                     ),
-                    child: const Text('Add Vendor User'),
+                    child: const Text('Add User'),
                   ),
                 ],
               ),
