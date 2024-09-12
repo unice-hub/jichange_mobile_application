@@ -24,6 +24,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
         useMaterial3: true,  // Material Design 3
       ),
+      debugShowCheckedModeBanner: false, // Disable debug banner
       home: const LoginPage(),
       routes: {
         '/home': (context) => const HomePage(),

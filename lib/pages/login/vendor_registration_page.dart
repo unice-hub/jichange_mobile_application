@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class VendorRegistrationPage extends StatefulWidget {
   const VendorRegistrationPage({super.key});
@@ -9,6 +11,41 @@ class VendorRegistrationPage extends StatefulWidget {
 
 class _VendorRegistrationPageState extends State<VendorRegistrationPage> {
   bool? _checkerForInvoiceApproval = false; // Group value for Radio buttons
+  String? _selectedBranch;
+  List<String> _branchNames = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBranches();
+  }
+
+  Future<void> _fetchBranches() async {
+    final url = Uri.parse('http://192.168.100.50:98/api/Branch/GetBranchLists');
+
+    try {
+      final response = await http.post(url, headers: {'Accept': 'application/json'});
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        final List<dynamic> branchList = jsonResponse['response'];
+
+        setState(() {
+          _branchNames = branchList.map((branch) => branch['Name'] as String).toList();
+          _isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load branches');
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      // Handle error (show a message to the user, etc.)
+      print('Error fetching branches: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,13 +59,6 @@ class _VendorRegistrationPageState extends State<VendorRegistrationPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // const Text(
-              //   'Vendor Registration',
-              //   style: TextStyle(
-              //     fontSize: 24.0,
-              //     fontWeight: FontWeight.bold,
-              //   ),
-              // ),
               const SizedBox(height: 16.0),
 
               // Vendor Name
@@ -50,7 +80,6 @@ class _VendorRegistrationPageState extends State<VendorRegistrationPage> {
                     child: TextField(
                       enabled: false, // Non-editable
                       decoration: InputDecoration(
-                        // labelText: 'Mobile Number',
                         hintText: '+255',
                         border: OutlineInputBorder(),
                         prefix: Padding(
@@ -64,7 +93,7 @@ class _VendorRegistrationPageState extends State<VendorRegistrationPage> {
                   Expanded(
                     flex: 3,
                     child: TextField(
-                      enabled: true, // Non-editable
+                      enabled: true,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
                         hintText: '(0) 111-000-333',
@@ -88,20 +117,26 @@ class _VendorRegistrationPageState extends State<VendorRegistrationPage> {
               const SizedBox(height: 16.0),
 
               // Branch Dropdown
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  labelText: 'Branch',
-                  border: OutlineInputBorder(),
-                ),
-                items: <String>['Branch 1', 'Branch 2', 'Branch 3']
-                    .map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged: (_) {},
-              ),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        labelText: 'Branch',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _branchNames.map((String branch) {
+                        return DropdownMenuItem<String>(
+                          value: branch,
+                          child: Text(branch),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedBranch = newValue;
+                        });
+                      },
+                      value: _selectedBranch,
+                    ),
               const SizedBox(height: 16.0),
 
               // Account Number
