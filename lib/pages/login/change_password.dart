@@ -6,7 +6,7 @@ import 'login_page.dart'; // Import login page
 class ChangePasswordPage extends StatefulWidget {
   final String mobileNumber;
 
-  const ChangePasswordPage({Key? key, required this.mobileNumber}) : super(key: key);
+  const ChangePasswordPage({super.key, required this.mobileNumber});
 
   @override
   _ChangePasswordPageState createState() => _ChangePasswordPageState();

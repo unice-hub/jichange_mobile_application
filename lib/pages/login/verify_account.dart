@@ -8,10 +8,10 @@ class VerifyAccountPage extends StatefulWidget {
   final String otpCode;
 
   const VerifyAccountPage({
-    Key? key,
+    super.key,
     required this.mobileNumber,
     required this.otpCode,
-  }) : super(key: key);
+  });
 
   @override
   _VerifyAccountPageState createState() => _VerifyAccountPageState();
@@ -27,7 +27,7 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
       isLoading = true;
     });
 
-    final url = 'http://192.168.100.50:98/api/Forgot/OtpValidate';
+    const url = 'http://192.168.100.50:98/api/Forgot/OtpValidate';
     final headers = {'Content-Type': 'application/json'};
     final body = json.encode({
       "otp_code": otpCode,
