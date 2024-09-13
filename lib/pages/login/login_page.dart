@@ -1,6 +1,8 @@
+
 import 'dart:convert'; // For encoding and decoding JSON
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http; // For making HTTP requests
+import 'package:shared_preferences/shared_preferences.dart'; // For session management
 import 'forgot_password_page.dart';
 import 'vendor_registration_page.dart';
 
@@ -18,7 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false; // For showing a loading indicator during login
 
-  // Method to handle login API call
+  // Method to handle login API call and save session
   Future<void> loginUser() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -44,7 +46,14 @@ class _LoginPageState extends State<LoginPage> {
       if (response.statusCode == 200) {
         var responseData = jsonDecode(response.body);
         String token = responseData['response']['Token'];
+        int instID = responseData['response']['InstID'];
         print('Login successful, Token: $token');
+        print('Login successful, InstID: $instID');
+
+        // Store the token in SharedPreferences for session management
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', token);
+        await prefs.setInt('instID', instID);
 
         // Navigate to Home Page
         if (!mounted) return;
@@ -294,7 +303,9 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                const ForgotPasswordPage()),
                       );
                     },
                     child: const Text('Forgot password?'),
@@ -307,7 +318,8 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: _isLoading ? null : loginUser,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16.0),
-                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -328,11 +340,11 @@ class _LoginPageState extends State<LoginPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
                     OutlinedButton(
-                      onPressed: () {
-                        _showControlNumberDetails(context);
-                      },
+                      onPressed: () => _showControlNumberDetails(context),
+                  // child: const Text('Control No Details'),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16.0, horizontal: 24.0),
                         side: const BorderSide(color: Colors.blue),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -344,11 +356,14 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const VendorRegistrationPage()),
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  const VendorRegistrationPage()),
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16.0, horizontal: 24.0),
                         backgroundColor: Colors.white,
                         foregroundColor: Colors.blue,
                         side: const BorderSide(color: Colors.blue),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CustomerSection extends StatefulWidget {
   const CustomerSection({super.key});
@@ -16,7 +17,30 @@ class _CustomerSectionState extends State<CustomerSection> {
   ];
 
   String searchQuery = "";
+  // String _token = 'Not logged in';
+  // String _InstID = 'Not logged in';
 
+  @override
+  void initState() {
+    super.initState();
+ 
+    // _loadToken();
+    // _loadInstID();
+    
+  }
+  // Future<void> _loadToken() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   setState(() {
+  //     _token = prefs.getString('token') ?? 'Not logged in';
+  //   });
+  // }
+
+  // Future<void> _loadInstID() async {
+  //    final prefs = await SharedPreferences.getInstance();
+  //   setState(() {
+  //     _InstID = prefs.getString('instID') ?? 'Not logged in';
+  //   });
+  // }
   @override
   Widget build(BuildContext context) {
     final filteredCustomers = customers.where((customer) {
@@ -41,6 +65,30 @@ class _CustomerSectionState extends State<CustomerSection> {
             ),
             child: Column(
               children: [
+                // Display session info
+                // Padding(
+                //   padding: const EdgeInsets.symmetric(vertical: 8.0),
+                //   child: Text(
+                //     // 'Session Info: $_sessionInfo', // Display session info
+                //     // 'Session Info: $_token', // Display session info
+                //     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                //           color: Colors.grey,
+                //         ),
+                //   ),
+                // ),
+
+                // Display session info
+                // Padding(
+                //   padding: const EdgeInsets.symmetric(vertical: 8.0),
+                //   child: Text(
+                //     // 'Session Info: $_sessionInfo', // Display session info
+                //     // 'Session Info: $_token', // Display session info
+                //     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                //           color: Colors.grey,
+                //         ),
+                //   ),
+                // ),
+
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: TextField(
@@ -261,7 +309,7 @@ class _CustomerSectionState extends State<CustomerSection> {
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Text(
-                    'Edit Customer',
+                                        'Edit Customer',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 16.0),
@@ -297,12 +345,23 @@ class _CustomerSectionState extends State<CustomerSection> {
                   const SizedBox(height: 16.0),
                   ElevatedButton(
                     onPressed: () {
-                      setState(() {
-                        customer.name = nameController.text;
-                        customer.email = emailController.text;
-                        customer.mobileNumber = mobileController.text;
-                      });
-                      Navigator.pop(context); // Close the bottom sheet
+                      if (nameController.text.isNotEmpty &&
+                          emailController.text.isNotEmpty &&
+                          mobileController.text.isNotEmpty) {
+                        setState(() {
+                          final index = customers.indexOf(customer);
+                          customers[index] = Customer(
+                            nameController.text,
+                            emailController.text,
+                            mobileController.text,
+                          );
+                        });
+                        Navigator.pop(context); // Close the bottom sheet
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('All fields are required')),
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
@@ -325,12 +384,12 @@ class _CustomerSectionState extends State<CustomerSection> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Delete Customer'),
-          content: Text('Are you sure you want to delete ${customer.name}?'),
-          actions: <Widget>[
+          title: const Text('Confirm Deletion'),
+          content: const Text('Are you sure you want to delete this customer?'),
+          actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Close the dialog
+                Navigator.of(context).pop(); // Close the dialog
               },
               child: const Text('Cancel'),
             ),
@@ -339,7 +398,7 @@ class _CustomerSectionState extends State<CustomerSection> {
                 setState(() {
                   customers.remove(customer);
                 });
-                Navigator.pop(context); // Close the dialog
+                Navigator.of(context).pop(); // Close the dialog
               },
               child: const Text('Delete'),
             ),
