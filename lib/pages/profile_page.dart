@@ -7,7 +7,7 @@ class ProfilePage extends StatelessWidget {
     // Add your logout logic here, e.g., clearing user session and navigating to the login page
     // For now, we'll just show a snack bar
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Logged out')),
+      const SnackBar(content: Text('Logged out')),
     );
   }
 

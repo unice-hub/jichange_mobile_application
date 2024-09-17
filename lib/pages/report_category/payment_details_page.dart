@@ -13,8 +13,8 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
   DateTime? fromDate;
   DateTime? toDate;
 
-  List<String> vendors = ['Me&U Apparel', 'Vendor 2', 'Vendor 3'];
-  List<String> customers = ['All', 'Customer 1', 'Customer 2'];
+  List<String> vendors = ['Me&U Apparel', 'Vendor 2', 'Vendor 3', 'joshua speaker urio'];
+  List<String> customers = ['All', 'Customer 1', 'Customer 2', 'joshua speaker urio'];
 
   // Function to pick a date
   Future<void> _selectDate(BuildContext context, bool isFromDate) async {
@@ -56,37 +56,44 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Filter section
-            _buildFilterSection(),
-            const SizedBox(height: 16.0),
-            
-            // Action buttons for downloading filtered data
-            Row(
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Download as spreadsheet action
-                  },
-                  icon: const Icon(Icons.download),
-                  label: const Text('Spreadsheet'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                  ),
+            // Wrapping filter section in SingleChildScrollView to avoid overflow
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildFilterSection(),
+                    const SizedBox(height: 16.0),
+                    // Action buttons for downloading filtered data
+                    Row(
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            // Download as spreadsheet action
+                          },
+                          icon: const Icon(Icons.download),
+                          label: const Text('Spreadsheet'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                          ),
+                        ),
+                        const SizedBox(width: 16.0),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            // Download as PDF action
+                          },
+                          icon: const Icon(Icons.picture_as_pdf),
+                          label: const Text('PDF'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16.0),
+                  ],
                 ),
-                const SizedBox(width: 16.0),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Download as PDF action
-                  },
-                  icon: const Icon(Icons.picture_as_pdf),
-                  label: const Text('PDF'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                  ),
-                ),
-              ],
+              ),
             ),
-            const SizedBox(height: 16.0),
 
             // Display the filtered payment details
             Expanded(
@@ -110,12 +117,14 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
           children: [
             // Vendor Dropdown
             Expanded(
+              flex: 1,
               child: DropdownButtonFormField<String>(
                 value: selectedVendor,
+                isExpanded: true,
                 items: vendors.map((vendor) {
                   return DropdownMenuItem(
                     value: vendor,
-                    child: Text(vendor),
+                    child: Text(vendor, overflow: TextOverflow.ellipsis),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -132,12 +141,14 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
             const SizedBox(width: 16.0),
             // Customer Dropdown
             Expanded(
+              flex: 1,
               child: DropdownButtonFormField<String>(
                 value: selectedCustomer,
+                isExpanded: true,
                 items: customers.map((customer) {
                   return DropdownMenuItem(
                     value: customer,
-                    child: Text(customer),
+                    child: Text(customer, overflow: TextOverflow.ellipsis),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -155,40 +166,40 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         ),
         const SizedBox(height: 16.0),
         Row(
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _selectDate(context, true),
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'From (Payment date)',
-                        suffixIcon: Icon(Icons.calendar_today),
-                        border: OutlineInputBorder(),
-                      ),
-                      child: Text(
-                        fromDate == null ? 'Choose a date' : fromDate.toString().substring(0, 10),
-                      ),
-                    ),
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: () => _selectDate(context, true),
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'From (Payment date)',
+                    suffixIcon: Icon(Icons.calendar_today),
+                    border: OutlineInputBorder(),
+                  ),
+                  child: Text(
+                    fromDate == null ? 'Choose a date' : fromDate.toString().substring(0, 10),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _selectDate(context, false),
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'To (Payment date)',
-                        suffixIcon: Icon(Icons.calendar_today),
-                        border: OutlineInputBorder(),
-                      ),
-                      child: Text(
-                        toDate == null ? 'Choose a date' : toDate.toString().substring(0, 10),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: InkWell(
+                onTap: () => _selectDate(context, false),
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'To (Payment date)',
+                    suffixIcon: Icon(Icons.calendar_today),
+                    border: OutlineInputBorder(),
+                  ),
+                  child: Text(
+                    toDate == null ? 'Choose a date' : toDate.toString().substring(0, 10),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 16.0),
         // Submit button for filtering
         ElevatedButton(

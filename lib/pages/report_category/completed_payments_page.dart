@@ -16,10 +16,10 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
   DateTime? fromDate;
   DateTime? toDate;
 
-  List<String> branches = ['Magomeni', 'Ilala', 'Kawe'];
-  List<String> vendors = ['Me&U Apparel', 'Vendor A', 'Vendor B'];
-  List<String> customers = ['All', 'Customer A', 'Customer B'];
-  List<String> invoiceNumbers = ['All', 'Invoice A', 'Invoice B'];
+  List<String> branches = ['Magomeni', 'Ilala', 'Kawe','joshua speaker urio'];
+  List<String> vendors = ['Me&U Apparel', 'Vendor A', 'Vendor B','joshua speaker urio'];
+  List<String> customers = ['All', 'Customer A', 'Customer B','joshua speaker urio'];
+  List<String> invoiceNumbers = ['All', 'Invoice A', 'Invoice B','joshua speaker urio'];
 
   // Dummy data for filtered results
   final List<Map<String, String>> filteredResults = [
@@ -83,13 +83,15 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
             Row(
               children: [
                 Expanded(
+                  flex: 1,
                   child: DropdownButtonFormField<String>(
                     value: selectedBranch,
+                    isExpanded: true,
                     hint: const Text('Select Branch'),
                     items: branches.map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
-                        child: Text(value),
+                        child: Text(value, overflow: TextOverflow.ellipsis),
                       );
                     }).toList(),
                     onChanged: (newValue) {
@@ -105,13 +107,15 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
+                  flex: 1,
                   child: DropdownButtonFormField<String>(
                     value: selectedVendor,
+                    isExpanded: true,
                     hint: const Text('Select Vendor'),
                     items: vendors.map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
-                        child: Text(value),
+                        child: Text(value, overflow: TextOverflow.ellipsis),
                       );
                     }).toList(),
                     onChanged: (newValue) {
@@ -131,13 +135,15 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
             Row(
               children: [
                 Expanded(
+                  flex: 1,
                   child: DropdownButtonFormField<String>(
                     value: selectedCustomer,
+                    isExpanded: true,
                     hint: const Text('Select Customer'),
                     items: customers.map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
-                        child: Text(value),
+                        child: Text(value, overflow: TextOverflow.ellipsis),
                       );
                     }).toList(),
                     onChanged: (newValue) {
@@ -153,13 +159,15 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
+                  flex: 1,
                   child: DropdownButtonFormField<String>(
                     value: selectedInvoiceNumber,
+                    isExpanded: true,
                     hint: const Text('Select Invoice Number'),
                     items: invoiceNumbers.map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
-                        child: Text(value),
+                        child: Text(value, overflow: TextOverflow.ellipsis),
                       );
                     }).toList(),
                     onChanged: (newValue) {

@@ -13,8 +13,8 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
   DateTime? fromDate;
   DateTime? toDate;
 
-  List<String> vendors = ['Me&U Apparel', 'Vendor A', 'Vendor B'];
-  List<String> customers = ['All', 'Customer A', 'Customer B'];
+  List<String> vendors = ['Me&U Apparel', 'Vendor A', 'Vendor B', 'Joshua Speaker Urio'];
+  List<String> customers = ['All', 'Customer A', 'Customer B', 'Joshua Speaker Urio'];
 
   // Dummy data for filtered results
   final List<Map<String, String>> filteredResults = [
@@ -32,7 +32,6 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
       'Due Date': 'Sun Aug 18 2024',
       'Reason': 'Item not delivered',
     },
-    // Additional data entries can go here
   ];
 
   Future<void> _selectDate(BuildContext context, bool isFrom) async {
@@ -70,21 +69,23 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
           ),
         ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             Row(
               children: [
                 // Vendor Dropdown
-                Expanded(
+                Flexible(
+                  flex: 1,
                   child: DropdownButtonFormField<String>(
                     value: selectedVendor,
+                    isExpanded: true, // Prevents overflow
                     hint: const Text('Select Vendor'),
                     items: vendors.map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
-                        child: Text(value),
+                        child: Text(value, overflow: TextOverflow.ellipsis),
                       );
                     }).toList(),
                     onChanged: (newValue) {
@@ -100,14 +101,16 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
                 ),
                 const SizedBox(width: 16),
                 // Customer Dropdown
-                Expanded(
+                Flexible(
+                  flex: 1,
                   child: DropdownButtonFormField<String>(
                     value: selectedCustomer,
+                    isExpanded: true, // Prevents overflow
                     hint: const Text('Select Customer'),
                     items: customers.map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
-                        child: Text(value),
+                        child: Text(value, overflow: TextOverflow.ellipsis),
                       );
                     }).toList(),
                     onChanged: (newValue) {
@@ -138,6 +141,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
                       ),
                       child: Text(
                         fromDate == null ? 'Choose a date' : fromDate.toString().substring(0, 10),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
@@ -155,6 +159,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
                       ),
                       child: Text(
                         toDate == null ? 'Choose a date' : toDate.toString().substring(0, 10),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
@@ -197,41 +202,41 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
               ],
             ),
             const SizedBox(height: 16),
-            Expanded(
-              child: ListView.builder(
-                itemCount: filteredResults.length,
-                itemBuilder: (context, index) {
-                  final item = filteredResults[index];
-                  return ExpansionTile(
-                    title: Text('Invoice No: ${item['Invoice No']}'),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Customer: ${item['Customer']}'),
-                        Text('Total Amount: ${item['Total Amount']}'),
-                        Text('Status: ${item['Status']}'),
-                      ],
-                    ),
+            ListView.builder(
+              shrinkWrap: true, // Required to avoid infinite height error
+              physics: const NeverScrollableScrollPhysics(), // Disable inner scrolling
+              itemCount: filteredResults.length,
+              itemBuilder: (context, index) {
+                final item = filteredResults[index];
+                return ExpansionTile(
+                  title: Text('Invoice No: ${item['Invoice No']}'),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ListTile(
-                        title: Text('Control No: ${item['Control No']}'),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Payment Type: ${item['Payment Type']}'),
-                            Text('Delivery Status: ${item['Delivery Status']}'),
-                            Text('Date Posted: ${item['Date Posted']}'),
-                            Text('Invoice Date: ${item['Invoice Date']}'),
-                            Text('Due Date: ${item['Due Date']}'),
-                            Text('Posted by: ${item['Posted by']}'),
-                            Text('Reason: ${item['Reason']}'),
-                          ],
-                        ),
-                      ),
+                      Text('Customer: ${item['Customer']}', overflow: TextOverflow.ellipsis),
+                      Text('Total Amount: ${item['Total Amount']}', overflow: TextOverflow.ellipsis),
+                      Text('Status: ${item['Status']}', overflow: TextOverflow.ellipsis),
                     ],
-                  );
-                },
-              ),
+                  ),
+                  children: [
+                    ListTile(
+                      title: Text('Control No: ${item['Control No']}'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Payment Type: ${item['Payment Type']}', overflow: TextOverflow.ellipsis),
+                          Text('Delivery Status: ${item['Delivery Status']}', overflow: TextOverflow.ellipsis),
+                          Text('Date Posted: ${item['Date Posted']}', overflow: TextOverflow.ellipsis),
+                          Text('Invoice Date: ${item['Invoice Date']}', overflow: TextOverflow.ellipsis),
+                          Text('Due Date: ${item['Due Date']}', overflow: TextOverflow.ellipsis),
+                          Text('Posted by: ${item['Posted by']}', overflow: TextOverflow.ellipsis),
+                          Text('Reason: ${item['Reason']}', overflow: TextOverflow.ellipsis),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),
