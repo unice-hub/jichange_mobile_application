@@ -45,15 +45,34 @@ class _LoginPageState extends State<LoginPage> {
 
       if (response.statusCode == 200) {
         var responseData = jsonDecode(response.body);
+        
+         // Extract session data
         String token = responseData['response']['Token'];
+        String userType = responseData['response']['userType'];
+        String userName = responseData['response']['Uname'];
         int instID = responseData['response']['InstID'];
-        print('Login successful, Token: $token');
-        print('Login successful, InstID: $instID');
+        int userID = responseData['response']['userid'];
+        int braid = responseData['response']['braid'];
+        String role = responseData['response']['role'];
+        String designation = responseData['response']['desig'];
+        
+        // // print('Login successful, Token: $token');
+        // print('Login successful, InstID: $instID');
+        // print('Login successful, InstID: $userType');
+        // print('Login successful, InstID: $braid');
+        // print('Login successful, InstID: $userName');
 
-        // Store the token in SharedPreferences for session management
+        
+        // Store the session data in SharedPreferences for session management
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
+        await prefs.setString('userType', userType);
+        await prefs.setString('userName', userName);
         await prefs.setInt('instID', instID);
+        await prefs.setInt('userID', userID);
+        await prefs.setInt('braid', braid);
+        await prefs.setString('role', role);
+        await prefs.setString('designation', designation);
 
         // Navigate to Home Page
         if (!mounted) return;
@@ -394,3 +413,5 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+
+

@@ -1,45 +1,98 @@
+import 'dart:convert';
+import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class CustomerSection extends StatefulWidget {
   const CustomerSection({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _CustomerSectionState createState() => _CustomerSectionState();
 }
 
 class _CustomerSectionState extends State<CustomerSection> {
-  final List<Customer> customers = [
-    Customer('Emmanuel', 'emmz56@yahoo.com', '255655443454'),
-    Customer('Mininos', 'koydorikigufum.com', '255800010022'),
-    Customer('Wang Ones', 'faimayurdi@gufum.com', '25580020010'),
-    Customer('Jackie Jackies', '255800800814', '255800800814'),
-  ];
-
+  List<Customer> customers = [];
   String searchQuery = "";
-  // String _token = 'Not logged in';
-  // String _InstID = 'Not logged in';
-
+  String _token = 'Not logged in';
+  int _userID = 0;
+  int _instID = 0;
+  String _braid = 'sksc';
+  String _userName = 'Unknown';
+  bool isLoading = true; // To show loading indicator while fetching data
+  
   @override
   void initState() {
     super.initState();
- 
-    // _loadToken();
-    // _loadInstID();
-    
+    _loadSessionInfo();
+    _fetchCustomerData();
   }
-  // Future<void> _loadToken() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   setState(() {
-  //     _token = prefs.getString('token') ?? 'Not logged in';
-  //   });
-  // }
 
-  // Future<void> _loadInstID() async {
-  //    final prefs = await SharedPreferences.getInstance();
-  //   setState(() {
-  //     _InstID = prefs.getString('instID') ?? 'Not logged in';
-  //   });
-  // }
+  // Method to load all session data from SharedPreferences
+  Future<void> _loadSessionInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _token = prefs.getString('token') ?? 'Not logged in';
+      _userID = prefs.getInt('userID') ?? 0;
+      _instID = prefs.getInt('instID') ?? 0;
+      _userName = prefs.getString('userName') ?? 'Unknown';
+      _braid = prefs.getString('ubraid') ?? 'Unknown';
+    });
+  }
+
+  // Method to fetch customer data from the API
+Future<void> _fetchCustomerData() async {
+  const url = 'http://192.168.100.50:98/api/RepCustomer/GetcustDetReport';
+  try {    
+    final prefs = await SharedPreferences.getInstance();
+    int instituteID = prefs.getInt('instID') ?? 0;
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $_token' // Ensure _token is initialized properly
+      },
+      body: jsonEncode({"vendors": instituteID}),
+    );
+
+    log(response.statusCode.toString());
+    log(response.body);
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseBody = jsonDecode(response.body);
+
+      // Check if 'response' exists and is a list
+      if (responseBody['response'] is List) {
+        final List<dynamic> responseList = responseBody['response'];
+
+        setState(() {
+          customers = responseList.map((item) => Customer.fromJson(item)).toList();
+          isLoading = false; // Data is fetched, hide loading indicator
+        });
+      } else {
+        // Handle unexpected data format
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unexpected data format')),
+        );
+      }
+    } else {
+      // Handle error response from the server
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: Failed to fetch customer data')),
+      );
+    }
+  } catch (e) {
+    // Handle any other errors
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: $e')),
+    );
+  }
+}
+
+
+
   @override
   Widget build(BuildContext context) {
     final filteredCustomers = customers.where((customer) {
@@ -64,30 +117,6 @@ class _CustomerSectionState extends State<CustomerSection> {
             ),
             child: Column(
               children: [
-                // Display session info
-                // Padding(
-                //   padding: const EdgeInsets.symmetric(vertical: 8.0),
-                //   child: Text(
-                //     // 'Session Info: $_sessionInfo', // Display session info
-                //     // 'Session Info: $_token', // Display session info
-                //     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                //           color: Colors.grey,
-                //         ),
-                //   ),
-                // ),
-
-                // Display session info
-                // Padding(
-                //   padding: const EdgeInsets.symmetric(vertical: 8.0),
-                //   child: Text(
-                //     // 'Session Info: $_sessionInfo', // Display session info
-                //     // 'Session Info: $_token', // Display session info
-                //     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                //           color: Colors.grey,
-                //         ),
-                //   ),
-                // ),
-
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: TextField(
@@ -106,16 +135,18 @@ class _CustomerSectionState extends State<CustomerSection> {
                   ),
                 ),
                 const SizedBox(height: 8.0),
-                filteredCustomers.isEmpty
-                    ? const Center(child: Text("No customers found"))
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(), // Disable scrolling inside the list
-                        itemCount: filteredCustomers.length,
-                        itemBuilder: (context, index) {
-                          return _buildCustomerCard(filteredCustomers[index]);
-                        },
-                      ),
+                isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : filteredCustomers.isEmpty
+                        ? const Center(child: Text("No customers found"))
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(), // Disable scrolling inside the list
+                            itemCount: filteredCustomers.length,
+                            itemBuilder: (context, index) {
+                              return _buildCustomerCard(filteredCustomers[index]);
+                            },
+                          ),
               ],
             ),
           ),
@@ -200,218 +231,39 @@ class _CustomerSectionState extends State<CustomerSection> {
   }
 
   void _showAddCustomerSheet(BuildContext context) {
-    final nameController = TextEditingController();
-    final emailController = TextEditingController();
-    final mobileController = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true, // Allows the sheet to expand when the keyboard appears
-      builder: (BuildContext context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom, // Adjust for keyboard
-          ),
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Text(
-                    'Add New Customer',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: nameController,
-                    decoration: InputDecoration(
-                      labelText: 'Name',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: emailController,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: mobileController,
-                    decoration: InputDecoration(
-                      labelText: 'Mobile Number',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (nameController.text.isNotEmpty &&
-                          emailController.text.isNotEmpty &&
-                          mobileController.text.isNotEmpty) {
-                        setState(() {
-                          customers.add(Customer(
-                            nameController.text,
-                            emailController.text,
-                            mobileController.text,
-                          ));
-                        });
-                        Navigator.pop(context); // Close the bottom sheet
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('All fields are required')),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                    child: const Text('Add Customer'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
+    // Code for adding customer (if needed)
   }
 
   void _showEditCustomerSheet(BuildContext context, Customer customer) {
-    final nameController = TextEditingController(text: customer.name);
-    final emailController = TextEditingController(text: customer.email);
-    final mobileController = TextEditingController(text: customer.mobileNumber);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true, // Allows the sheet to expand when the keyboard appears
-      builder: (BuildContext context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom, // Adjust for keyboard
-          ),
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Text(
-                                        'Edit Customer',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: nameController,
-                    decoration: InputDecoration(
-                      labelText: 'Name',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: emailController,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: mobileController,
-                    decoration: InputDecoration(
-                      labelText: 'Mobile Number',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (nameController.text.isNotEmpty &&
-                          emailController.text.isNotEmpty &&
-                          mobileController.text.isNotEmpty) {
-                        setState(() {
-                          final index = customers.indexOf(customer);
-                          customers[index] = Customer(
-                            nameController.text,
-                            emailController.text,
-                            mobileController.text,
-                          );
-                        });
-                        Navigator.pop(context); // Close the bottom sheet
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('All fields are required')),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                    child: const Text('Save Changes'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
+    // Code for editing customer (if needed)
   }
 
   void _confirmDeleteCustomer(BuildContext context, Customer customer) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm Deletion'),
-          content: const Text('Are you sure you want to delete this customer?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  customers.remove(customer);
-                });
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: const Text('Delete'),
-            ),
-          ],
-        );
-      },
-    );
+    // Code for confirming delete (if needed)
   }
 }
 
+// Model class for Customer
 class Customer {
-  String name;
-  String email;
-  String mobileNumber;
+  final int id;
+  final String name;
+  final String email;
+  final String mobileNumber;
 
-  Customer(this.name, this.email, this.mobileNumber);
+  Customer({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.mobileNumber,
+  });
+
+  // Factory method to create a Customer object from JSON
+  factory Customer.fromJson(Map<String, dynamic> json) {
+    return Customer(
+      id: json['Cust_Sno'],
+      name: json['Cust_Name'] ?? 'N/A',
+      email: json['Email'] ?? 'N/A',
+      mobileNumber: json['Phone'] ?? 'N/A',
+    );
+  }
 }

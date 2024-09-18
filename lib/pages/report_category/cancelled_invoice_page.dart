@@ -160,15 +160,15 @@ class _CancelledInvoicePageState extends State<CancelledInvoicePage> {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  flex: 1,
+                  flex: 1,//text overflow
                   child: DropdownButtonFormField<String>(
                     value: selectedInvoiceNumber,
-                    isExpanded: true,
+                    isExpanded: true,//it contol overflow text
                     hint: const Text('Select Invoice Number'),
                     items: invoiceNumbers.map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
-                        child: Text(value, overflow: TextOverflow.ellipsis),
+                        child: Text(value, overflow: TextOverflow.ellipsis),//it show text in .. when thir is overflowtext
                       );
                     }).toList(),
                     onChanged: (newValue) {
