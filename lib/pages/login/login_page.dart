@@ -1,5 +1,6 @@
 
 import 'dart:convert'; // For encoding and decoding JSON
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http; // For making HTTP requests
 import 'package:shared_preferences/shared_preferences.dart'; // For session management
@@ -62,7 +63,7 @@ class _LoginPageState extends State<LoginPage> {
         // print('Login successful, InstID: $braid');
         // print('Login successful, InstID: $userName');
 
-        
+       
         // Store the session data in SharedPreferences for session management
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
@@ -73,6 +74,7 @@ class _LoginPageState extends State<LoginPage> {
         await prefs.setInt('braid', braid);
         await prefs.setString('role', role);
         await prefs.setString('designation', designation);
+        
 
         // Navigate to Home Page
         if (!mounted) return;
@@ -88,6 +90,7 @@ class _LoginPageState extends State<LoginPage> {
       });
     }
   }
+  
 
   // Method to handle Control Number Details API call
   Future<void> _fetchControlNumberDetails(String controlNumber) async {

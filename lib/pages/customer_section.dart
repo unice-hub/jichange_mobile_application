@@ -8,7 +8,6 @@ class CustomerSection extends StatefulWidget {
   const CustomerSection({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _CustomerSectionState createState() => _CustomerSectionState();
 }
 
@@ -18,10 +17,10 @@ class _CustomerSectionState extends State<CustomerSection> {
   String _token = 'Not logged in';
   int _userID = 0;
   int _instID = 0;
-  String _braid = 'sksc';
+  String _braid = 'Unknown';
   String _userName = 'Unknown';
   bool isLoading = true; // To show loading indicator while fetching data
-  
+
   @override
   void initState() {
     super.initState();
@@ -42,56 +41,58 @@ class _CustomerSectionState extends State<CustomerSection> {
   }
 
   // Method to fetch customer data from the API
-Future<void> _fetchCustomerData() async {
-  const url = 'http://192.168.100.50:98/api/RepCustomer/GetcustDetReport';
-  try {    
-    final prefs = await SharedPreferences.getInstance();
-    int instituteID = prefs.getInt('instID') ?? 0;
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $_token' // Ensure _token is initialized properly
-      },
-      body: jsonEncode({"vendors": instituteID}),
-    );
+  Future<void> _fetchCustomerData() async {
+    const url = 'http://192.168.100.50:98/api/RepCustomer/GetcustDetReport';
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      int instituteID = prefs.getInt('instID') ?? 0;
 
-    log(response.statusCode.toString());
-    log(response.body);
+      // Log the request to debug the API call
+      log('Making API request with token: $_token and instituteID: $instituteID');
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> responseBody = jsonDecode(response.body);
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token' // Ensure _token is initialized properly
+        },
+        body: jsonEncode({"vendors": [instituteID]}),
+      );
 
-      // Check if 'response' exists and is a list
-      if (responseBody['response'] is List) {
-        final List<dynamic> responseList = responseBody['response'];
+      log('API Status Code: ${response.statusCode}');
+      log('API Response Body: ${response.body}');
 
-        setState(() {
-          customers = responseList.map((item) => Customer.fromJson(item)).toList();
-          isLoading = false; // Data is fetched, hide loading indicator
-        });
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
+
+        // Check if 'response' contains a list as expected
+        if (responseBody['response'] is List) {
+          setState(() {
+            customers = (responseBody['response'] as List)
+                .map((item) => Customer.fromJson(item))
+                .toList();
+            isLoading = false; // Data is fetched, hide loading indicator
+          });
+        } else {
+          // Handle the case where the response is not a list
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Unexpected data format: response is not a list')),
+          );
+        }
       } else {
-        // Handle unexpected data format
+        // Handle error response from the server
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unexpected data format')),
+          const SnackBar(content: Text('Error: Failed to fetch customer data')),
         );
       }
-    } else {
-      // Handle error response from the server
+    } catch (e) {
+      // Handle any other errors
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error: Failed to fetch customer data')),
+        SnackBar(content: Text('Error: $e')),
       );
     }
-  } catch (e) {
-    // Handle any other errors
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error: $e')),
-    );
   }
-}
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -260,10 +261,10 @@ class Customer {
   // Factory method to create a Customer object from JSON
   factory Customer.fromJson(Map<String, dynamic> json) {
     return Customer(
-      id: json['Cust_Sno'],
-      name: json['Cust_Name'] ?? 'N/A',
-      email: json['Email'] ?? 'N/A',
-      mobileNumber: json['Phone'] ?? 'N/A',
+      id: json['Cust_Sno'] ?? 0,
+      name: json['Cust_Name'] ?? 'Unknown',
+      email: json['Email'] ?? 'Unknown',
+      mobileNumber: json['Phone'] ?? 'Unknown',
     );
   }
 }

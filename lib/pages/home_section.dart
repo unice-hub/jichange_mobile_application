@@ -10,9 +10,9 @@ class HomeSection extends StatefulWidget {
 
 class _HomeSectionState extends State<HomeSection> {
   String _token = 'Not logged in';
-  int _userID = 402;
-  int _instID = 402;
-  String _braid = 'sksc';
+  int _userID = 0;
+  int _instID = 0;
+  int _braid = 0;
   String _userName = 'Unknown';
   
 
@@ -27,10 +27,10 @@ class _HomeSectionState extends State<HomeSection> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _token = prefs.getString('token') ?? 'Not logged in';
-      _userID = prefs.getInt('userID') ?? 402;
-      _instID = prefs.getInt('instID') ?? 402;
+      _userID = prefs.getInt('userID') ?? 0;
+      _instID = prefs.getInt('instID') ?? 0;
       _userName = prefs.getString('userName') ?? 'Unknown';
-      _braid = prefs.getString('ubraid') ?? 'Unknown';
+      _braid = prefs.getInt('braid') ?? 0;
       
     });
   }
