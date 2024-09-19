@@ -95,7 +95,7 @@ class _CustomerSectionState extends State<CustomerSection> {
   }
 
   Future<void> _modifyCustomerAPI(Customer customer, String name, String email, String mobile) async {
-    const url = 'http://192.168.100.50:98/api/Customer/AddCustomer'; // Replace with the actual API endpoint
+    const url = 'http://192.168.100.50:98/api/Customer/AddCustomer'; 
     final prefs = await SharedPreferences.getInstance();
     int instituteID = prefs.getInt('instID') ?? 0;
     int userID = prefs.getInt('userID') ?? 0;
