@@ -94,28 +94,18 @@ class _CustomerSectionState extends State<CustomerSection> {
     }
   }
 
-  Future<void> _addCustomerAPI(String name, String email, String mobile) async {
-  const url = 'http://192.168.100.50:98/api/Customer/AddCustomer';
-   final prefs = await SharedPreferences.getInstance();
-      int instituteID = prefs.getInt('instID') ?? 0;
-      int userID= prefs.getInt('userID') ?? 0;
+  Future<void> _modifyCustomerAPI(Customer customer, String name, String email, String mobile) async {
+    const url = 'http://192.168.100.50:98/api/Customer/AddCustomer'; // Replace with the actual API endpoint
+    final prefs = await SharedPreferences.getInstance();
+    int instituteID = prefs.getInt('instID') ?? 0;
+    int userID = prefs.getInt('userID') ?? 0;
 
-  final body = jsonEncode({
-      "CSno": 0,
-      "compid": instituteID, // Replace with your actual company ID
+    final body = jsonEncode({
+      "CSno": customer.id, // Use the customer ID for modification
+      "compid": instituteID,
       "CName": name,
-      "PostboxNo": "",
-      "Address": "",
-      "regid": 0,
-      "distsno": 0,
-      "wardsno": 0,
-      "Tinno": "",
-      "VatNo": "",
-      "CoPerson": "",
       "Mail": email,
       "Mobile_Number": mobile,
-      "dummy": true,
-      "check_status": "",
       "userid": userID
     });
 
@@ -131,23 +121,73 @@ class _CustomerSectionState extends State<CustomerSection> {
       );
 
       if (response.statusCode == 200) {
-        // Handle success response
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Customer added successfully')),
-        );
+        // Show success dialog
+        _showQuickAlert(context, 'Success', 'Customer modified successfully!', true);
         _fetchCustomerData(); // Refresh customer list
       } else {
-        // Handle error response
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add customer: ${response.body}')),
-        );
+        // Show error dialog
+        _showQuickAlert(context, 'Error', 'Failed to modify customer: ${response.body}', false);
       }
     } catch (e) {
-      // Handle any exceptions
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      _showQuickAlert(context, 'Error', 'Error: $e', false);
     }
+  }
+
+
+  Future<void> _addCustomerAPI(String name, String email, String mobile) async {
+    const url = 'http://192.168.100.50:98/api/Customer/AddCustomer';
+    final prefs = await SharedPreferences.getInstance();
+        int instituteID = prefs.getInt('instID') ?? 0;
+        int userID= prefs.getInt('userID') ?? 0;
+
+    final body = jsonEncode({
+        "CSno": 0,
+        "compid": instituteID, // Replace with your actual company ID
+        "CName": name,
+        "PostboxNo": "",
+        "Address": "",
+        "regid": 0,
+        "distsno": 0,
+        "wardsno": 0,
+        "Tinno": "",
+        "VatNo": "",
+        "CoPerson": "",
+        "Mail": email,
+        "Mobile_Number": mobile,
+        "dummy": true,
+        "check_status": "",
+        "userid": userID
+      });
+
+      try {
+        final response = await http.post(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $_token'
+          },
+          body: body,
+        );
+
+        if (response.statusCode == 200) {
+          // Handle success response
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Customer added successfully')),
+          );
+          _fetchCustomerData(); // Refresh customer list
+        } else {
+          // Handle error response
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to add customer: ${response.body}')),
+          );
+        }
+      } catch (e) {
+        // Handle any exceptions
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
   }
 
 
@@ -409,9 +449,136 @@ void _showConfirmationDialog(BuildContext context, String name, String email, St
   }
 
   void _showEditCustomerSheet(BuildContext context, Customer customer) {
-    // Code for editing customer (if needed)
-    
-  }
+  final nameController = TextEditingController(text: customer.name);
+  final emailController = TextEditingController(text: customer.email);
+  final mobileController = TextEditingController(text: customer.mobileNumber);
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (BuildContext context) {
+      return Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  'Edit Customer',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 16.0),
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Name',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+                TextField(
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+                TextField(
+                  controller: mobileController,
+                  decoration: InputDecoration(
+                    labelText: 'Mobile Number',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+                ElevatedButton(
+                  onPressed: () {
+                    String name = nameController.text.trim();
+                    String email = emailController.text.trim();
+                    String mobile = mobileController.text.trim();
+
+                    if (name.isNotEmpty && email.isNotEmpty && mobile.isNotEmpty) {
+                      _showModifyConfirmationDialog(context, customer, name, email, mobile);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please fill all fields')),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                  ),
+                  child: const Text('Save Changes'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+void _showModifyConfirmationDialog(BuildContext context, Customer customer, String name, String email, String mobile) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Modify Customer'),
+        content: const Text('Are you sure you want to modify this customer?'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+            },
+            child: const Text('CLOSE'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+              _modifyCustomerAPI(customer, name, email, mobile); // Call API to modify customer
+            },
+            child: const Text('CONFIRM'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+void _showQuickAlert(BuildContext context, String title, String message, bool isSuccess) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   void _confirmDeleteCustomer(BuildContext context, Customer customer) {
     showDialog(
