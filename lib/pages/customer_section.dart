@@ -304,7 +304,7 @@ void _showConfirmationDialog(BuildContext context, String name, String email, St
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop(); // Close the dialog
+              // Navigator.of(context).pop(); // Close the dialog
               // Handle attaching invoice logic
             },
             child: const Text('YES, ATTACH INVOICE'),
@@ -414,8 +414,76 @@ void _showConfirmationDialog(BuildContext context, String name, String email, St
   }
 
   void _confirmDeleteCustomer(BuildContext context, Customer customer) {
-    // Code for confirming delete (if needed)
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm'),
+          content: const Text('Are you sure you want to delete this customer?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('CLOSE'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                _deleteCustomerAPI(customer.id); // Call the delete API
+              },
+              child: const Text('REMOVE'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error, // Red button for delete
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
+
+  Future<void> _deleteCustomerAPI(int custSno) async {
+    const url = 'http://192.168.100.50:98/api/Customer/DeleteCust';
+    final prefs = await SharedPreferences.getInstance();
+    int userID = prefs.getInt('userID') ?? 0;
+
+    final body = jsonEncode({
+      "sno": custSno,
+      "userid": userID,
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token', // Ensure token is available
+        },
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        // Success: Show a success alert
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Customer deleted successfully')),
+        );
+        _fetchCustomerData(); // Refresh the customer list
+      } else {
+        // Failure: Show an error alert
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete customer: ${response.body}')),
+        );
+      }
+    } catch (e) {
+      // Handle exceptions
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
 }
 
 // Model class for Customer
