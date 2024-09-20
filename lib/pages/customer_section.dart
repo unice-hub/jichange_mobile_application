@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'customer_details.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -252,6 +253,7 @@ class _CustomerSectionState extends State<CustomerSection> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+
           _showAddCustomerSheet(context);
         },
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -294,6 +296,10 @@ class _CustomerSectionState extends State<CustomerSection> {
                       icon: Icon(Icons.remove_red_eye_outlined, color: Theme.of(context).colorScheme.primary),
                       onPressed: () {
                         // Handle view action
+                         Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const CustomerDetailsPage(name: 'Cust_Name', email: 'Email', mobile: 'Phone')), // Navigate to customer_details.dart
+                        );
                       },
                     ),
                     IconButton(
@@ -599,10 +605,10 @@ void _showQuickAlert(BuildContext context, String title, String message, bool is
                 Navigator.of(context).pop(); // Close the dialog
                 _deleteCustomerAPI(customer.id); // Call the delete API
               },
-              child: const Text('REMOVE'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.error, // Red button for delete
               ),
+              child: const Text('REMOVE'),
             ),
           ],
         );
