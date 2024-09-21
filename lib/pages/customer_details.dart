@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+
 
 class CustomerDetailsPage extends StatefulWidget {
   final String name;
@@ -6,11 +10,11 @@ class CustomerDetailsPage extends StatefulWidget {
   final String mobile;
 
   const CustomerDetailsPage({
-    Key? key,
+    super.key,
     required this.name,
     required this.email,
     required this.mobile,
-  }) : super(key: key);
+  });
 
   @override
   _CustomerDetailsPageState createState() => _CustomerDetailsPageState();
@@ -69,7 +73,7 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Customer details',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
@@ -89,7 +93,7 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   'Transactions',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -101,10 +105,10 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
                   child: TextField(
                     controller: _searchController,
                     onChanged: _filterTransactions,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Search Invoice No.',
                       border: OutlineInputBorder(),
-                      suffixIcon: const Icon(Icons.search),
+                      suffixIcon: Icon(Icons.search),
                     ),
                   ),
                 ),
@@ -136,8 +140,8 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
         onPressed: () {
           // Action for floating button
         },
+        backgroundColor: Theme.of(context).colorScheme.primary,
         child: const Icon(Icons.add),
-        backgroundColor: Colors.blue, // Change to your preferred color
       ),
     );
   }
@@ -161,13 +165,13 @@ class TransactionCard extends StatefulWidget {
   final String status;
 
   const TransactionCard({
-    Key? key,
+    super.key,
     required this.invoiceNo,
     required this.created,
     required this.controlNo,
     required this.amount,
     required this.status,
-  }) : super(key: key);
+  });
 
   @override
   _TransactionCardState createState() => _TransactionCardState();
@@ -207,17 +211,19 @@ class _TransactionCardState extends State<TransactionCard> {
               if (_isExpanded) ...[
                 const SizedBox(height: 10),
                 const Divider(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Control No: ${widget.controlNo}'),
-                    IconButton(
-                      icon: const Icon(Icons.visibility),
-                      onPressed: () {
-                        // Action for viewing control number details
-                      },
-                    ),
-                  ],
+                Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Control No: ${widget.controlNo}'),
+                      IconButton(
+                        icon: const Icon(Icons.visibility),
+                        onPressed: () {
+                          // Action for viewing control number details
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ],

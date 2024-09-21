@@ -296,10 +296,12 @@ class _CustomerSectionState extends State<CustomerSection> {
                       icon: Icon(Icons.remove_red_eye_outlined, color: Theme.of(context).colorScheme.primary),
                       onPressed: () {
                         // Handle view action
-                         Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const CustomerDetailsPage(name: 'Cust_Name', email: 'Email', mobile: 'Phone')), // Navigate to customer_details.dart
-                        );
+                        //  Navigator.push(
+                        //   // context,
+                        //   // MaterialPageRoute(builder: (context) => const CustomerDetailsPage(name: 'Cust_Name', email: 'Email', mobile: 'Phone')), // Navigate to customer_details.dart
+                        // );
+                        _viewCustomer(customer);
+                        
                       },
                     ),
                     IconButton(
@@ -367,6 +369,68 @@ void _showConfirmationDialog(BuildContext context, String name, String email, St
     },
   );
 }
+
+      Future<Customer?> _fetchCustomerDetails(int customerId) async {
+        const url = 'http://192.168.100.50:98/api/Customer/GetCustbyId';
+        final prefs = await SharedPreferences.getInstance();
+        int instituteID = prefs.getInt('instID') ?? 0;
+        // int userID= prefs.getInt('userID') ?? 0;
+
+        final body = jsonEncode({
+          "compid": instituteID,
+          "Sno": "$customerId",
+        });
+
+        try {
+          final response = await http.post(
+            Uri.parse(url),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'Authorization': 'Bearer $_token',
+            },
+            body: body,
+          );
+
+          if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          // print(data); // Print the raw response for debugging
+          return Customer.fromJson(data); 
+        } else {
+          print('Failed to fetch customer details: ${response.statusCode}');
+          return null;
+        }
+        } catch (e) {
+          // Handle exceptions
+          return null;
+        }
+      }
+      
+
+  void _viewCustomer(Customer customer) async{
+    
+
+    final customerDetails = await _fetchCustomerDetails(customer.id);
+      if (customerDetails != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CustomerDetailsPage(
+              name: customerDetails.name,
+              email: customerDetails.email,
+              mobile: customerDetails.mobileNumber,
+                
+              ),
+            ),
+        );
+       log("Customer name: " + customerDetails.name);
+       log("Customer Email: " + customerDetails.email);
+       log("Customer Mobile: " + customerDetails.mobileNumber);
+     } else {
+     _showQuickAlert(context, 'Error', 'Failed to load customer details', false);
+    }
+    
+  }
 
   void _showAddCustomerSheet(BuildContext context) {
     // Code for adding customer (if needed)
