@@ -835,11 +835,24 @@ void _showQuickAlert(BuildContext context, String title, String message, bool is
 
       if (response.statusCode == 200) {
         // Success: Show a success alert
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Customer deleted successfully')),
-        );
+        Map<String,dynamic> jsonObject = json.decode(response.body);
+        log(jsonObject['response'].toString());
+        if (jsonObject['response'] == 0 && jsonObject['message'].length > 0) {
+          log(jsonObject["message"].toString());
+          String kitu = jsonObject["message"].toString();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(kitu)),
+          );
+        }
+        else{
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Customer deleted successfully')),
+          );
+        }
+
         _fetchCustomerData(); // Refresh the customer list
-      } else {
+      } 
+      else {
         // Failure: Show an error alert
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to delete customer: ${response.body}')),
