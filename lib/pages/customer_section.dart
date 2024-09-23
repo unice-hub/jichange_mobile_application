@@ -657,6 +657,7 @@ void _viewCustomer(Customer customer) async {
                     ),
                     const SizedBox(height: 8.0),
                     
+                    
                     // Mobile field with validation message
                     TextField(
                       controller: mobileController,
