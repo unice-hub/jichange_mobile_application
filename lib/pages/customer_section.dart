@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'customer_details.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -61,8 +62,8 @@ class _CustomerSectionState extends State<CustomerSection> {
         body: jsonEncode({"vendors": [instituteID]}),
       );
 
-      log('API Status Code: ${response.statusCode}');
-      log('API Response Body: ${response.body}');
+      // log('API Status Code: ${response.statusCode}');
+      // log('API Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = jsonDecode(response.body);
@@ -370,237 +371,367 @@ void _showConfirmationDialog(BuildContext context, String name, String email, St
   );
 }
 
-      Future<Customer?> _fetchCustomerDetails(int customerId) async {
-        const url = 'http://192.168.100.50:98/api/Customer/GetCustbyId';
-        final prefs = await SharedPreferences.getInstance();
-        int instituteID = prefs.getInt('instID') ?? 0;
-        // int userID= prefs.getInt('userID') ?? 0;
+void _viewCustomer(Customer customer) async {
+  // Fetch customer details from the API
+  Future<Customer?> _fetchCustomerDetails(int customerId) async {
+    const url = 'http://192.168.100.50:98/api/Customer/GetCustbyId';
+    
+    // Retrieve instituteID from shared preferences
+    final prefs = await SharedPreferences.getInstance();
+    int instituteID = prefs.getInt('instID') ?? 0;
 
-        final body = jsonEncode({
-          "compid": instituteID,
-          "Sno": "$customerId",
-        });
+    // Construct request body with the institute ID and customer ID
+    final body = jsonEncode({
+      "compid": instituteID,
+      "Sno": "$customerId",
+    });
 
-        try {
-          final response = await http.post(
-            Uri.parse(url),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'Authorization': 'Bearer $_token',
-            },
-            body: body,
-          );
+    try {
+      // Make the POST request to fetch customer details
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token', // Ensure _token is defined earlier in your code
+        },
+        body: body,
+      );
 
-          if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          // print(data); // Print the raw response for debugging
-          return Customer.fromJson(data); 
-        } else {
-          print('Failed to fetch customer details: ${response.statusCode}');
-          return null;
-        }
-        } catch (e) {
-          // Handle exceptions
-          return null;
-        }
+      log('API Response Body: ${response.body}'); // Log the raw response body for debugging
+
+      if (response.statusCode == 200) {
+        // Parse the response body into a Map
+        
+        // Use the parsed data to create a Customer object
+        final data = jsonDecode(response.body);
+        log('Successfully fetched customer details'); // Log success message
+        return Customer.fromJson(data); 
+      } else {
+        // Log the failure with the response status code
+        log('Failed to fetch customer details: ${response.statusCode}');
+        return null;
       }
-      
-
-  void _viewCustomer(Customer customer) async{
-    
-
-    final customerDetails = await _fetchCustomerDetails(customer.id);
-      if (customerDetails != null) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CustomerDetailsPage(
-              name: customerDetails.name,
-              email: customerDetails.email,
-              mobile: customerDetails.mobileNumber,
-                
-              ),
-            ),
-        );
-       log("Customer name: " + customerDetails.name);
-       log("Customer Email: " + customerDetails.email);
-       log("Customer Mobile: " + customerDetails.mobileNumber);
-     } else {
-     _showQuickAlert(context, 'Error', 'Failed to load customer details', false);
+    } catch (e) {
+      // Log any exceptions that occur during the request
+      log('Error fetching customer details: $e');
+      return null;
     }
-    
   }
 
-  void _showAddCustomerSheet(BuildContext context) {
-    // Code for adding customer (if needed)
-    final nameController = TextEditingController();
-    final emailController = TextEditingController();
-    final mobileController = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true, // Allows the sheet to expand when the keyboard appears
-      builder: (BuildContext context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom, // Adjust for keyboard
-          ),
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Text(
-                    'Add New Customer',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: nameController,
-                    decoration: InputDecoration(
-                      labelText: 'Name',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: emailController,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: mobileController,
-                    decoration: InputDecoration(
-                      labelText: 'Mobile Number',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  ElevatedButton(
-                    onPressed: () {
-                      String name = nameController.text.trim();
-                      String email = emailController.text.trim();
-                      String mobile = mobileController.text.trim();
-
-                      if (name.isNotEmpty && email.isNotEmpty && mobile.isNotEmpty) {
-                        _showConfirmationDialog(context, name, email, mobile);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please fill all fields')),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                    child: const Text('Add Customer'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+  // Fetch customer details using the customer ID
+  final customerDetails = await _fetchCustomerDetails(customer.id);
+  // log(customer.id.toString());
+  // log(customer.email);
+  // log(customer.mobileNumber);
+  // log(customer.name);
+  // Check if customer details were successfully retrieved
+  
+  if (customerDetails != true) {
+    // Navigate to the CustomerDetailsPage with the retrieved details
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CustomerDetailsPage(
+          name: customer.name,
+          email: customer.email,
+          mobile: customer.mobileNumber,
+        ),
+      ),
     );
-    
+
+    // Log customer details for debugging purposes
+    // log("Customer name: ${customer.name}");
+    // log("Customer Email: ${customer.email}");
+    // log("Customer Mobile: ${customer.mobileNumber}");
+  } else {
+    // Show an error message if customer details couldn't be fetched
+    _showQuickAlert(context, 'Error', 'Failed to load customer details', false);
   }
+}
 
-  void _showEditCustomerSheet(BuildContext context, Customer customer) {
-  final nameController = TextEditingController(text: customer.name);
-  final emailController = TextEditingController(text: customer.email);
-  final mobileController = TextEditingController(text: customer.mobileNumber);
 
+ void _showAddCustomerSheet(BuildContext context) {
+  // Controllers for input fields
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final mobileController = TextEditingController();
+
+  // Email validation regex pattern
+  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+  // Mobile number validation regex pattern (digits only)
+  final mobileRegex = RegExp(r'^\d+$');
+
+  // State variables for error messages
+  String? nameError;
+  String? emailError;
+  String? mobileError;
+
+  // Use StatefulBuilder to maintain local state in the bottom sheet
   showModalBottomSheet(
     context: context,
-    isScrollControlled: true,
+    isScrollControlled: true, // Allows the sheet to expand when the keyboard appears
     builder: (BuildContext context) {
-      return Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text(
-                  'Edit Customer',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 16.0),
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Name',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16.0),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-                TextField(
-                  controller: emailController,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16.0),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-                TextField(
-                  controller: mobileController,
-                  decoration: InputDecoration(
-                    labelText: 'Mobile Number',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16.0),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-                ElevatedButton(
-                  onPressed: () {
-                    String name = nameController.text.trim();
-                    String email = emailController.text.trim();
-                    String mobile = mobileController.text.trim();
-
-                    if (name.isNotEmpty && email.isNotEmpty && mobile.isNotEmpty) {
-                      _showModifyConfirmationDialog(context, customer, name, email, mobile);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please fill all fields')),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.0),
-                    ),
-                  ),
-                  child: const Text('Save Changes'),
-                ),
-              ],
+      return StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom, // Adjust for keyboard
             ),
-          ),
-        ),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      'Add New Customer',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 16.0),
+                    
+                    // Name field with validation message
+                    TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Name',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        errorText: nameError, // Show error message if nameError is not null
+                      ),
+                    ),
+                    const SizedBox(height: 8.0),
+                    
+                    // Email field with validation message
+                    TextField(
+                      controller: emailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        errorText: emailError, // Show error message if emailError is not null
+                      ),
+                    ),
+                    const SizedBox(height: 8.0),
+                    
+                    // Mobile field with validation message
+                    TextField(
+                      controller: mobileController,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: InputDecoration(
+                        labelText: 'Mobile Number',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        errorText: mobileError, // Show error message if mobileError is not null
+                      ),
+                      keyboardType: TextInputType.phone, // Set the keyboard to number
+                    ),
+                    const SizedBox(height: 16.0),
+                    
+                    ElevatedButton(
+                      onPressed: () {
+                        String name = nameController.text.trim();
+                        String email = emailController.text.trim();
+                        String mobile = mobileController.text.trim();
+
+                        // Reset error messages before validation
+                        setState(() {
+                          nameError = null;
+                          emailError = null;
+                          mobileError = null;
+                        });
+
+                        // Validation
+                        bool isValid = true;
+
+                        if (name.isEmpty) {
+                          setState(() {
+                            nameError = 'Please enter your name';
+                          });
+                          isValid = false;
+                        }
+
+                        if (email.isEmpty || !emailRegex.hasMatch(email)) {
+                          setState(() {
+                            emailError = 'Please enter a valid email address';
+                          });
+                          isValid = false;
+                        }
+
+                        if (mobile.isEmpty || !mobileRegex.hasMatch(mobile)) {
+                          setState(() {
+                            mobileError = 'Please enter a valid mobile number';
+                          });
+                          isValid = false;
+                        }
+
+                        // If all fields are valid, proceed with the action
+                        if (isValid) {
+                          _showConfirmationDialog(context, name, email, mobile);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                      ),
+                      child: const Text('Add Customer'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       );
     },
   );
 }
+
+
+  void _showEditCustomerSheet(BuildContext context, Customer customer) {
+  // Controllers for input fields with initial values
+  final nameController = TextEditingController(text: customer.name);
+  final emailController = TextEditingController(text: customer.email);
+  final mobileController = TextEditingController(text: customer.mobileNumber);
+
+  // Email validation regex pattern
+  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+  // Mobile number validation regex pattern (digits only)
+  final mobileRegex = RegExp(r'^\d+$');
+
+  // State variables for error messages
+  String? nameError;
+  String? emailError;
+  String? mobileError;
+
+  // Use StatefulBuilder to maintain local state in the bottom sheet
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (BuildContext context) {
+      return StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      'Edit Customer',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 16.0),
+                    
+                    // Name field with validation message
+                    TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Name',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        errorText: nameError, // Show error message if nameError is not null
+                      ),
+                    ),
+                    const SizedBox(height: 8.0),
+                    
+                    // Email field with validation message
+                    TextField(
+                      controller: emailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        errorText: emailError, // Show error message if emailError is not null
+                      ),
+                    ),
+                    const SizedBox(height: 8.0),
+                    
+                    // Mobile field with validation message
+                    TextField(
+                      controller: mobileController,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: InputDecoration(
+                        labelText: 'Mobile Number',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        errorText: mobileError, // Show error message if mobileError is not null
+                      ),
+                      keyboardType: TextInputType.phone, // Set the keyboard to number
+                    ),
+                    const SizedBox(height: 16.0),
+                    
+                    ElevatedButton(
+                      onPressed: () {
+                        String name = nameController.text.trim();
+                        String email = emailController.text.trim();
+                        String mobile = mobileController.text.trim();
+
+                        // Reset error messages before validation
+                        setState(() {
+                          nameError = null;
+                          emailError = null;
+                          mobileError = null;
+                        });
+
+                        // Validation
+                        bool isValid = true;
+
+                        if (name.isEmpty) {
+                          setState(() {
+                            nameError = 'Please enter your name';
+                          });
+                          isValid = false;
+                        }
+
+                        if (email.isEmpty || !emailRegex.hasMatch(email)) {
+                          setState(() {
+                            emailError = 'Please enter a valid email address';
+                          });
+                          isValid = false;
+                        }
+
+                        if (mobile.isEmpty || !mobileRegex.hasMatch(mobile)) {
+                          setState(() {
+                            mobileError = 'Please enter a valid mobile number';
+                          });
+                          isValid = false;
+                        }
+
+                        // If all fields are valid, proceed with the action
+                        if (isValid) {
+                          _showModifyConfirmationDialog(context, customer, name, email, mobile);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                      ),
+                      child: const Text('Save Changes'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
 
 void _showModifyConfirmationDialog(BuildContext context, Customer customer, String name, String email, String mobile) {
   showDialog(
