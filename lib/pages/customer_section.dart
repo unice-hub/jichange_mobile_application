@@ -17,10 +17,10 @@ class _CustomerSectionState extends State<CustomerSection> {
   List<Customer> customers = [];
   String searchQuery = "";
   String _token = 'Not logged in';
-  int _userID = 0;
-  int _instID = 0;
-  String _braid = 'Unknown';
-  String _userName = 'Unknown';
+  // int _userID = 0;
+  // int _instID = 0;
+  // String _braid = 'Unknown';
+  // String _userName = 'Unknown';
   bool isLoading = true; // To show loading indicator while fetching data
 
   @override
@@ -35,10 +35,10 @@ class _CustomerSectionState extends State<CustomerSection> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _token = prefs.getString('token') ?? 'Not logged in';
-      _userID = prefs.getInt('userID') ?? 0;
-      _instID = prefs.getInt('instID') ?? 0;
-      _userName = prefs.getString('userName') ?? 'Unknown';
-      _braid = prefs.getString('ubraid') ?? 'Unknown';
+      // _userID = prefs.getInt('userID') ?? 0;
+      // _instID = prefs.getInt('instID') ?? 0;
+      // _userName = prefs.getString('userName') ?? 'Unknown';
+      // _braid = prefs.getString('ubraid') ?? 'Unknown';
     });
   }
 
@@ -62,8 +62,8 @@ class _CustomerSectionState extends State<CustomerSection> {
         body: jsonEncode({"vendors": [instituteID]}),
       );
 
-      // log('API Status Code: ${response.statusCode}');
-      // log('API Response Body: ${response.body}');
+      log('API Status Code: ${response.statusCode}');
+      log('API Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = jsonDecode(response.body);
@@ -373,7 +373,7 @@ void _showConfirmationDialog(BuildContext context, String name, String email, St
 
 void _viewCustomer(Customer customer) async {
   // Fetch customer details from the API
-  Future<Customer?> _fetchCustomerDetails(int customerId) async {
+  Future<Customer?> fetchCustomerDetails(int customerId) async {
     const url = 'http://192.168.100.50:98/api/Customer/GetCustbyId';
     
     // Retrieve instituteID from shared preferences
@@ -420,7 +420,7 @@ void _viewCustomer(Customer customer) async {
   }
 
   // Fetch customer details using the customer ID
-  final customerDetails = await _fetchCustomerDetails(customer.id);
+  final customerDetails = await fetchCustomerDetails(customer.id);
   // log(customer.id.toString());
   // log(customer.email);
   // log(customer.mobileNumber);

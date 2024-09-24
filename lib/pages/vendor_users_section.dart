@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:developer';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class VendorUsersSection extends StatefulWidget {
   const VendorUsersSection({super.key});
@@ -8,127 +12,258 @@ class VendorUsersSection extends StatefulWidget {
 }
 
 class _VendorUsersSectionState extends State<VendorUsersSection> {
-  final List<VendorUser> users = [
-    VendorUser('25540040040', 'User', 'Cilog', 'cilog50844@iteradev.com', '25540040040'),
-    VendorUser('apparel1', 'Admin', 'Shin Chin', 'betejoy504@albarulo.com', '25580000900'),
-    VendorUser('apparel2', 'Manager', 'Mumtaz Aziz', 'novita3519@albarulo.com', '25580008008'),
-  ];
-
+  List<VendorUser> vendorUsers = [];
+  List<VendorUserRole> vendorUsersRole = [];
   List<VendorUser> filteredUsers = [];
+  String searchQuery = "";
+  String _token = 'Not logged in';
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    filteredUsers = users; // Display all users initially
+    _loadSessionInfo();
   }
 
-  void _filterUsers(String query) {
+  Future<void> _loadSessionInfo() async {
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
-      filteredUsers = users.where((user) {
-        return user.username.toLowerCase().contains(query.toLowerCase()) ||
-            user.fullName.toLowerCase().contains(query.toLowerCase()) ||
-            user.email.toLowerCase().contains(query.toLowerCase()) ||
-            user.mobileNumber.contains(query);
-      }).toList();
+      _token = prefs.getString('token') ?? 'Not logged in';
     });
+    _fetchVendorUsersData();
+    _fetchVendorUsersRoleData();
+    
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: Column(
-        children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-                labelText: 'Search by username, full name, email or mobile',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
+  // Method to fetch Vendor Users data from the API
+  Future<void> _fetchVendorUsersData() async {
+    const url = 'http://192.168.100.50:98/api/CompanyUsers/GetCompanyUserss';
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      int instituteID = prefs.getInt('instID') ?? 0;
+
+      log('Making API request with token: $_token and instituteID: $instituteID');
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode({"compid": instituteID}),
+      );
+
+      log('API Status Code: ${response.statusCode}');
+      log('API Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
+        if (responseBody['response'] is List) {
+          setState(() {
+            vendorUsers = (responseBody['response'] as List)
+                .map((item) => VendorUser.fromJson(item))
+                .toList();
+            // filteredUsers = vendorUsers; // Initialize filtered users
+            isLoading = false;
+          });
+        } else {
+          _showSnackBar('Unexpected data format: response is not a list');
+        }
+      } else {
+        _showSnackBar('Error: Failed to fetch vendor users');
+      }
+    } catch (e) {
+      _showSnackBar('Error: $e');
+    }
+  }
+
+  // Method to fetch Vendor Users data from the API
+  Future<void> _fetchVendorUsersRoleData() async {
+    const url = 'http://192.168.100.50:98/api/Role/GetRolesAct';
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      int instituteID = prefs.getInt('instID') ?? 0;
+
+      log('Making API request with token: $_token and instituteID: $instituteID');
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        // body: jsonEncode({"compid": instituteID}),
+      );
+
+      log('API Status Code: ${response.statusCode}');
+      log('API Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
+        if (responseBody['response'] is List) {
+          setState(() {
+            vendorUsersRole = (responseBody['response'] as List)
+                .map((item) => VendorUserRole.fromJson(item))
+                .toList();
+            
+            isLoading = false;
+          });
+        } else {
+          _showSnackBar('Unexpected data format: response is not a list');
+        }
+      } else {
+        _showSnackBar('Error: Failed to fetch vendor users');
+      }
+    } catch (e) {
+      _showSnackBar('Error: $e');
+    }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  String getRoleActDescription(String userPosition) {
+    try {
+      var t = vendorUsersRole.firstWhere((role) => role.sno == int.parse(userPosition));
+      return t.role;
+    } catch (e) {
+      return '-';
+    }
+  }
+
+ @override
+Widget build(BuildContext context) {
+  filteredUsers = vendorUsers.where((user) {
+    return user.username.toLowerCase().contains(searchQuery.toLowerCase()) ||
+        user.fullName.toLowerCase().contains(searchQuery.toLowerCase()) ||
+        user.email.toLowerCase().contains(searchQuery.toLowerCase()) ||
+        user.mobileNumber.contains(searchQuery);
+  }).toList();
+
+  return Scaffold(
+    resizeToAvoidBottomInset: true,
+    backgroundColor: Theme.of(context).colorScheme.background,  // Updated for better background color.
+    body: GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus(); // Dismiss keyboard when tapping outside.
+      },
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 16.0,
+            right: 16.0,
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: TextField(
+                  onChanged: (value) {
+                    setState(() {
+                      searchQuery = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search),
+                    labelText: 'Search by username, full name, email, or mobile',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                  ),
                 ),
               ),
-              onChanged: _filterUsers,
-            ),
+              const SizedBox(height: 8.0),
+              isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : filteredUsers.isEmpty
+                      ? const Center(child: Text("No vendor users found"))
+                      : SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.6,
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: filteredUsers.length,
+                            itemBuilder: (context, index) {
+                              return _buildUserCard(filteredUsers[index]);
+                            },
+                          ),
+                        ),
+            ],
           ),
-
-          // List of Vendor Users
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16.0),
-              itemCount: filteredUsers.length,
-              itemBuilder: (context, index) {
-                return _buildUserCard(filteredUsers[index]);
-              },
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showAddVendorUserSheet(context);
-        },
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-
-  Widget _buildUserCard(VendorUser user) {
-    return Card(
-      elevation: 4.0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.0),
-      ),
-      child: ExpansionTile(
-        tilePadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        title: Text(user.username, style: Theme.of(context).textTheme.titleLarge),
-        subtitle: Text(user.email, style: Theme.of(context).textTheme.bodyMedium),
-        leading: CircleAvatar(
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          child: Text(
-            user.username[0].toUpperCase(),
-            style: const TextStyle(color: Colors.white),
-          ), // First letter of username
         ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildInfoRow(Icons.person, 'Full Name', user.fullName),
-                const SizedBox(height: 8.0),
-                _buildInfoRow(Icons.phone, 'Mobile Number', user.mobileNumber),
-                const SizedBox(height: 8.0),
-                _buildInfoRow(Icons.badge, 'Role', user.role),
-                const SizedBox(height: 16.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.send, color: Theme.of(context).colorScheme.primary),
-                      onPressed: () {
-                        _showResendCredentialsDialog(context, user);
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.edit, color: Theme.of(context).colorScheme.primary),
-                      onPressed: () {
-                        _showEditVendorUserSheet(context, user);
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
-    );
-  }
+    ),
+    floatingActionButton: FloatingActionButton(
+      onPressed: () {
+        _showAddVendorUserSheet(context);
+      },
+      backgroundColor: Theme.of(context).colorScheme.primary,
+      child: const Icon(Icons.add),
+    ),
+  );
+}
+
+
+
+ //to displya usercard 
+ Widget _buildUserCard(VendorUser user) {
+  return Card(
+    elevation: 3.0,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16.0),
+    ),
+    margin: const EdgeInsets.symmetric(vertical: 8.0),
+    child: ExpansionTile(
+      tilePadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      title: Text(user.username, style: Theme.of(context).textTheme.titleMedium),
+      subtitle: Text(user.email, style: Theme.of(context).textTheme.bodyMedium),
+      leading: CircleAvatar(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        child: Text(
+          user.username[0].toUpperCase(),
+          style: const TextStyle(color: Colors.white),
+        ),
+      ),
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildInfoRow(Icons.person, 'Full Name', user.fullName),
+              const SizedBox(height: 8.0),
+              _buildInfoRow(Icons.phone, 'Mobile Number', user.mobileNumber),
+              const SizedBox(height: 8.0),
+              _buildInfoRow(Icons.badge, 'Role', getRoleActDescription(user.userpos)),
+              const SizedBox(height: 16.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.send, color: Theme.of(context).colorScheme.primary),
+                    onPressed: () {
+                      _showResendCredentialsDialog(context, user);
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.edit, color: Theme.of(context).colorScheme.primary),
+                    onPressed: () {
+                      _showEditVendorUserSheet(context, user);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
@@ -150,15 +285,15 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
           actions: [
             TextButton(
               onPressed: () {
-                _sendCredentialsByEmail(user); // Send by email
-                Navigator.pop(context); // Close the dialog
+                _sendCredentialsByEmail(user);
+                Navigator.pop(context);
               },
               child: const Text('Email'),
             ),
             TextButton(
               onPressed: () {
-                _sendCredentialsBySMS(user); // Send by SMS
-                Navigator.pop(context); // Close the dialog
+                _sendCredentialsBySMS(user);
+                Navigator.pop(context);
               },
               child: const Text('Telephone'),
             ),
@@ -170,99 +305,71 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
 
   void _sendCredentialsByEmail(VendorUser user) {
     // Logic to send email (you need to implement email functionality here)
-    print('Sending credentials to ${user.email}');
+    log('Sending credentials to ${user.email}');
   }
 
   void _sendCredentialsBySMS(VendorUser user) {
     // Logic to send SMS (you need to implement SMS functionality here)
-    print('Sending credentials to ${user.mobileNumber}');
+    log('Sending credentials to ${user.mobileNumber}');
   }
 
-  void _showEditVendorUserSheet(BuildContext context, VendorUser user) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (BuildContext context) {
-        return Padding(
-          padding: MediaQuery.of(context).viewInsets,
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Text(
-                    'Edit Vendor User',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: TextEditingController(text: user.username),
-                    decoration: InputDecoration(
-                      labelText: 'Username',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
+  //Editing vendor users
+ void _showEditVendorUserSheet(BuildContext context, VendorUser user) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (BuildContext context) {
+      return Padding(
+        padding: MediaQuery.of(context).viewInsets,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  'Edit Vendor User',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 16.0),
+                _buildEditableTextField('Username', user.username),
+                const SizedBox(height: 16.0),
+                _buildEditableTextField('Full Name', user.fullName),
+                const SizedBox(height: 16.0),
+                _buildEditableTextField('Email', user.email),
+                const SizedBox(height: 16.0),
+                _buildEditableTextField('Mobile Number', user.mobileNumber),
+                const SizedBox(height: 16.0),
+                // _buildEditableTextField('Role', user1.role),
+                const SizedBox(height: 16.0),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.0),
                     ),
                   ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: TextEditingController(text: user.fullName),
-                    decoration: InputDecoration(
-                      labelText: 'Full Name',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: TextEditingController(text: user.email),
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: TextEditingController(text: user.mobileNumber),
-                    decoration: InputDecoration(
-                      labelText: 'Mobile Number',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: TextEditingController(text: user.role),
-                    decoration: InputDecoration(
-                      labelText: 'Role',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                    child: const Text('Save Changes'),
-                  ),
-                ],
-              ),
+                  child: const Text('Save Changes'),
+                ),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      );
+    },
+  );
+}
+
+
+  Widget _buildEditableTextField(String label, String initialValue) {
+    return TextField(
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+      ),
+      controller: TextEditingController(text: initialValue),
     );
   }
 
@@ -280,54 +387,19 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Text(
-                    'Add New Vendor User',
+                    'Add Vendor User',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 16.0),
-                  TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Username',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
+                  _buildEditableTextField('Username', ''),
                   const SizedBox(height: 16.0),
-                  TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Full Name',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
+                  _buildEditableTextField('Full Name', ''),
                   const SizedBox(height: 16.0),
-                  TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
+                  _buildEditableTextField('Email', ''),
                   const SizedBox(height: 16.0),
-                  TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Mobile Number',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
+                  _buildEditableTextField('Mobile Number', ''),
                   const SizedBox(height: 16.0),
-                  TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Role',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
+                  _buildEditableTextField('Role', ''),
                   const SizedBox(height: 16.0),
                   ElevatedButton(
                     onPressed: () {
@@ -338,7 +410,7 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
                         borderRadius: BorderRadius.circular(16.0),
                       ),
                     ),
-                    child: const Text('Add User'),
+                    child: const Text('Add Vendor User'),
                   ),
                 ],
               ),
@@ -350,12 +422,51 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
   }
 }
 
+
 class VendorUser {
+  final int id;
   final String username;
-  final String role;
   final String fullName;
   final String email;
   final String mobileNumber;
+  final String userpos;
 
-  VendorUser(this.username, this.role, this.fullName, this.email, this.mobileNumber);
+  VendorUser({
+    required this.id,
+    required this.username,
+    required this.fullName,
+    required this.email,
+    required this.mobileNumber,
+    required this.userpos,
+  });
+
+  // Factory method to create a VendorUser object from JSON
+   factory VendorUser.fromJson(Map<String, dynamic> json) {
+    return VendorUser(
+      id: json['Cust_Sno'] ?? 0,
+      username: json['Username'] ?? 'Unknown',
+      fullName: json['Fullname'] ?? 'Unknown',
+      email: json['Email'] ?? 'Unknown',
+      mobileNumber: json['Mobile'] ?? 'Unknown',
+      userpos: json['Userpos'] ?? 'Unknown',
+    );
+  }
+}
+
+class VendorUserRole {
+  final String role;
+  final int sno;
+
+  VendorUserRole({
+    required this.role,
+    required this.sno,
+  });
+
+  // Factory method to create a VendorUser object from JSON
+   factory VendorUserRole.fromJson(Map<String, dynamic> json) {
+    return VendorUserRole(
+      role: json['Description'] ?? 'Unknown',
+      sno: json['Sno'] ?? -1
+    );
+  }
 }
