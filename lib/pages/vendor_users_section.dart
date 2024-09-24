@@ -303,14 +303,62 @@ Widget build(BuildContext context) {
     );
   }
 
-  void _sendCredentialsByEmail(VendorUser user) {
-    // Logic to send email (you need to implement email functionality here)
-    log('Sending credentials to ${user.email}');
+  Future<void> _sendCredentialsByEmail(VendorUser user) async {
+    const url = 'http://192.168.100.50:98/api/CompanyUsers/ResendCredentials';
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode({
+           "resendCredentials": "email",
+           "companyUserId": user.id
+        }),
+      );
+
+      log('API Status Code: ${response.statusCode}');
+      log('API Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        _showSnackBar('Credentials sent to email successfully.');
+      } else {
+        _showSnackBar('Error: Failed to send credentials to email.');
+      }
+    } catch (e) {
+      _showSnackBar('Error: $e');
+    }
   }
 
-  void _sendCredentialsBySMS(VendorUser user) {
-    // Logic to send SMS (you need to implement SMS functionality here)
-    log('Sending credentials to ${user.mobileNumber}');
+  Future<void> _sendCredentialsBySMS(VendorUser user) async {
+    const url = 'http://192.168.100.50:98/api/CompanyUsers/ResendCredentials';
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode({
+           "resendCredentials": "mobile",
+           "companyUserId": user.id
+        }),
+      );
+
+      log('API Status Code: ${response.statusCode}');
+      log('API Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        _showSnackBar('Credentials sent to mobile successfully.');
+      } else {
+        _showSnackBar('Error: Failed to send credentials to mobile.');
+      }
+    } catch (e) {
+      _showSnackBar('Error: $e');
+    }
   }
 
   //Editing vendor users
@@ -443,7 +491,7 @@ class VendorUser {
   // Factory method to create a VendorUser object from JSON
    factory VendorUser.fromJson(Map<String, dynamic> json) {
     return VendorUser(
-      id: json['Cust_Sno'] ?? 0,
+      id: json['CompuserSno'] ?? 0,
       username: json['Username'] ?? 'Unknown',
       fullName: json['Fullname'] ?? 'Unknown',
       email: json['Email'] ?? 'Unknown',
