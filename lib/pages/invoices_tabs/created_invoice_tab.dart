@@ -1,5 +1,10 @@
+
 import 'package:flutter/material.dart';
 import '../invoices_section.dart'; // Import Invoice class
+import 'dart:convert';
+import 'dart:developer';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class CreatedInvoiceTab extends StatefulWidget {
   final List<Invoice> createdInvoices;
@@ -16,11 +21,71 @@ class CreatedInvoiceTab extends StatefulWidget {
 }
 
 class _CreatedInvoiceTabState extends State<CreatedInvoiceTab> {
-  final List<InvoiceData> createdInvoices = [
-    InvoiceData('Wang Ones', 'APP/082302', 'Fri Aug 23 2024', 'No Access', 'Fixed', 'Active', '245,000 CDF', 'Mon Sep 30 2024', 'Fri Oct 04 2024'),
-    InvoiceData('Jackie Jackies', 'APP/082303', 'Fri Aug 23 2024', 'Access', 'Flexible', 'No Active', '4,000 CDF', 'Mon Jan 29 2024', 'Fri Feb 04 2024'),
-    InvoiceData('Pio Pio J.', 'APP/082304', 'Fri Aug 23 2024', 'No Access', 'Fixed', 'Active', '5,000 CDF', 'Mon Mar 10 2024', 'Fri Apr 04 2024'),
-  ];
+  String searchQuery = "";
+  String _token = 'Not logged in';
+  bool isLoading = true;
+  List<InvoiceData> createdInvoices = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSessionInfo();
+  }
+
+  Future<void> _loadSessionInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _token = prefs.getString('token') ?? 'Not logged in';
+    });
+    _fetchInvoicesData();
+  }
+
+  // Method to fetch Invoice data from the API
+  Future<void> _fetchInvoicesData() async {
+    const url = 'http://192.168.100.50:98/api/Invoice/GetchDetails';
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      int instituteID = prefs.getInt('instID') ?? 0;
+
+      log('Making API request with token: $_token and instituteID: $instituteID');
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode({"compid": instituteID}),
+      );
+
+      log('API Status Code: ${response.statusCode}');
+      log('API Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
+        if (responseBody['response'] is List) {
+          setState(() {
+            createdInvoices = (responseBody['response'] as List)
+                .map((item) => InvoiceData.fromJson(item))
+                .toList();
+            isLoading = false;
+          });
+        } else {
+          _showSnackBar('Unexpected data format: response is not a list');
+        }
+      } else {
+        _showSnackBar('Error: Failed to fetch invoices');
+      }
+    } catch (e) {
+      _showSnackBar('Error: $e');
+    }
+  }
+
+  void _showSnackBar(String message) {
+    final snackBar = SnackBar(content: Text(message));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,24 +105,26 @@ class _CreatedInvoiceTabState extends State<CreatedInvoiceTab> {
           ),
         ),
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16.0),
-            itemCount: createdInvoices.length, // Use the local createdInvoices list
-            itemBuilder: (context, index) {
-              final invoice = createdInvoices[index];
-              return _InvoiceCard(
-                customerName: invoice.customerName,
-                invoiceNumber: invoice.invoiceNumber,
-                invoiceDate: invoice.invoiceDate,
-                approve: invoice.approve,
-                paymentType: invoice.paymentType,
-                status: invoice.status,
-                total: invoice.total,
-                dueDate: invoice.dueDate,
-                expiryDate: invoice.expiryDate,
-              );
-            },
-          ),
+          child: isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16.0),
+                  itemCount: createdInvoices.length,
+                  itemBuilder: (context, index) {
+                    final invoice = createdInvoices[index];
+                    return _InvoiceCard(
+                      customerName: invoice.customerName,
+                      invoiceNumber: invoice.invoiceNumber,
+                      invoiceDate: invoice.invoiceDate,
+                      approve: invoice.approve,
+                      paymentType: invoice.paymentType,
+                      status: invoice.status,
+                      total: invoice.total,
+                      dueDate: invoice.dueDate,
+                      expiryDate: invoice.expiryDate,
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -71,11 +138,26 @@ class InvoiceData {
   final String approve;
   final String paymentType;
   final String status;
-  final String total;
+  final int total;
   final String dueDate;
   final String expiryDate;
 
   InvoiceData(this.customerName, this.invoiceNumber, this.invoiceDate, this.approve, this.paymentType, this.status, this.total, this.dueDate, this.expiryDate);
+
+  // Assuming fromJson method to parse data from API
+  factory InvoiceData.fromJson(Map<String, dynamic> json) {
+    return InvoiceData(
+      json['Chus_Name'],
+      json['Invoice_No'],
+      json['Invoice_Date'],
+      json['AuditBy'] ?? "NO ",
+      json['Payment_Type'],
+      json['Status'],
+      json['Total'],
+      json['Due_Date'],
+      json['Invoice_Expired_Date'],
+    );
+  }
 }
 
 class _InvoiceCard extends StatefulWidget {
@@ -85,7 +167,7 @@ class _InvoiceCard extends StatefulWidget {
   final String approve;
   final String paymentType;
   final String status;
-  final String total;
+  final int total;
   final String dueDate;
   final String expiryDate;
 
@@ -127,7 +209,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Customer name:'), // Left-aligned
+                  const Text('Customer namee:'), // Left-aligned
                   Text(widget.customerName), // Right-aligned
                 ],
               ),
@@ -234,7 +316,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Total:'), // Left-aligned
-                  Text(widget.total), // Right-aligned
+                  Text(widget.total.toString()), // Right-aligned
                 ],
               ),
               const SizedBox(height: 5),
