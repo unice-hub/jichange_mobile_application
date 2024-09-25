@@ -46,8 +46,10 @@ class _CreatedInvoiceTabState extends State<CreatedInvoiceTab> {
     try {
       final prefs = await SharedPreferences.getInstance();
       int instituteID = prefs.getInt('instID') ?? 0;
+      int UserID = prefs.getInt('userID') ?? 0;
 
       log('Making API request with token: $_token and instituteID: $instituteID');
+      log('userID: $UserID');
 
       final response = await http.post(
         Uri.parse(url),
@@ -138,7 +140,7 @@ class InvoiceData {
   final String approve;
   final String paymentType;
   final String status;
-  final int total;
+  final double total;
   final String dueDate;
   final String expiryDate;
 
@@ -167,7 +169,7 @@ class _InvoiceCard extends StatefulWidget {
   final String approve;
   final String paymentType;
   final String status;
-  final int total;
+  final double total;
   final String dueDate;
   final String expiryDate;
 
@@ -209,7 +211,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Customer namee:'), // Left-aligned
+                  const Text('Customer name:'), // Left-aligned
                   Text(widget.customerName), // Right-aligned
                 ],
               ),
@@ -295,7 +297,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Status:'), // Left-aligned
+                  const Text('Status2:'), // Left-aligned
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
