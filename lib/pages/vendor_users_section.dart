@@ -134,135 +134,135 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
     }
   }
 
- @override
-Widget build(BuildContext context) {
-  filteredUsers = vendorUsers.where((user) {
-    return user.username.toLowerCase().contains(searchQuery.toLowerCase()) ||
-        user.fullName.toLowerCase().contains(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().contains(searchQuery.toLowerCase()) ||
-        user.mobileNumber.contains(searchQuery);
-  }).toList();
+  @override
+  Widget build(BuildContext context) {
+    filteredUsers = vendorUsers.where((user) {
+      return user.username.toLowerCase().contains(searchQuery.toLowerCase()) ||
+          user.fullName.toLowerCase().contains(searchQuery.toLowerCase()) ||
+          user.email.toLowerCase().contains(searchQuery.toLowerCase()) ||
+          user.mobileNumber.contains(searchQuery);
+    }).toList();
 
-  return Scaffold(
-    resizeToAvoidBottomInset: true,
-    backgroundColor: Theme.of(context).colorScheme.background,  // Updated for better background color.
-    body: GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus(); // Dismiss keyboard when tapping outside.
-      },
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.only(
-            left: 16.0,
-            right: 16.0,
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      searchQuery = value;
-                    });
-                  },
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.search),
-                    labelText: 'Search by username, full name, email, or mobile',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,  // Updated for better background color.
+      body: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus(); // Dismiss keyboard when tapping outside.
+        },
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 16.0,
+              right: 16.0,
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: TextField(
+                    onChanged: (value) {
+                      setState(() {
+                        searchQuery = value;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search),
+                      labelText: 'Search by username, full name, email, or mobile',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8.0),
-              isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : filteredUsers.isEmpty
-                      ? const Center(child: Text("No vendor users found"))
-                      : SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.6,
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: filteredUsers.length,
-                            itemBuilder: (context, index) {
-                              return _buildUserCard(filteredUsers[index]);
-                            },
+                const SizedBox(height: 8.0),
+                isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : filteredUsers.isEmpty
+                        ? const Center(child: Text("No vendor users found"))
+                        : SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.6,
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: filteredUsers.length,
+                              itemBuilder: (context, index) {
+                                return _buildUserCard(filteredUsers[index]);
+                              },
+                            ),
                           ),
-                        ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-    floatingActionButton: FloatingActionButton(
-      onPressed: () {
-        _showAddVendorUserSheet(context);
-      },
-      backgroundColor: Theme.of(context).colorScheme.primary,
-      child: const Icon(Icons.add),
-    ),
-  );
-}
-
-
-
- //to displya usercard 
- Widget _buildUserCard(VendorUser user) {
-  return Card(
-    elevation: 3.0,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16.0),
-    ),
-    margin: const EdgeInsets.symmetric(vertical: 8.0),
-    child: ExpansionTile(
-      tilePadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      title: Text(user.username, style: Theme.of(context).textTheme.titleMedium),
-      subtitle: Text(user.email, style: Theme.of(context).textTheme.bodyMedium),
-      leading: CircleAvatar(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showAddVendorUserSheet(context);
+        },
         backgroundColor: Theme.of(context).colorScheme.primary,
-        child: Text(
-          user.username[0].toUpperCase(),
-          style: const TextStyle(color: Colors.white),
-        ),
+        child: const Icon(Icons.add),
       ),
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildInfoRow(Icons.person, 'Full Name', user.fullName),
-              const SizedBox(height: 8.0),
-              _buildInfoRow(Icons.phone, 'Mobile Number', user.mobileNumber),
-              const SizedBox(height: 8.0),
-              _buildInfoRow(Icons.badge, 'Role', getRoleActDescription(user.userpos)),
-              const SizedBox(height: 16.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.send, color: Theme.of(context).colorScheme.primary),
-                    onPressed: () {
-                      _showResendCredentialsDialog(context, user);
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.edit, color: Theme.of(context).colorScheme.primary),
-                    onPressed: () {
-                      _showEditVendorUserSheet(context, user);
-                    },
-                  ),
-                ],
-              ),
-            ],
+    );
+  }
+
+
+
+  //to displya usercard 
+  Widget _buildUserCard(VendorUser user) {
+    return Card(
+      elevation: 3.0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        title: Text(user.username, style: Theme.of(context).textTheme.titleMedium),
+        subtitle: Text(user.email, style: Theme.of(context).textTheme.bodyMedium),
+        leading: CircleAvatar(
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          child: Text(
+            user.username[0].toUpperCase(),
+            style: const TextStyle(color: Colors.white),
           ),
         ),
-      ],
-    ),
-  );
-}
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildInfoRow(Icons.person, 'Full Name', user.fullName),
+                const SizedBox(height: 8.0),
+                _buildInfoRow(Icons.phone, 'Mobile Number', user.mobileNumber),
+                const SizedBox(height: 8.0),
+                _buildInfoRow(Icons.badge, 'Role', getRoleActDescription(user.userpos)),
+                const SizedBox(height: 16.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.send, color: Theme.of(context).colorScheme.primary),
+                      onPressed: () {
+                        _showResendCredentialsDialog(context, user);
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.edit, color: Theme.of(context).colorScheme.primary),
+                      onPressed: () {
+                        _showEditVendorUserSheet(context, user);
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
@@ -362,53 +362,53 @@ Widget build(BuildContext context) {
   }
 
   //Editing vendor users
- void _showEditVendorUserSheet(BuildContext context, VendorUser user) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    builder: (BuildContext context) {
-      return Padding(
-        padding: MediaQuery.of(context).viewInsets,
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text(
-                  'Edit Vendor User',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 16.0),
-                _buildEditableTextField('Username', user.username),
-                const SizedBox(height: 16.0),
-                _buildEditableTextField('Full Name', user.fullName),
-                const SizedBox(height: 16.0),
-                _buildEditableTextField('Email', user.email),
-                const SizedBox(height: 16.0),
-                _buildEditableTextField('Mobile Number', user.mobileNumber),
-                const SizedBox(height: 16.0),
-                // _buildEditableTextField('Role', user1.role),
-                const SizedBox(height: 16.0),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.0),
-                    ),
+  void _showEditVendorUserSheet(BuildContext context, VendorUser user) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return Padding(
+          padding: MediaQuery.of(context).viewInsets,
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    'Edit Vendor User',
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                  child: const Text('Save Changes'),
-                ),
-              ],
+                  const SizedBox(height: 16.0),
+                  _buildEditableTextField('Username', user.username),
+                  const SizedBox(height: 16.0),
+                  _buildEditableTextField('Full Name', user.fullName),
+                  const SizedBox(height: 16.0),
+                  _buildEditableTextField('Email', user.email),
+                  const SizedBox(height: 16.0),
+                  _buildEditableTextField('Mobile Number', user.mobileNumber),
+                  const SizedBox(height: 16.0),
+                  // _buildEditableTextField('Role', user1.role),
+                  const SizedBox(height: 16.0),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                    ),
+                    child: const Text('Save Changes'),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      );
-    },
-  );
-}
+        );
+      },
+    );
+  }
 
 
   Widget _buildEditableTextField(String label, String initialValue) {
