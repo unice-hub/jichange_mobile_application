@@ -11,40 +11,14 @@ class InvoicesSection extends StatefulWidget {
 
 class _InvoicesSectionState extends State<InvoicesSection> {
   final List<Invoice> createdInvoices = [
-    // Invoice data
+    // Sample Invoice Data
+   
   ];
 
   final List<Invoice> generatedInvoices = [
-    // Invoice data
+    // Sample Invoice Data
+    
   ];
-
-  List<Invoice> filteredInvoices = [];
-  List<Invoice> filteredGeneratedInvoices = [];
-
-  @override
-  void initState() {
-    super.initState();
-    filteredInvoices = createdInvoices;
-    filteredGeneratedInvoices = generatedInvoices;
-  }
-
-  void _filterCreatedInvoices(String query) {
-    setState(() {
-      filteredInvoices = createdInvoices.where((invoice) {
-        return invoice.customerName.toLowerCase().contains(query.toLowerCase()) ||
-               invoice.invoiceNumber.toLowerCase().contains(query.toLowerCase());
-      }).toList();
-    });
-  }
-
-  void _filterGeneratedInvoices(String query) {
-    setState(() {
-      filteredGeneratedInvoices = generatedInvoices.where((invoice) {
-        return invoice.customerName.toLowerCase().contains(query.toLowerCase()) ||
-               invoice.invoiceNumber.toLowerCase().contains(query.toLowerCase());
-      }).toList();
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,12 +37,10 @@ class _InvoicesSectionState extends State<InvoicesSection> {
         body: TabBarView(
           children: [
             CreatedInvoiceTab(
-              createdInvoices: filteredInvoices,
-              filterCreatedInvoices: _filterCreatedInvoices,
+              createdInvoices: createdInvoices, filteredInvoices: [],
             ),
             GeneratedInvoiceTab(
-              generatedInvoices: filteredGeneratedInvoices,
-              filterGeneratedInvoices: _filterGeneratedInvoices,
+              generatedInvoices: generatedInvoices, filterGeneratedInvoices: (String ) {  },
             ),
           ],
         ),

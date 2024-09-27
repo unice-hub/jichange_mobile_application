@@ -1,6 +1,5 @@
-
 import 'package:flutter/material.dart';
-import '../invoices_section.dart'; // Import Invoice class
+import '../invoices_section.dart';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,11 +7,11 @@ import 'package:http/http.dart' as http;
 
 class CreatedInvoiceTab extends StatefulWidget {
   final List<Invoice> createdInvoices;
-  final Function(String) filterCreatedInvoices;
+  final List<Invoice> filteredInvoices;
 
   const CreatedInvoiceTab({
     required this.createdInvoices,
-    required this.filterCreatedInvoices,
+    required this.filteredInvoices,
     super.key,
   });
 
@@ -25,7 +24,7 @@ class _CreatedInvoiceTabState extends State<CreatedInvoiceTab> {
   String _token = 'Not logged in';
   bool isLoading = true;
   List<InvoiceData> createdInvoices = [];
-
+  
   @override
   void initState() {
     super.initState();
@@ -40,16 +39,14 @@ class _CreatedInvoiceTabState extends State<CreatedInvoiceTab> {
     _fetchInvoicesData();
   }
 
-  // Method to fetch Invoice data from the API
   Future<void> _fetchInvoicesData() async {
     const url = 'http://192.168.100.50:98/api/Invoice/GetchDetails';
+    
     try {
       final prefs = await SharedPreferences.getInstance();
       int instituteID = prefs.getInt('instID') ?? 0;
-      int UserID = prefs.getInt('userID') ?? 0;
-
-      log('Making API request with token: $_token and instituteID: $instituteID');
-      log('userID: $UserID');
+      int userID = prefs.getInt('userID') ?? 0;
+      log(userID.toString());
 
       final response = await http.post(
         Uri.parse(url),
@@ -61,15 +58,12 @@ class _CreatedInvoiceTabState extends State<CreatedInvoiceTab> {
         body: jsonEncode({"compid": instituteID}),
       );
 
-      log('API Status Code: ${response.statusCode}');
-      log('API Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = jsonDecode(response.body);
         if (responseBody['response'] is List) {
           setState(() {
             createdInvoices = (responseBody['response'] as List)
-                .map((item) => InvoiceData.fromJson(item))
+                .map((item) => InvoiceData.fromJson(item, userID))
                 .toList();
             isLoading = false;
           });
@@ -85,50 +79,88 @@ class _CreatedInvoiceTabState extends State<CreatedInvoiceTab> {
   }
 
   void _showSnackBar(String message) {
-    final snackBar = SnackBar(content: Text(message));
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: TextField(
-            decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search),
-              labelText: 'Search by name or invoice',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
+    // Filter the invoices based on the search query
+    final filteredInvoices = createdInvoices.where((invoice) {
+      return invoice.customerName.toLowerCase().contains(searchQuery.toLowerCase()) ||
+             invoice.invoiceNumber.toLowerCase().contains(searchQuery.toLowerCase()) ||
+             invoice.approve.toLowerCase().contains(searchQuery.toLowerCase()) ||
+             invoice.paymentType.toLowerCase().contains(searchQuery.toLowerCase()) ||
+             invoice.status.toLowerCase().contains(searchQuery.toLowerCase());
+    }).toList();
+
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+        },
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Column(
+              children: [
+                _buildSearchField(),
+                const SizedBox(height: 8.0),
+                _buildInvoiceList(filteredInvoices),
+              ],
             ),
-            onChanged: (query) => widget.filterCreatedInvoices(query),
           ),
         ),
-        Expanded(
-          child: isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16.0),
-                  itemCount: createdInvoices.length,
-                  itemBuilder: (context, index) {
-                    final invoice = createdInvoices[index];
-                    return _InvoiceCard(
-                      customerName: invoice.customerName,
-                      invoiceNumber: invoice.invoiceNumber,
-                      invoiceDate: invoice.invoiceDate,
-                      approve: invoice.approve,
-                      paymentType: invoice.paymentType,
-                      status: invoice.status,
-                      total: invoice.total,
-                      dueDate: invoice.dueDate,
-                      expiryDate: invoice.expiryDate,
-                    );
-                  },
-                ),
+      ),
+      floatingActionButton: _buildFloatingActionButton(),
+    );
+  }
+
+  Widget _buildSearchField() {
+    return TextField(
+      onChanged: (value) {
+        setState(() {
+          searchQuery = value;
+        });
+      },
+      decoration: InputDecoration(
+        prefixIcon: const Icon(Icons.search),
+        labelText: 'Search',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.0),
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildInvoiceList(List<InvoiceData> invoices) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (invoices.isEmpty) {
+      return const Center(child: Text("No invoices found"));
+    }
+    return SizedBox(
+      height: MediaQuery.of(context).size.height * 0.66,
+      child: ListView.builder(
+        shrinkWrap: true,
+        itemCount: invoices.length,
+        itemBuilder: (context, index) {
+          final invoice = invoices[index];
+          return _InvoiceCard(invoice: invoice);
+        },
+      ),
+    );
+  }
+
+  Widget _buildFloatingActionButton() {
+    return FloatingActionButton(
+      onPressed: () {
+        // Define what happens when the button is pressed
+      },
+      backgroundColor: Theme.of(context).colorScheme.primary,
+      child: const Icon(Icons.add),
     );
   }
 }
@@ -144,15 +176,24 @@ class InvoiceData {
   final String dueDate;
   final String expiryDate;
 
-  InvoiceData(this.customerName, this.invoiceNumber, this.invoiceDate, this.approve, this.paymentType, this.status, this.total, this.dueDate, this.expiryDate);
+  InvoiceData(
+    this.customerName,
+    this.invoiceNumber,
+    this.invoiceDate,
+    this.approve,
+    this.paymentType,
+    this.status,
+    this.total,
+    this.dueDate,
+    this.expiryDate,
+  );
 
-  // Assuming fromJson method to parse data from API
-  factory InvoiceData.fromJson(Map<String, dynamic> json) {
+  factory InvoiceData.fromJson(Map<String, dynamic> json, int userID) {
     return InvoiceData(
       json['Chus_Name'],
       json['Invoice_No'],
       json['Invoice_Date'],
-      json['AuditBy'] ?? "NO ",
+      (json['AuditBy'] == userID.toString()) ? "No Access" : "Access",
       json['Payment_Type'],
       json['Status'],
       json['Total'],
@@ -163,28 +204,9 @@ class InvoiceData {
 }
 
 class _InvoiceCard extends StatefulWidget {
-  final String customerName;
-  final String invoiceNumber;
-  final String invoiceDate;
-  final String approve;
-  final String paymentType;
-  final String status;
-  final double total;
-  final String dueDate;
-  final String expiryDate;
+  final InvoiceData invoice;
 
-  const _InvoiceCard({
-    super.key,
-    required this.customerName,
-    required this.invoiceNumber,
-    required this.invoiceDate,
-    required this.approve,
-    required this.paymentType,
-    required this.status,
-    required this.total,
-    required this.dueDate,
-    required this.expiryDate,
-  });
+  const _InvoiceCard({super.key, required this.invoice});
 
   @override
   _InvoiceCardState createState() => _InvoiceCardState();
@@ -208,179 +230,131 @@ class _InvoiceCardState extends State<_InvoiceCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Customer name:'), // Left-aligned
-                  Text(widget.customerName), // Right-aligned
-                ],
-              ),
+              _buildInvoiceRow('Customer name:', widget.invoice.customerName),
               const SizedBox(height: 5),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Invoice N°:'), // Left-aligned
-                  Text(widget.invoiceNumber), // Right-aligned
-                ],
-              ),
+              _buildInvoiceRow('Invoice N°:', widget.invoice.invoiceNumber),
               const SizedBox(height: 5),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Invoice Date:'), // Left-aligned
-                  Text(widget.invoiceDate), // Right-aligned
-                ],
-              ),
+              _buildInvoiceRow('Invoice Date:', widget.invoice.invoiceDate),
               const SizedBox(height: 5),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Approve:'), // Left-aligned
-                  widget.approve == 'Access'
-                      ? ElevatedButton(
-                          onPressed: () {
-                            // Define the action to perform when the button is pressed
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue, // Set the button color to blue
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8), // Optional: Add rounded corners
-                            ),
-                          ),
-                          child: Text(
-                            widget.approve,
-                            style: const TextStyle(
-                              // fontWeight: FontWeight.bold, // Set text weight to bold
-                              color: Colors.white, // Set text color to white
-                            ),
-                          ),
-                        )
-                      : Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: widget.approve == 'No Access' ? Colors.yellow : Colors.blue,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            widget.approve,
-                            style: TextStyle(
-                              // fontWeight: FontWeight.bold, // Set text weight to bold
-                              color: widget.approve == 'No Access' ? Colors.black : const Color.fromARGB(255, 223, 250, 224),
-                            ),
-                          ),
-                        ),
-                ],
-              ),
-
+              _buildApprovalRow(),
               const SizedBox(height: 5),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Payment type:'), // Left-aligned
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: widget.paymentType == 'Fixed' ? Colors.purpleAccent : Colors.greenAccent, // Purple for "Fixed", green for "Flexible"
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      widget.paymentType, // Right-aligned
-                      style: TextStyle(
-                        color: widget.paymentType == 'Fixed' ? Colors.white : Colors.black, // White text for "Fixed", black for "Flexible"
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              _buildInvoiceRow('Payment type:', _buildPaymentTypeContainer()),
               const SizedBox(height: 5),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Status2:'), // Left-aligned
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: widget.status == 'Active' ? Colors.blueAccent : Colors.redAccent, // Blue for "Active", red for "No Active"
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      widget.status, // Right-aligned
-                      style: TextStyle(
-                        color: widget.status == 'Active' ? Colors.white : Colors.white, // White for both "Active" and "No Active"
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              _buildInvoiceRow('Status:', _buildStatusContainer()),
               const SizedBox(height: 5),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Total:'), // Left-aligned
-                  Text(widget.total.toString()), // Right-aligned
-                ],
-              ),
+              _buildInvoiceRow('Total:', widget.invoice.total.toString()),
               const SizedBox(height: 5),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Due Date:'), // Left-aligned
-                  Text(widget.dueDate), // Right-aligned
-                ],
-              ),
+              _buildInvoiceRow('Due Date:', widget.invoice.dueDate),
               const SizedBox(height: 5),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Expiry Date:'), // Left-aligned
-                  Text(widget.expiryDate), // Right-aligned
-                ],
-              ),
-              const SizedBox(height: 5),
-              if (_isExpanded) ...[
-                const SizedBox(height: 10),
-                const Divider(),
-                Row(
-                  children: [
-                    const Text('Actions'),
-                    IconButton(
-                      icon: const Icon(Icons.visibility),
-                      onPressed: () {
-                        // Action for viewing control number details
-                      },
-                    ),
-                    // Add other action icons
-                    IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () {
-                        // Action for editing
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.cancel),
-                      onPressed: () {
-                        // Action for cancelling
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.download),
-                      onPressed: () {
-                        // Action for downloading
-                      },
-                    ),
-                  ],
-                ),
-              ],
+              _buildInvoiceRow('Expiry Date:', widget.invoice.expiryDate),
+              if (_isExpanded) _buildActionButtons(),
             ],
           ),
         ),
       ),
     );
   }
+
+  Widget _buildInvoiceRow(String label, dynamic value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label),
+        value is Widget ? value : Text(value.toString()),
+      ],
+    );
+  }
+
+  Widget _buildApprovalRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text('Approve:'),
+        ElevatedButton(
+          onPressed: () {
+            // Define the action to perform when the button is pressed
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: widget.invoice.approve == 'Access' ? Colors.blue : Colors.yellow,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          child: Text(widget.invoice.approve, style: const TextStyle(color: Colors.white)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPaymentTypeContainer() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: widget.invoice.paymentType == 'Fixed' ? Colors.purpleAccent : Colors.greenAccent,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        widget.invoice.paymentType,
+        style: TextStyle(color: widget.invoice.paymentType == 'Fixed' ? Colors.white : Colors.black),
+      ),
+    );
+  }
+
+  Widget _buildStatusContainer() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: widget.invoice.status == 'Active' ? Colors.blueAccent : Colors.redAccent,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        widget.invoice.status,
+        style: const TextStyle(color: Colors.white),
+      ),
+    );
+  }
+
+ Widget _buildActionButtons() {
+  return Column(
+    children: [
+      const SizedBox(height: 10),
+      const Divider(),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildIconActionButton(Icons.visibility, 'View Details', () {
+            // Define the action to view details
+          }),
+          _buildIconActionButton(Icons.picture_as_pdf, 'Download PDF', () {
+            // Define the action to download PDF
+          }),
+          _buildIconActionButton(Icons.edit, 'Edit', () {
+            // Define the action to edit the invoice
+          }),
+          _buildIconActionButton(Icons.cancel, 'Cancel', () {
+            // Define the action to cancel
+          }),
+        ],
+      ),
+    ],
+  );
 }
 
+Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPressed) {
+  return Column(
+    children: [
+      IconButton(
+        icon: Icon(icon, color: Theme.of(context).colorScheme.primary),
+        onPressed: onPressed,
+      ),
+      Text(label, style: const TextStyle(fontSize: 12)),
+    ],
+  );
+}
 
-
-
-
+  Widget _buildActionButton(String label, VoidCallback onPressed) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      child: Text(label),
+    );
+  }
+}
