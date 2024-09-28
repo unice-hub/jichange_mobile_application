@@ -46,6 +46,11 @@ class _LoginPageState extends State<LoginPage> {
       if (response.statusCode == 200) {
         var responseData = jsonDecode(response.body);
         
+        // Check if login was unsuccessful due to incorrect username or password
+        if (responseData['response']?['check'] == "Username or password is incorrect") {
+          _showErrorDialog('Username or password is incorrect.');
+          return;
+        }
          // Extract session data
         String token = responseData['response']['Token'];
         String userType = responseData['response']['userType'];
@@ -78,11 +83,29 @@ class _LoginPageState extends State<LoginPage> {
         // Navigate to Home Page
         if (!mounted) return;
         Navigator.pushNamed(context, '/home');
+      } else if (response.statusCode == 401) {
+        // Handle unauthorized (wrong username/password)
+        _showErrorDialog('Incorrect username or password. Please try again.');
+
+      }else if (response.statusCode >= 500){
+        // Handle server errors
+        _showErrorDialog('Server error. Please try again later.');
+
       } else {
-        _showErrorDialog('Login failed. Please check your credentials.');
+       // Handle other errors
+        _showErrorDialog('Login failed. Please check your credentials and try again.');
       }
+
     } catch (e) {
-      _showErrorDialog('An error occurred. Please try again.');
+      if (e is http.ClientException) {
+        // Network error
+        _showErrorDialog('Network error. Please check your connection and try again.');
+
+      } else {
+        // Other exceptions
+        _showErrorDialog('An unexpected error occurred. Please try again.');
+        
+      }
     } finally {
       setState(() {
         _isLoading = false;
@@ -93,30 +116,54 @@ class _LoginPageState extends State<LoginPage> {
 
   // Method to handle Control Number Details API call
   Future<void> _fetchControlNumberDetails(String controlNumber) async {
-    final url = Uri.parse('http://192.168.100.50:98/api/Invoice/GetControl');
-    final headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    };
-    final body = jsonEncode({'control': controlNumber});
+  final url = Uri.parse('http://192.168.100.50:98/api/Invoice/GetControl');
+  final headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  };
+  final body = jsonEncode({'control': controlNumber});
 
-    try {
-      final response = await http.post(url, headers: headers, body: body);
+  try {
+    final response = await http.post(url, headers: headers, body: body);
 
-      if (response.statusCode == 200) {
-        var responseData = jsonDecode(response.body);
-        // Handle the response data here
-        final details = responseData['response'];
-
-        // Show the details in a dialog or update the UI
-        _showControlNumberDetailsDialog(details);
-      } else {
-        _showErrorDialog('Failed to fetch control number details.');
+    if (response.statusCode == 200) {
+      var responseData = jsonDecode(response.body);
+      
+      // Check if the control number is incorrect based on the response
+      if (responseData['response'] == 0) {
+        // If control number is wrong, show an error dialog
+        _showErrorDialog('Failed to get control number details. Please check your control number and try again.');
+        return;
       }
-    } catch (e) {
-      _showErrorDialog('An error occurred while fetching control number details.');
+
+      // If control number is correct, handle and display the details
+      final details = responseData['response'];
+      _showControlNumberDetailsDialog(details);
+
+    } else if (response.statusCode == 401) {
+      // Handle unauthorized (wrong control number)
+      _showErrorDialog('Incorrect Control Number. Please try again.');
+      
+    } else if (response.statusCode >= 500) {
+      // Handle server errors
+      _showErrorDialog('Server error. Please try again later.');
+
+    } else {
+      // Handle other errors
+      _showErrorDialog('Failed to get control number details. Please check your control number and try again.');
     }
+  } catch (e) {
+    if (e is http.ClientException) {
+        // Network error
+        _showErrorDialog('Network error. Please check your connection and try again.');
+
+      } else {
+        // Other exceptions
+        _showErrorDialog('An unexpected error occurred. Please try again.');
+        
+      }
   }
+}
 
   // Show Control Number Details as a BottomSheet
   void _showControlNumberDetails(BuildContext context) {

@@ -54,7 +54,19 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         _showErrorDialog('Failed to change the password. Please try again.');
       }
     } catch (e) {
-      _showErrorDialog('An error occurred. Please try again.');
+      if (e is http.ClientException) {
+        // Network error
+        _showErrorDialog('Network error. Please check your connection and try again.');
+
+      } else {
+        // Other exceptions
+        _showErrorDialog('An unexpected error occurred. Please try again.');
+        
+      }
+      setState(() {
+        _isLoading = false;
+      });
+      
     } finally {
       setState(() {
         _isLoading = false;

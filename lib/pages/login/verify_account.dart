@@ -61,15 +61,36 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
         );
       }
     } catch (e) {
-      // Handle network error
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to connect to the server. Please check your internet connection.')),
-      );
-    }
+      if (e is http.ClientException) {
+        // Network error
+        _showErrorDialog('Network error. Please check your connection and try again.');
 
+      } else {
+        // Other exceptions
+        _showErrorDialog('An unexpected error occurred. Please try again.');
+        
+      }
+    }
     setState(() {
       isLoading = false;
     });
+  }
+
+  // Show error dialog in case of failure
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   // Function to handle OTP submission

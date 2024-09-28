@@ -89,10 +89,15 @@ class _CustomerSectionState extends State<CustomerSection> {
         );
       }
     } catch (e) {
-      // Handle any other errors
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      if (e is http.ClientException) {
+        // Network error
+        _showErrorDialog('Network error. Please check your connection and try again.');
+
+      } else {
+        // Other exceptions
+        _showErrorDialog('An unexpected error occurred. Please try again.');
+        
+      }
     }
   }
 
@@ -131,7 +136,15 @@ class _CustomerSectionState extends State<CustomerSection> {
         _showQuickAlert(context, 'Error', 'Failed to modify customer: ${response.body}', false);
       }
     } catch (e) {
-      _showQuickAlert(context, 'Error', 'Error: $e', false);
+      if (e is http.ClientException) {
+        // Network error
+        _showErrorDialog('Network error. Please check your connection and try again.');
+
+      } else {
+        // Other exceptions
+        _showErrorDialog('An unexpected error occurred. Please try again.');
+        
+      }
     }
   }
 
@@ -185,13 +198,35 @@ class _CustomerSectionState extends State<CustomerSection> {
           );
         }
       } catch (e) {
-        // Handle any exceptions
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+
+        if (e is http.ClientException) {
+          // Network error
+          _showErrorDialog('Network error. Please check your connection and try again.');
+
+        } else {
+          // Other exceptions
+          _showErrorDialog('An unexpected error occurred. Please try again.');
+          
+        }
       }
   }
 
+  // Show error dialog in case of failure
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -405,7 +440,7 @@ void _viewCustomer(Customer customer) async {
         
         // Use the parsed data to create a Customer object
         final data = jsonDecode(response.body);
-        log('Successfully fetched customer details'); // Log success message
+        // log('Successfully fetched customer details'); // Log success message
         return Customer.fromJson(data); 
       } else {
         // Log the failure with the response status code
@@ -413,8 +448,15 @@ void _viewCustomer(Customer customer) async {
         return null;
       }
     } catch (e) {
-      // Log any exceptions that occur during the request
-      log('Error fetching customer details: $e');
+      if (e is http.ClientException) {
+        // Network error
+        _showErrorDialog('Network error. Please check your connection and try again.');
+
+      } else {
+        // Other exceptions
+        _showErrorDialog('An unexpected error occurred. Please try again.');
+        
+      }
       return null;
     }
   }
@@ -859,10 +901,15 @@ void _showQuickAlert(BuildContext context, String title, String message, bool is
         );
       }
     } catch (e) {
-      // Handle exceptions
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      if (e is http.ClientException) {
+        // Network error
+        _showErrorDialog('Network error. Please check your connection and try again.');
+
+      } else {
+        // Other exceptions
+        _showErrorDialog('An unexpected error occurred. Please try again.');
+        
+      }
     }
   }
 

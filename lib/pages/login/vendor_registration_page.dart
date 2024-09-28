@@ -39,12 +39,38 @@ class _VendorRegistrationPageState extends State<VendorRegistrationPage> {
         throw Exception('Failed to load branches');
       }
     } catch (e) {
+      if (e is http.ClientException) {
+        // Network error
+        _showErrorDialog('Network error. Please check your connection and try again.');
+
+      } else {
+        // Other exceptions
+        _showErrorDialog('An unexpected error occurred. Please try again.');
+        
+      }
       setState(() {
         _isLoading = false;
       });
       // Handle error (show a message to the user, etc.)
       print('Error fetching branches: $e');
     }
+  }
+
+  // Show error dialog in case of failure
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

@@ -66,8 +66,18 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         _showErrorDialog('Failed to send OTP. Please try again.');
       }
     } catch (e) {
-      // Show error message for no service
-      _showErrorDialog('No service at the moment. Please try again later.');
+      if (e is http.ClientException) {
+        // Network error
+        _showErrorDialog('Network error. Please check your connection and try again.');
+
+      } else {
+        // Other exceptions
+        _showErrorDialog('An unexpected error occurred. Please try again.');
+        
+      }
+      setState(() {
+        _isLoading = false;
+      });
     } finally {
       setState(() {
         _isLoading = false;
