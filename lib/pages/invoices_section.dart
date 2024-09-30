@@ -37,10 +37,10 @@ class _InvoicesSectionState extends State<InvoicesSection> {
         body: TabBarView(
           children: [
             CreatedInvoiceTab(
-              createdInvoices: createdInvoices, filteredInvoices: [],
+              createdInvoices: createdInvoices, filteredCreatedInvoices: [],
             ),
             GeneratedInvoiceTab(
-              generatedInvoices: generatedInvoices, filterGeneratedInvoices: (String ) {  },
+              generatedInvoices: generatedInvoices, filterGeneratedInvoices: [],
             ),
           ],
         ),

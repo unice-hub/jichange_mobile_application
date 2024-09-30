@@ -3,15 +3,16 @@ import '../invoices_section.dart';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
 class CreatedInvoiceTab extends StatefulWidget {
   final List<Invoice> createdInvoices;
-  final List<Invoice> filteredInvoices;
+  final List<Invoice> filteredCreatedInvoices;
 
   const CreatedInvoiceTab({
     required this.createdInvoices,
-    required this.filteredInvoices,
+    required this.filteredCreatedInvoices,
     super.key,
   });
 
@@ -85,7 +86,7 @@ class _CreatedInvoiceTabState extends State<CreatedInvoiceTab> {
   @override
   Widget build(BuildContext context) {
     // Filter the invoices based on the search query
-    final filteredInvoices = createdInvoices.where((invoice) {
+    final filteredCreatedInvoices = createdInvoices.where((invoice) {
       return invoice.customerName.toLowerCase().contains(searchQuery.toLowerCase()) ||
              invoice.invoiceNumber.toLowerCase().contains(searchQuery.toLowerCase()) ||
              invoice.approve.toLowerCase().contains(searchQuery.toLowerCase()) ||
@@ -107,7 +108,7 @@ class _CreatedInvoiceTabState extends State<CreatedInvoiceTab> {
               children: [
                 _buildSearchField(),
                 const SizedBox(height: 8.0),
-                _buildInvoiceList(filteredInvoices),
+                _buildInvoiceList(filteredCreatedInvoices),
               ],
             ),
           ),
@@ -173,6 +174,7 @@ class InvoiceData {
   final String paymentType;
   final String status;
   final double total;
+  final String currencyCode;
   final String dueDate;
   final String expiryDate;
 
@@ -184,6 +186,7 @@ class InvoiceData {
     this.paymentType,
     this.status,
     this.total,
+    this.currencyCode,
     this.dueDate,
     this.expiryDate,
   );
@@ -197,11 +200,18 @@ class InvoiceData {
       json['Payment_Type'],
       json['Status'],
       json['Total'],
+      json['Currency_Code'],
       json['Due_Date'],
       json['Invoice_Expired_Date'],
     );
   }
 }
+
+String formatDate(String dateStr) {
+  DateTime dateTime = DateTime.parse(dateStr);
+  return DateFormat('EEE MMM dd yyyy').format(dateTime);
+}
+
 
 class _InvoiceCard extends StatefulWidget {
   final InvoiceData invoice;
@@ -232,7 +242,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
             children: [
               _buildInvoiceRow('Customer name:', widget.invoice.customerName),
               const SizedBox(height: 5),
-              _buildInvoiceRow('Invoice N°:', widget.invoice.invoiceNumber),
+              _buildInvoiceRow('Invoice Date:', formatDate(widget.invoice.invoiceDate)),
               const SizedBox(height: 5),
               _buildInvoiceRow('Invoice Date:', widget.invoice.invoiceDate),
               const SizedBox(height: 5),
@@ -242,11 +252,11 @@ class _InvoiceCardState extends State<_InvoiceCard> {
               const SizedBox(height: 5),
               _buildInvoiceRow('Status:', _buildStatusContainer()),
               const SizedBox(height: 5),
-              _buildInvoiceRow('Total:', widget.invoice.total.toString()),
+              _buildInvoiceRow('Total:', "${widget.invoice.total}  ${widget.invoice.currencyCode}"),
               const SizedBox(height: 5),
-              _buildInvoiceRow('Due Date:', widget.invoice.dueDate),
+              _buildInvoiceRow('Due Date:', formatDate(widget.invoice.dueDate)),
               const SizedBox(height: 5),
-              _buildInvoiceRow('Expiry Date:', widget.invoice.expiryDate),
+              _buildInvoiceRow('Expiry Date:', formatDate(widget.invoice.expiryDate)),
               if (_isExpanded) _buildActionButtons(),
             ],
           ),
