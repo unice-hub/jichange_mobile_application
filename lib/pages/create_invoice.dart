@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'dart:developer';
 
 class CreateInvoicePage extends StatefulWidget {
   const CreateInvoicePage({super.key});
@@ -8,52 +13,242 @@ class CreateInvoicePage extends StatefulWidget {
 }
 
 class _CreateInvoicePageState extends State<CreateInvoicePage> {
-  String? selectedBranch;
-  String? selectedVendor;
+  String searchQuery = "";
+  String _token = 'Not logged in';
+  bool isLoading = true;
+
   String? selectedCustomer;
-  String? selectedInvoiceNumber;
-  DateTime? fromDate;
-  DateTime? toDate;
+  String? selectedPaymentType;
+  String? selectedCurrency;
+  DateTime? invoiceDate;
+  DateTime? dueDate;
+  DateTime? expiryDate;
+  final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController quantityController = TextEditingController();
+  final TextEditingController unitPriceController = TextEditingController();
+  double totalPrice = 0;
 
-  List<String> branches = ['Magomeni', 'Ilala', 'Kawe', 'Joshua Speaker Urio'];
-  List<String> vendors = ['Me&U Apparel', 'Vendor A', 'Vendor B', 'Joshua Speaker Urio'];
-  List<String> customers = ['All', 'Customer A', 'Customer B', 'Joshua Speaker Urio'];
-  List<String> invoiceNumbers = ['All', 'Invoice A', 'Invoice B', 'Joshua Speaker Urio'];
+  // List to hold added items
+  List<Map<String, dynamic>> addedItems = [];
 
-  // Dummy data for filtered results
-  final List<Map<String, String>> filteredResults = [
-    {
-      'Payment Date': 'Thu Aug 22 2024',
-      'Payer': 'Min Man',
-      'Customer': 'Mini Man',
-      'Invoice N°': 'ap01',
-      'Control N°': 'T00060198',
-      'Payment Method': 'MNO',
-      'Transaction N°': 'AC9102900000',
-      'Status': 'Not sent',
-      'Receipt N°': 'TZSC339030',
-      'Total Amount': '2,262,500 TZS',
-      'Paid Amount': '2,262,500 TZS',
-      'Payment Type': 'Fixed',
-    },
-    // Additional entries can go here
-  ];
+  // Sample customer list
+  List<String> customers = [];
+  List<String> paymentTypes = ['Fixed', 'Flexible'];
+  List<String> currency = [];
 
-  Future<void> _selectDate(BuildContext context, bool isFrom) async {
+  @override
+  void initState() {
+    super.initState();
+    _loadSessionInfo() ;
+  }
+
+  Future<void> _loadSessionInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _token = prefs.getString('token') ?? 'Not logged in';
+    });
+    _fetchCustomerName();
+    _fetchCurrency();
+  }
+  
+  Future<void> _fetchCustomerName() async {
+    const url = 'http://192.168.100.50:98/api/Invoice/GetCustomersS';
+
+    try {
+       final prefs = await SharedPreferences.getInstance();
+        int instituteID = prefs.getInt('instID') ?? 0;
+        int userID = prefs.getInt('userID') ?? 0;
+        
+        log(userID.toString());
+
+        final response = await http.post(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $_token',
+          },
+          body: jsonEncode({"compid": instituteID}),
+        );
+
+        if (response.statusCode == 200) {
+          final jsonResponse = json.decode(response.body);
+          final List<dynamic> customerName = jsonResponse['response'];
+          setState(() {
+             customers = customerName.map((branch) => branch['Customer_Name'] as String).toList();
+            isLoading = false;
+          });
+          
+        } else {
+          throw Exception('Failed to load branches');
+        }
+      } catch (e) {
+        if (e is http.ClientException) {
+          // Network error
+          _showErrorDialog('Network error. Please check your connection and try again.');
+
+        } else {
+          // Other exceptions
+          _showErrorDialog('An unexpected error occurred. Please try again.');
+          
+        }
+      setState(() {
+        isLoading = false;
+      });
+      // Handle error (show a message to the user, etc.)
+      // print('Error fetching branches: $e');
+    }
+  }
+
+  Future<void> _fetchCurrency() async {
+    const url = 'http://192.168.100.50:98/api/Invoice/GetCurrency';
+
+    try {
+       final prefs = await SharedPreferences.getInstance();
+        // int instituteID = prefs.getInt('instID') ?? 0;
+        int userID = prefs.getInt('userID') ?? 0;
+        
+        log(userID.toString());
+
+        final response = await http.get(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $_token',
+          },
+          // body: jsonEncode({"compid": instituteID}),
+        );
+
+        if (response.statusCode == 200) {
+          final jsonResponse = json.decode(response.body);
+          final List<dynamic> currencyCode = jsonResponse['response'];
+          setState(() {
+             currency = currencyCode.map((branch) => branch['Currency_Code'] as String).toList();
+            isLoading = false;
+          });
+          
+        } else {
+          throw Exception('Failed to load branches');
+        }
+      } catch (e) {
+        if (e is http.ClientException) {
+          // Network error
+          _showErrorDialog('Network error. Please check your connection and try again.');
+
+        } else {
+          // Other exceptions
+          _showErrorDialog('An unexpected error occurred. Please try again.');
+          
+        }
+      setState(() {
+        isLoading = false;
+      });
+      // Handle error (show a message to the user, etc.)
+      // print('Error fetching branches: $e');
+    }
+  }
+
+  // Show error dialog in case of failure
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  Future<void> _selectDate(BuildContext context, bool isInvoiceDate) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
+
     if (picked != null) {
       setState(() {
-        if (isFrom) {
-          fromDate = picked;
+        if (isInvoiceDate) {
+          invoiceDate = picked;
         } else {
-          toDate = picked;
+          dueDate = picked;
         }
       });
+    }
+  }
+
+  Future<void> _selectExpiryDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+
+    if (picked != null) {
+      setState(() {
+        expiryDate = picked;
+      });
+    }
+  }
+
+  void calculateTotalPrice() {
+    final quantity = double.tryParse(quantityController.text) ?? 0;
+    final unitPrice = double.tryParse(unitPriceController.text) ?? 0;
+    setState(() {
+      totalPrice = quantity * unitPrice;
+    });
+  }
+
+  void addItem() {
+    final description = descriptionController.text;
+    final quantity = double.tryParse(quantityController.text) ?? 0;
+    final unitPrice = double.tryParse(unitPriceController.text) ?? 0;
+    final total = quantity * unitPrice;
+
+    if (description.isNotEmpty && quantity > 0 && unitPrice > 0) {
+      setState(() {
+        addedItems.add({
+          'description': description,
+          'quantity': quantity,
+          'unitPrice': unitPrice,
+          'total': total,
+        });
+
+        // Clear input fields
+        descriptionController.clear();
+        quantityController.clear();
+        unitPriceController.clear();
+        totalPrice = 0;
+      });
+    } else {
+      // Show an error or warning for invalid inputs
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields with valid data')),
+      );
+    }
+  }
+
+  void submitInvoice() {
+    if (addedItems.isNotEmpty) {
+      // Perform your submission logic here
+      // For example, making an API call to submit the invoice data
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invoice submitted successfully!')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please add at least one item to submit.')),
+      );
     }
   }
 
@@ -74,216 +269,245 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
           ),
         ],
       ),
-      body: SingleChildScrollView( // Wrap the entire content in SingleChildScrollView
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Filters Section
-            Column(
-              children: [
-                // Invoice number
-                const TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Invoice number',
-                    border: OutlineInputBorder(),
-                    hintText: 'Enter invoice number',
-                  ),
+            const TextField(
+              decoration: InputDecoration(
+                labelText: 'Invoice number',
+                border: OutlineInputBorder(),
+                hintText: 'Enter invoice number',
+              ),
+            ),
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: () => _selectDate(context, true),
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Invoice Date',
+                  suffixIcon: Icon(Icons.calendar_today),
+                  border: OutlineInputBorder(),
                 ),
-                const SizedBox(height: 16),
-
-                // From (Invoice Date)
-                InkWell(
-                  onTap: () => _selectDate(context, true),
-                  child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'Invoice Date',
-                      suffixIcon: Icon(Icons.calendar_today),
-                      border: OutlineInputBorder(),
-                    ),
-                    child: Text(
-                      fromDate == null ? 'Choose a date' : fromDate!.toLocal().toString().split(' ')[0],
-                    ),
-                  ),
+                child: Text(
+                  invoiceDate == null ? 'Choose a date' : invoiceDate!.toLocal().toString().split(' ')[0],
                 ),
-                const SizedBox(height: 16),
-
-                // Invoice due date
-                InkWell(
-                  onTap: () => _selectDate(context, false),
-                  child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'Invoice due Date',
-                      suffixIcon: Icon(Icons.calendar_today),
-                      border: OutlineInputBorder(),
-                    ),
-                    child: Text(
-                      toDate == null ? 'Choose a date' : toDate!.toLocal().toString().split(' ')[0],
-                    ),
-                  ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: () => _selectDate(context, false),
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Invoice Due Date',
+                  suffixIcon: Icon(Icons.calendar_today),
+                  border: OutlineInputBorder(),
                 ),
-                const SizedBox(height: 16),
-
-                // Invoice due date
-                InkWell(
-                  onTap: () => _selectDate(context, false),
-                  child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'Invoice expiry Date',
-                      suffixIcon: Icon(Icons.calendar_today),
-                      border: OutlineInputBorder(),
-                    ),
-                    child: Text(
-                      toDate == null ? 'Choose a date' : toDate!.toLocal().toString().split(' ')[0],
-                    ),
-                  ),
+                child: Text(
+                  dueDate == null ? 'Choose a date' : dueDate!.toLocal().toString().split(' ')[0],
                 ),
-                const SizedBox(height: 16),
-
-                // Customer Dropdown
-                DropdownButtonFormField<String>(
-                  value: selectedCustomer,
-                  isExpanded: true,
-                  hint: const Text('Select Customer'),
-                  items: customers.map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value, overflow: TextOverflow.ellipsis),
-                    );
-                  }).toList(),
-                  onChanged: (newValue) {
-                    setState(() {
-                      selectedCustomer = newValue;
-                    });
-                  },
-                  decoration: const InputDecoration(
-                    labelText: 'Customer',
-                    border: OutlineInputBorder(),
-                  ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: () => _selectExpiryDate(context),
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Invoice Expiry Date',
+                  suffixIcon: Icon(Icons.calendar_today),
+                  border: OutlineInputBorder(),
                 ),
-                const SizedBox(height: 16),
-
-                // Invoice Number Dropdown
-                DropdownButtonFormField<String>(
-                  value: selectedInvoiceNumber,
-                  isExpanded: true,
-                  hint: const Text('Select a payment type'),
-                  items: invoiceNumbers.map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value, overflow: TextOverflow.ellipsis),
-                    );
-                  }).toList(),
-                  onChanged: (newValue) {
-                    setState(() {
-                      selectedInvoiceNumber = newValue;
-                    });
-                  },
-                  decoration: const InputDecoration(
-                    labelText: 'Payment type',
-                    border: OutlineInputBorder(),
-                  ),
+                child: Text(
+                  expiryDate == null ? 'Choose a date' : expiryDate!.toLocal().toString().split(' ')[0],
                 ),
-                const SizedBox(height: 16),
-
-                // Invoice remark Dropdown (Optional)
-                DropdownButtonFormField<String>(
-                  value: selectedInvoiceNumber,
-                  isExpanded: true,
-                  hint: const Text('Enter invoice remark'),
-                  items: invoiceNumbers.map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value, overflow: TextOverflow.ellipsis),
-                    );
-                  }).toList(),
-                  onChanged: (newValue) {
-                    setState(() {
-                      selectedInvoiceNumber = newValue;
-                    });
-                  },
-                  decoration: const InputDecoration(
-                    labelText: 'Invoice remark (Optional)',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
+              ),
             ),
             const SizedBox(height: 16),
 
-            ElevatedButton(
-              onPressed: () {
-                // Implement filtering logic here
+            isLoading
+            ? const Center(child: CircularProgressIndicator())
+
+            : DropdownButtonFormField<String>(
+              
+              value: selectedCustomer,
+              isExpanded: true,
+              hint: const Text('Select Customer'),
+              items: customers.map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value, overflow: TextOverflow.ellipsis),
+                );
+              }).toList(),
+              onChanged: (newValue) {
+                setState(() {
+                  selectedCustomer = newValue;
+                });
               },
-              child: const Text('Submit'),
+              decoration: const InputDecoration(
+                labelText: 'Customer',
+                border: OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 16),
 
-            // Export buttons
+            DropdownButtonFormField<String>(
+              value: selectedPaymentType,
+              isExpanded: true,
+              hint: const Text('Select payment type'),
+              items: paymentTypes.map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value, overflow: TextOverflow.ellipsis),
+                );
+              }).toList(),
+              onChanged: (newValue) {
+                setState(() {
+                  selectedPaymentType = newValue;
+                });
+              },
+              decoration: const InputDecoration(
+                labelText: 'Payment type',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : DropdownButtonFormField<String>(
+
+              value: selectedCurrency,
+              isExpanded: true,
+              hint: const Text('Select a currency'),
+              items: currency.map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value, overflow: TextOverflow.ellipsis),
+                );
+              }).toList(),
+              onChanged: (newValue) {
+                setState(() {
+                  selectedCurrency = newValue;
+                });
+              },
+              decoration: const InputDecoration(
+                labelText: 'Currency',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            const TextField(
+              decoration: InputDecoration(
+                labelText: 'Invoice remarks (Optional)',
+                border: OutlineInputBorder(),
+                hintText: 'Enter invoice remarks',
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Divider(),
+            const Text(
+              'Item Details',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 ElevatedButton.icon(
-                  onPressed: () {
-                    // Export to Excel logic here
-                  },
+                  onPressed: addItem,
                   icon: const Icon(Icons.add),
                   label: const Text('ADD'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.greenAccent,
                   ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: descriptionController,
+              decoration: const InputDecoration(
+                labelText: 'Description',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: quantityController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Quantity',
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) => calculateTotalPrice(),
+                  ),
+                ),
                 const SizedBox(width: 16),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Export to PDF logic here
-                  },
-                  icon: const Icon(Icons.remove),
-                  label: const Text('REMOVE'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                Expanded(
+                  child: TextField(
+                    controller: unitPriceController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Unit Price',
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) => calculateTotalPrice(),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Total price: $totalPrice',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 16),
 
-            // Filtered Results Section
+            // Display the added items
+            const Divider(),
+            const Text(
+              'Added Items',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
             ListView.builder(
-              physics: const NeverScrollableScrollPhysics(), // Disable scrolling in the inner ListView
-              shrinkWrap: true, // Allow ListView to take only the space it needs
-              itemCount: filteredResults.length,
+              shrinkWrap: true, // Ensure it doesn't scroll separately
+              itemCount: addedItems.length,
               itemBuilder: (context, index) {
-                final item = filteredResults[index];
+                final item = addedItems[index];
                 return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  child: ExpansionTile(
-                    title: Text('Invoice N°: ${item['Invoice N°']}'),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Customer: ${item['Customer']}'),
-                        Text('Total Amount: ${item['Total Amount']}'),
-                        Text('Status: ${item['Status']}'),
-                      ],
+                  child: ListTile(
+                    title: Text(item['description']),
+                    subtitle: Text('Quantity: ${item['quantity']} | Unit Price: ${item['unitPrice']} | Total: ${item['total']}'),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.redAccent),
+                      onPressed: () {
+                        setState(() {
+                          addedItems.removeAt(index);
+                        });
+                      },
                     ),
-                    children: [
-                      ListTile(
-                        title: Text('Control N°: ${item['Control N°']}'),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Payment Date: ${item['Payment Date']}'),
-                            Text('Paid Amount: ${item['Paid Amount']}'),
-                            Text('Payment Method: ${item['Payment Method']}'),
-                            Text('Transaction N°: ${item['Transaction N°']}'),
-                            Text('Receipt N°: ${item['Receipt N°']}'),
-                          ],
-                        ),
-                      ),
-                    ],
                   ),
                 );
               },
+            ),
+
+            // Submit button
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: submitInvoice,
+              child: const Text('Submit'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                minimumSize: const Size(double.infinity, 48),
+              ),
             ),
           ],
         ),

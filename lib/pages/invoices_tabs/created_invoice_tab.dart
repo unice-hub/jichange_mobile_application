@@ -185,18 +185,18 @@ class InvoiceData {
   final int compid;
   final String companyName;
   final String controlNumber;
-  final String remarks;
-  final String goodsStatus;
-  final String approvalStatus;
-  final String currencyName;
-  final double totalWithoutVAT;
-  final double totalVAT;
-  final int itemQty;
-  final int itemUnitPrice;
-  final int itemTotalAmount;
-  final int invMasNo;
-  final String deliveryStatus;
-  final int invDetSno;
+  // final String remarks;
+  // final String goodsStatus;
+  // final String approvalStatus;
+  // final String currencyName;
+  // final double totalWithoutVAT;
+  // final double totalVAT;
+  // final int itemQty;
+  // final int itemUnitPrice;
+  // final int itemTotalAmount;
+  // final int invMasNo;
+  // final String deliveryStatus;
+  // final int invDetSno;
 
   InvoiceData(
     this.customerName,
@@ -213,18 +213,18 @@ class InvoiceData {
     this.compid,
     this.companyName,
     this.controlNumber,
-    this.remarks,
-    this.goodsStatus,
-    this.approvalStatus,
-    this.currencyName,
-    this.totalWithoutVAT,
-    this.totalVAT,
-    this.itemQty,
-    this.itemUnitPrice,
-    this.itemTotalAmount,
-    this.invMasNo,
-    this.deliveryStatus,
-    this.invDetSno,
+    // this.remarks,
+    // this.goodsStatus,
+    // this.approvalStatus,
+    // this.currencyName,
+    // this.totalWithoutVAT,
+    // this.totalVAT,
+    // this.itemQty,
+    // this.itemUnitPrice,
+    // this.itemTotalAmount,
+    // this.invMasNo,
+    // this.deliveryStatus,
+    // this.invDetSno,
   );
 
   factory InvoiceData.fromJson(Map<String, dynamic> json, int userID) {
@@ -243,18 +243,18 @@ class InvoiceData {
       json['Com_Mas_Sno'],
       json['Company_Name'],
       json['Control_No'],
-      json['Remarks'] ?? '',
-      json['goods_status'] ?? '',
-      json['approval_status'] ?? '',
-      json['Currency_Name'] ?? '',
-      json['Total_Without_Vt'] ?? '',
-      json['Total_Vt'] ?? '',
-      json['Item_Qty'] ?? '',
-      json['Item_Unit_Price'] ?? '',
-      json['Item_Total_Amount'] ?? '',
-      json['Chus_Mas_No'] ?? '',
-      json['delivery_status'] ?? '',
-      json['Inv_Det_Sno'] ?? '',
+      // json['Remarks'] ?? '',
+      // json['goods_status'] ?? '',
+      // json['approval_status'] ?? '',
+      // json['Currency_Name'] ?? '',
+      // json['Total_Without_Vt'] ?? '',
+      // json['Total_Vt'] ?? '',
+      // json['Item_Qty'] ?? '',
+      // json['Item_Unit_Price'] ?? '',
+      // json['Item_Total_Amount'] ?? '',
+      // json['Chus_Mas_No'] ?? '',
+      // json['delivery_status'] ?? '',
+      // json['Inv_Det_Sno'] ?? '',
     );
   }
 }
@@ -295,7 +295,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildInvoiceRow('Customer11 name:', widget.invoice.customerName),
+              _buildInvoiceRow('Customer name:', widget.invoice.customerName),
               const SizedBox(height: 5),
               _buildInvoiceRow('Invoice N°:', widget.invoice.invoiceNumber),
               const SizedBox(height: 5),
@@ -307,7 +307,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
               const SizedBox(height: 5),
               _buildInvoiceRow('Status:', _buildStatusContainer()),
               const SizedBox(height: 5),
-              _buildInvoiceRow('Total:', "${widget.invoice.total}  ${widget.invoice.currencyCode}"),
+              _buildInvoiceRow('Total:', "${widget.invoice.total.toString()}  ${widget.invoice.currencyCode}"),
               const SizedBox(height: 5),
               _buildInvoiceRow('Due Date:', formatDate(widget.invoice.dueDate)),
               const SizedBox(height: 5),
@@ -531,11 +531,11 @@ Future<void> cancelInvoice() async {
       "edate": DateTime.now().toIso8601String(), // End date
       "iedate": DateTime.now().toIso8601String(), // Invoice expired date
       "ptype": widget.invoice.paymentType, // Payment type
-      "chus": widget.invoice.invMasNo, // Customer number
+      // "chus": widget.invoice.invMasNo, // Customer number
       "comno": 0, // Company number
       "ccode": widget.invoice.currencyCode, // Currency code
       "ctype": "0", // Placeholder for type information
-      "cino": widget.invoice.controlNumber, // Control number
+      // "cino": widget.invoice.controlNumber, // Control number
       "twvat": "", // Total without VAT
       "vtamou": "", // VAT amount
       "total": widget.invoice.total.toString(), // Total amount
@@ -547,27 +547,27 @@ Future<void> cancelInvoice() async {
       "details": [
         {
           "Inv_Mas_Sno": widget.invoice.invMasSno,
-          "Inv_Det_Sno": widget.invoice.invDetSno,
+          // "Inv_Det_Sno": widget.invoice.invDetSno,
           "Invoice_Date": widget.invoice.invoiceDate,
           "Payment_Type": widget.invoice.paymentType,
           "Invoice_No": widget.invoice.invoiceNumber,
           "Due_Date": widget.invoice.dueDate,
           "Invoice_Expired_Date": widget.invoice.expiryDate,
-          "Chus_Mas_No": widget.invoice.invMasNo,
+          // "Chus_Mas_No": widget.invoice.invMasNo,
           "Chus_Name": widget.invoice.customerName,
           "Com_Mas_Sno": widget.invoice.compid,
-          "Company_Name": widget.invoice.companyName,
+          // "Company_Name": widget.invoice.companyName,
           // "Inv_Remarks": null,
-          "Remarks": widget.invoice.remarks,
+          // "Remarks": widget.invoice.remarks,
           // "vat_category": null,
           "Currency_Code": widget.invoice.currencyCode,
-          "Currency_Name": widget.invoice.currencyName,
-          "Total_Without_Vt": widget.invoice.totalWithoutVAT,
-          "Total_Vt": widget.invoice.totalVAT,
-          "Total": widget.invoice.total,
-          "Item_Qty": widget.invoice.itemQty,
-          "Item_Unit_Price": widget.invoice.itemUnitPrice,
-          "Item_Total_Amount": widget.invoice.itemTotalAmount,
+          // "Currency_Name": widget.invoice.currencyName,
+          // "Total_Without_Vt": widget.invoice.totalWithoutVAT,
+          // "Total_Vt": widget.invoice.totalVAT,
+          // "Total": widget.invoice.total,
+          // "Item_Qty": widget.invoice.itemQty,
+          // "Item_Unit_Price": widget.invoice.itemUnitPrice,
+          // "Item_Total_Amount": widget.invoice.itemTotalAmount,
           // "Vat_Percentage": widget.invoice.vatPercentage,
           // "Vat_Amount": widget.invoice.vatAmount,
           // "Item_Without_vat": widget.invoice.itemWithoutVAT,
@@ -580,7 +580,7 @@ Future<void> cancelInvoice() async {
           // "Audit_Date": DateTime.now().toIso8601String(),
           // "grand_count": widget.invoice.grandCount,
           // "daily_count": widget.invoice.dailyCount,
-          "approval_status": widget.invoice.approvalStatus,
+          // "approval_status": widget.invoice.approvalStatus,
           // "approval_date": DateTime.now().toIso8601String(),
           // "p_date": widget.invoice.pDate,
           // "Customer_ID_Type": widget.invoice.customerIDType,
@@ -591,7 +591,7 @@ Future<void> cancelInvoice() async {
           // "Zreport_Date": widget.invoice.zreportDate,
           // "Zreport_Date1": widget.invoice.zreportDate1,
           // "Zreport_Date2": widget.invoice.zreportDate2,
-          "Control_No": widget.invoice.controlNumber,
+          // "Control_No": widget.invoice.controlNumber,
           "Reason": _reasonController.text, // Reason for cancellation
           "Status": widget.invoice.status,
           "Mobile": "",
@@ -602,7 +602,7 @@ Future<void> cancelInvoice() async {
       "sno": widget.invoice.invMasSno,
       // "warrenty": widget.invoice.warranty, // Warranty details
       // "goods_status": widget.invoice.goodsStatus, // Goods status
-      "delivery_status": widget.invoice.deliveryStatus, // Delivery status
+      // "delivery_status": widget.invoice.deliveryStatus, // Delivery status
       "reason": _reasonController.text, // Cancellation reason
       "userid": userID, // User ID
     };
