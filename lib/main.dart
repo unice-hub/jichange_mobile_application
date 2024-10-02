@@ -8,6 +8,7 @@ import 'pages/login/login_page.dart';
 import 'pages/login/forgot_password_page.dart';
 import 'pages/login/vendor_registration_page.dart';
 import 'pages/profile_page.dart';
+import 'pages/create_invoice.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,6 +32,7 @@ class MyApp extends StatelessWidget {
         '/forgot-password': (context) => const ForgotPasswordPage(),
         '/register': (context) => const VendorRegistrationPage(),
         '/profile': (context) => const ProfilePage(),
+        '/create_invoice': (context) => const CreateInvoicePage(),
       },
     );
   }
