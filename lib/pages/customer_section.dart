@@ -17,10 +17,7 @@ class _CustomerSectionState extends State<CustomerSection> {
   List<Customer> customers = [];
   String searchQuery = "";
   String _token = 'Not logged in';
-  // int _userID = 0;
-  // int _instID = 0;
-  // String _braid = 'Unknown';
-  // String _userName = 'Unknown';
+  
   bool isLoading = true; // To show loading indicator while fetching data
 
   @override
@@ -50,7 +47,7 @@ class _CustomerSectionState extends State<CustomerSection> {
       int instituteID = prefs.getInt('instID') ?? 0;
 
       // Log the request to debug the API call
-      log('Making API request with token: $_token and instituteID: $instituteID');
+      // log('Making API request with token: $_token and instituteID: $instituteID');
 
       final response = await http.post(
         Uri.parse(url),
@@ -62,8 +59,8 @@ class _CustomerSectionState extends State<CustomerSection> {
         body: jsonEncode({"vendors": [instituteID]}),
       );
 
-      log('API Status Code: ${response.statusCode}');
-      log('API Response Body: ${response.body}');
+      // log('API Status Code: ${response.statusCode}');
+      // log('API Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = jsonDecode(response.body);
@@ -454,7 +451,8 @@ void _viewCustomer(Customer customer) async {
 
       } else {
         // Other exceptions
-        _showErrorDialog('An unexpected error occurred. Please try again.');
+        _showErrorDialog('An unexpected error occurred. Please try again.\n' + e.toString());
+        log(e.toString());
         
       }
       return null;
@@ -478,6 +476,7 @@ void _viewCustomer(Customer customer) async {
           name: customer.name,
           email: customer.email,
           mobile: customer.mobileNumber,
+          custSno: customer.id,
         ),
       ),
     );
@@ -921,12 +920,14 @@ class Customer {
   final String name;
   final String email;
   final String mobileNumber;
+ 
 
   Customer({
     required this.id,
     required this.name,
     required this.email,
     required this.mobileNumber,
+  
   });
 
   // Factory method to create a Customer object from JSON
@@ -936,6 +937,7 @@ class Customer {
       name: json['Cust_Name'] ?? 'Unknown',
       email: json['Email'] ?? 'Unknown',
       mobileNumber: json['Phone'] ?? 'Unknown',
+     
     );
   }
 }

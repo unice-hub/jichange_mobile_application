@@ -9,6 +9,7 @@ class CustomerDetailsPage extends StatefulWidget {
   final String name;
   final String email;
   final String mobile;
+  final int custSno;
   
 
   const CustomerDetailsPage({
@@ -16,6 +17,7 @@ class CustomerDetailsPage extends StatefulWidget {
     required this.name,
     required this.email,
     required this.mobile,
+    required this.custSno,
   });
 
   @override
@@ -55,7 +57,7 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
       final prefs = await SharedPreferences.getInstance();
       int instituteID = prefs.getInt('instID') ?? 0;
       int userID = prefs.getInt('userID') ?? 0;
-      log(userID.toString());
+      // log(userID.toString());
 
       final response = await http.post(
         Uri.parse(url),
@@ -66,13 +68,12 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
         },
         body: jsonEncode({
           "companyIds": [instituteID],
-          "customerIds": [50195],
-          "stdate": "",
+          "customerIds": [widget.custSno],
           "enddate": "",
-          "allowCancelInvoice": true
+          "allowCancelInvoice": false //true//false
         }),
       );
-
+      log(widget.custSno.toString());
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = jsonDecode(response.body);
         if (responseBody['response'] is List) {
@@ -91,6 +92,7 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
       }
     } catch (e) {
       _showSnackBar('Error: $e');
+      log(e.toString());
     }
   }
 
@@ -147,6 +149,7 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
                     Text('Name: ${widget.name}'),
                     Text('Email: ${widget.email}'),
                     Text('Mobile: ${widget.mobile}'),
+                    // Text('custSno: ${widget.custSno}'),
                   ],
                 ),
               ),
@@ -230,8 +233,8 @@ class TransactionCardData {
 
   factory TransactionCardData.fromJson(Map<String, dynamic> json, int userID){
     return TransactionCardData(
-      json['Invoice_Date'],
       json['Invoice_No'],
+      json['Invoice_Date'],
       json['Control_No'],
       json['Total'],
       json['Status'],
@@ -277,14 +280,15 @@ class _TransactionCardState extends State<TransactionCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text('Created: ${widget.created}'),
               Text(
                 'Invoice No: ${widget.invoiceNo}',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 5),
-              Text('Created: ${widget.created}'),
+              Text('Control N°:  ${widget.controlNo}'),
               const SizedBox(height: 5),
-              Text('Amount:  \$${widget.amount}'),
+              Text('Amount:  ${widget.amount}'),
               const SizedBox(height: 5),
               Text(
                 'Status: ${widget.status}',
@@ -297,9 +301,10 @@ class _TransactionCardState extends State<TransactionCard> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('Control No: ${widget.controlNo}'),
+                      const Text('Action(s):'),
                       IconButton(
                         icon: const Icon(Icons.visibility),
+                        
                         onPressed: () {
                           // Action for viewing control number details
                         },
