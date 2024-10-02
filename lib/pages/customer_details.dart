@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:developer';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 
 class CustomerDetailsPage extends StatefulWidget {
   final String name;
   final String email;
   final String mobile;
+  
 
   const CustomerDetailsPage({
     super.key,
@@ -19,25 +24,86 @@ class CustomerDetailsPage extends StatefulWidget {
 
 class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
   final TextEditingController _searchController = TextEditingController();
-  final List<TransactionCardData> _transactions = [
-    TransactionCardData('F9032', 'Fri Sep 06 2024', 'T00070213', '111,000 TZS', 'Approved'),
-    TransactionCardData('F9033', 'Fri Sep 07 2024', 'T00070214', '50,000 TZS', 'Pending'),
-    // Add more transaction data as needed
-  ];
+
+  String searchQuery = "";
+  String _token = 'Not logged in';
+  bool isLoading = true;
+  List<TransactionCardData> _transactions = [];
   List<TransactionCardData> _filteredTransactions = [];
+
+
 
   @override
   void initState() {
     super.initState();
     _filteredTransactions = _transactions;
+    _loadSessionInfo();
   }
 
+  Future<void> _loadSessionInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _token = prefs.getString('token') ?? 'Not logged in';
+    });
+    _fetchInvoicesData();
+  }
+
+  Future<void> _fetchInvoicesData() async {
+    const url = 'http://192.168.100.50:98/api/RepCompInvoice/GetInvReport';
+    
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      int instituteID = prefs.getInt('instID') ?? 0;
+      int userID = prefs.getInt('userID') ?? 0;
+      log(userID.toString());
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode({
+          "companyIds": [instituteID],
+          "customerIds": [50195],
+          "stdate": "",
+          "enddate": "",
+          "allowCancelInvoice": true
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
+        if (responseBody['response'] is List) {
+          setState(() {
+            _transactions = (responseBody['response'] as List)
+                .map((item) => TransactionCardData.fromJson(item, userID))
+                .toList();
+            _filteredTransactions = _transactions; // Set filtered list to transactions
+            isLoading = false;
+          });
+        } else {
+          _showSnackBar('Unexpected data format: response is not a list');
+        }
+      } else {
+        _showSnackBar('Error: Failed to fetch invoices');
+      }
+    } catch (e) {
+      _showSnackBar('Error: $e');
+    }
+  }
+
+   void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
   void _filterTransactions(String query) {
     setState(() {
       _filteredTransactions = _transactions
           .where((transaction) => transaction.invoiceNo.toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
+    
   }
 
   @override
@@ -114,19 +180,22 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
             const SizedBox(height: 10),
             // Transaction Cards
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(8.0),
-                itemCount: _filteredTransactions.length,
-                itemBuilder: (context, index) {
-                  final transaction = _filteredTransactions[index];
-                  return TransactionCard(
-                    invoiceNo: transaction.invoiceNo,
-                    created: transaction.created,
-                    controlNo: transaction.controlNo,
-                    amount: transaction.amount,
-                    status: transaction.status,
-                  );
-                },
+              child: isLoading
+                  ? const Center(
+                    child: CircularProgressIndicator())
+                  : ListView.builder(
+                    padding: const EdgeInsets.all(8.0),
+                    itemCount: _filteredTransactions.length,
+                    itemBuilder: (context, index) {
+                      final transaction = _filteredTransactions[index];
+                      return TransactionCard(
+                        invoiceNo: transaction.invoiceNo,
+                        created: transaction.created,
+                        controlNo: transaction.controlNo,
+                        amount: transaction.amount,
+                        status: transaction.status,
+                      );
+                    },
               ),
             ),
           ],
@@ -148,17 +217,33 @@ class TransactionCardData {
   final String invoiceNo;
   final String created;
   final String controlNo;
-  final String amount;
+  final double amount;
   final String status;
 
-  TransactionCardData(this.invoiceNo, this.created, this.controlNo, this.amount, this.status);
+  TransactionCardData(
+    this.invoiceNo, 
+    this.created, 
+    this.controlNo, 
+    this.amount, 
+    this.status
+  );
+
+  factory TransactionCardData.fromJson(Map<String, dynamic> json, int userID){
+    return TransactionCardData(
+      json['Invoice_Date'],
+      json['Invoice_No'],
+      json['Control_No'],
+      json['Total'],
+      json['Status'],
+    );
+  }
 }
 
 class TransactionCard extends StatefulWidget {
   final String invoiceNo;
   final String created;
   final String controlNo;
-  final String amount;
+  final double amount;
   final String status;
 
   const TransactionCard({
@@ -199,7 +284,7 @@ class _TransactionCardState extends State<TransactionCard> {
               const SizedBox(height: 5),
               Text('Created: ${widget.created}'),
               const SizedBox(height: 5),
-              Text('Amount: ${widget.amount}'),
+              Text('Amount:  \$${widget.amount}'),
               const SizedBox(height: 5),
               Text(
                 'Status: ${widget.status}',
