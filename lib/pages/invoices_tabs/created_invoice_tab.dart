@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:learingdart/core/api/invoice_apis.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../invoices_section.dart';
@@ -36,51 +37,68 @@ class _CreatedInvoiceTabState extends State<CreatedInvoiceTab> {
   }
 
   Future<void> _loadSessionInfo() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _token = prefs.getString('token') ?? 'Not logged in';
-    });
+    // final prefs = await SharedPreferences.getInstance();
+    // setState(() {
+    //   _token = prefs.getString('token') ?? 'Not logged in';
+    // });
     _fetchInvoicesData();
   }
 
   Future<void> _fetchInvoicesData() async {
-    const url = 'http://192.168.100.50:98/api/Invoice/GetchDetails';
-    
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      int instituteID = prefs.getInt('instID') ?? 0;
-      int userID = prefs.getInt('userID') ?? 0;
-      log(userID.toString());
-
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $_token',
-        },
-        body: jsonEncode({"compid": instituteID}),
-      );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseBody = jsonDecode(response.body);
-        if (responseBody['response'] is List) {
-          setState(() {
-            createdInvoices = (responseBody['response'] as List)
+    final prefs = await SharedPreferences.getInstance();
+    int instituteID = prefs.getInt('instID') ?? 0;
+    int userID = prefs.getInt('userID') ?? 0;
+    final Map<String,int> body = {
+      "compid": instituteID
+    };
+    final getchDetails = await InvoiceApis.getchDetails.sendRequest(body: body);
+    log(getchDetails.toString());
+              setState(() {
+            createdInvoices = (getchDetails['response'] as List)
                 .map((item) => InvoiceData.fromJson(item, userID))
                 .toList();
             isLoading = false;
           });
-        } else {
-          _showSnackBar('Unexpected data format: response is not a list');
-        }
-      } else {
-        _showSnackBar('Error: Failed to fetch invoices');
-      }
-    } catch (e) {
-      _showSnackBar('Error: $e');
-    }
   }
+
+  // Future<void> _fetchInvoicesData() async {
+  //   const url = 'http://192.168.100.50:98/api/Invoice/GetchDetails';
+    
+  //   try {
+  //     final prefs = await SharedPreferences.getInstance();
+  //     int instituteID = prefs.getInt('instID') ?? 0;
+  //     int userID = prefs.getInt('userID') ?? 0;
+  //     log(userID.toString());
+
+  //     final response = await http.post(
+  //       Uri.parse(url),
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Accept': 'application/json',
+  //         'Authorization': 'Bearer $_token',
+  //       },
+  //       body: jsonEncode({"compid": instituteID}),
+  //     );
+
+  //     if (response.statusCode == 200) {
+  //       final Map<String, dynamic> responseBody = jsonDecode(response.body);
+  //       if (responseBody['response'] is List) {
+  //         setState(() {
+  //           createdInvoices = (responseBody['response'] as List)
+  //               .map((item) => InvoiceData.fromJson(item, userID))
+  //               .toList();
+  //           isLoading = false;
+  //         });
+  //       } else {
+  //         _showSnackBar('Unexpected data format: response is not a list');
+  //       }
+  //     } else {
+  //       _showSnackBar('Error: Failed to fetch invoices');
+  //     }
+  //   } catch (e) {
+  //     _showSnackBar('Error: $e');
+  //   }
+  // }
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
@@ -194,7 +212,7 @@ class InvoiceData {
   // final int itemQty;
   // final int itemUnitPrice;
   // final int itemTotalAmount;
-  // final int invMasNo;
+  final int invMasNo;
   // final String deliveryStatus;
   // final int invDetSno;
 
@@ -222,7 +240,7 @@ class InvoiceData {
     // this.itemQty,
     // this.itemUnitPrice,
     // this.itemTotalAmount,
-    // this.invMasNo,
+    this.invMasNo,
     // this.deliveryStatus,
     // this.invDetSno,
   );
@@ -243,6 +261,7 @@ class InvoiceData {
       json['Com_Mas_Sno'],
       json['Company_Name'],
       json['Control_No'],
+      
       // json['Remarks'] ?? '',
       // json['goods_status'] ?? '',
       // json['approval_status'] ?? '',
@@ -252,7 +271,7 @@ class InvoiceData {
       // json['Item_Qty'] ?? '',
       // json['Item_Unit_Price'] ?? '',
       // json['Item_Total_Amount'] ?? '',
-      // json['Chus_Mas_No'] ?? '',
+      json['Chus_Mas_No'] ?? '',
       // json['delivery_status'] ?? '',
       // json['Inv_Det_Sno'] ?? '',
     );
@@ -531,7 +550,7 @@ Future<void> cancelInvoice() async {
       "edate": DateTime.now().toIso8601String(), // End date
       "iedate": DateTime.now().toIso8601String(), // Invoice expired date
       "ptype": widget.invoice.paymentType, // Payment type
-      // "chus": widget.invoice.invMasNo, // Customer number
+      "chus": widget.invoice.invMasNo, // Customer number
       "comno": 0, // Company number
       "ccode": widget.invoice.currencyCode, // Currency code
       "ctype": "0", // Placeholder for type information

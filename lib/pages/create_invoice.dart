@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:learingdart/core/api/invoice_apis.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'dart:convert';
 import 'dart:developer';
@@ -168,47 +169,45 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
     }
   }
 
+   Future<Map<String,dynamic>> isExistInvoice(String compid, String invno) async {
+    return await InvoiceApis.isExistInvoice.sendRequest(urlParam: '?compid=$compid&invno=$invno');
+  }
+
+
   Future<void> _isExistInvoice(String compid, String invno) async {
   //  final prefs = await SharedPreferences.getInstance();
-
+  //final getchDetails = await InvoiceApis.getchDetails.sendRequest(body: body);
   // Base URL of the API
-  const String baseUrl = 'http://192.168.100.50:98/api/Invoice/IsExistInvoice';
+  // const String baseUrl = 'http://192.168.100.50:98/api/Invoice/IsExistInvoice';
 
   // Constructing the full URL with query parameters
-  String url = '$baseUrl?compid=$compid&invno=$invno';
+  //String url = '$baseUrl?compid=$compid&invno=$invno';
 
   try {
       // Sending the GET request
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/pdf',
-          'Authorization': 'Bearer $_token',
-        },
-      );
+      // final response = await http.get(
+      //   Uri.parse(url),
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     'Accept': 'application/pdf',
+      //     'Authorization': 'Bearer $_token',
+      //   },
+      // );
 
       // Handling the response
-      if (response.statusCode == 200) {
-        final responseBody = jsonDecode(response.body);
+        //final responseBody = jsonDecode(response.body);
+        final exists = await isExistInvoice(compid,invno);
 
         // Checking if the "response" field is true or false
-        if (responseBody['response'] == true) {
+        if (exists['response'] == true) {
           setState(() {
             invoiceErrorMessage = 'Invoice number already exists'; // Display the error
           });
-        } else if (responseBody['response'] == false) {
+        } else {
           setState(() {
             invoiceErrorMessage = null; // No error message as invoice does not exist
           });
 
-      }
-       
-      } else {
-        // Handling non-200 status codes
-          setState(() {
-            invoiceErrorMessage = 'Error checking invoice number'; // General error message
-        });
       }
   } catch (e) {
     // Handle any exception
