@@ -1,8 +1,10 @@
+// import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+// import 'dart:convert';
 import 'dart:developer';
 
 class CreateInvoicePage extends StatefulWidget {
@@ -15,6 +17,7 @@ class CreateInvoicePage extends StatefulWidget {
 class _CreateInvoicePageState extends State<CreateInvoicePage> {
   String searchQuery = "";
   String _token = 'Not logged in';
+  int compid = 0;
   bool isLoading = true;
 
   String? selectedCustomer;
@@ -27,28 +30,43 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
   final TextEditingController quantityController = TextEditingController();
   final TextEditingController unitPriceController = TextEditingController();
   double totalPrice = 0;
+  int cusMasSno = -1;
 
   // List to hold added items
   List<Map<String, dynamic>> addedItems = [];
 
   // Sample customer list
-  List<String> customers = [];
+  List<dynamic> customers = [];
   List<String> paymentTypes = ['Fixed', 'Flexible'];
   List<String> currency = [];
+
+  TextEditingController invoiceNumberController = TextEditingController();
+  TextEditingController remarks = TextEditingController();
+  String? invoiceErrorMessage;
 
   @override
   void initState() {
     super.initState();
     _loadSessionInfo() ;
+
+     // Add a listener to the invoice number field to check if it exists
+    invoiceNumberController.addListener(() {
+      String invno = invoiceNumberController.text;
+      if (invno.isNotEmpty) {
+        _isExistInvoice(compid.toString(), invno);
+      }
+    });
   }
 
   Future<void> _loadSessionInfo() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _token = prefs.getString('token') ?? 'Not logged in';
+      compid = prefs.getInt('instID')?? 0;
     });
     _fetchCustomerName();
     _fetchCurrency();
+    // _isExistInvoice(compid, invno);
   }
   
   Future<void> _fetchCustomerName() async {
@@ -73,11 +91,12 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
 
         if (response.statusCode == 200) {
           final jsonResponse = json.decode(response.body);
-          final List<dynamic> customerName = jsonResponse['response'];
-          setState(() {
-             customers = customerName.map((branch) => branch['Customer_Name'] as String).toList();
-            isLoading = false;
-          });
+          customers = jsonResponse['response'];
+          
+          // setState(() {
+          //    customers = customerName.map((branch) => branch['Customer_Name'] ['Cus_Mas_Sno'] as String).toList();
+          //   isLoading = false;
+          // });
           
         } else {
           throw Exception('Failed to load branches');
@@ -149,6 +168,57 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
     }
   }
 
+  Future<void> _isExistInvoice(String compid, String invno) async {
+  //  final prefs = await SharedPreferences.getInstance();
+
+  // Base URL of the API
+  const String baseUrl = 'http://192.168.100.50:98/api/Invoice/IsExistInvoice';
+
+  // Constructing the full URL with query parameters
+  String url = '$baseUrl?compid=$compid&invno=$invno';
+
+  try {
+      // Sending the GET request
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/pdf',
+          'Authorization': 'Bearer $_token',
+        },
+      );
+
+      // Handling the response
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+
+        // Checking if the "response" field is true or false
+        if (responseBody['response'] == true) {
+          setState(() {
+            invoiceErrorMessage = 'Invoice number already exists'; // Display the error
+          });
+        } else if (responseBody['response'] == false) {
+          setState(() {
+            invoiceErrorMessage = null; // No error message as invoice does not exist
+          });
+
+      }
+       
+      } else {
+        // Handling non-200 status codes
+          setState(() {
+            invoiceErrorMessage = 'Error checking invoice number'; // General error message
+        });
+      }
+  } catch (e) {
+    // Handle any exception
+    // log('Error: $e');
+    setState(() {
+      invoiceErrorMessage = 'Error checking invoice number'; // Error in the request
+    });
+  }
+}
+
   // Show error dialog in case of failure
   void _showErrorDialog(String message) {
     showDialog(
@@ -165,6 +235,141 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
       ),
     );
   }
+
+  // Function to validate inputs
+  bool _validateInputs() {
+    if (invoiceNumberController.text.isEmpty ||
+        invoiceDate == null ||
+        dueDate == null ||
+        expiryDate == null ||
+        selectedCustomer == null ||
+        selectedPaymentType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all required fields')),
+      );
+      return false;
+    }
+
+    if (addedItems.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please add at least one item to submit.')),
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  // Function to show confirmation dialog
+  void _showConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm'),
+        content: const Text('Save changes?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('CLOSE'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // Close the dialog
+              _submitInvoice();
+            },
+            child: const Text('CONFIRM'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Function to submit the invoice
+  Future<void> _submitInvoice() async {
+    if (!_validateInputs()) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final int userId = prefs.getInt('userID') ?? 0;
+    final int instituteID = prefs.getInt('instID') ?? 0;
+
+     if (invoiceDate == null || dueDate == null || expiryDate == null) {
+      // Handle null dates if necessary
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all the date fields.')),
+      );
+      return;
+    }
+
+  // Calculate total invoice amount
+  final double totalAmount = addedItems.fold(0.0, (sum, item) => sum + item['total']);
+  log(totalAmount.toString());
+
+    // Preparing the data for API call
+    final Map<String, dynamic> invoiceData = {
+      'userid': userId,
+      'vtamou': 0,
+      'compid': instituteID,
+      'invno': invoiceNumberController.text,
+      'auname': totalAmount.toString(), // Example data, adjust as needed
+      'date': invoiceDate!.toIso8601String(),
+      'edate': dueDate!.toIso8601String(),
+      'iedate': expiryDate!.toIso8601String(),
+      'lastrow': 0,
+      'ptype': selectedPaymentType,
+      'sno': 0,
+      'chus': cusMasSno, // Example customer number
+      'ccode': selectedCurrency,
+      'total': totalAmount.toString(),
+      'twvat': 0,
+      'details': addedItems.map((item) {
+        return {
+          'Item_Description': item['description'],
+          'Item_Qty': item['quantity'],
+          'Item_Unit_Price': item['unitPrice'],
+          'Item_Total_Amount': item['total'],
+          'remarks': "",
+          // Add other necessary fields
+        };
+      }).toList(),
+      'Inv_remark': '', // Example, adjust as needed
+    };
+
+    const url = 'http://192.168.100.50:98/api/Invoice/AddInvoice';
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode(invoiceData),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invoice submitted successfully!')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to submit invoice.')),
+        );
+      }
+    } catch (e) {
+      log('Error submitting invoice: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occurred. Please try again.')),
+      );
+    }
+  }
+
+  // Button to trigger validation and confirmation
+  void _onSubmitButtonPressed() {
+    if (_validateInputs()) {
+      _showConfirmationDialog();
+    }
+  }
+
 
 
   Future<void> _selectDate(BuildContext context, bool isInvoiceDate) async {
@@ -193,6 +398,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
+
 
     if (picked != null) {
       setState(() {
@@ -272,15 +478,27 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const TextField(
-              decoration: InputDecoration(
+             TextField(
+              controller: invoiceNumberController,
+              decoration: const InputDecoration(
                 labelText: 'Invoice number',
                 border: OutlineInputBorder(),
                 hintText: 'Enter invoice number',
+                // errorText: invoiceErrorMessage,// Display error message
               ),
             ),
+            if (invoiceErrorMessage != null) 
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  invoiceErrorMessage!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
             const SizedBox(height: 16),
+
             InkWell(
               onTap: () => _selectDate(context, true),
               child: InputDecorator(
@@ -295,6 +513,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
               ),
             ),
             const SizedBox(height: 16),
+
             InkWell(
               onTap: () => _selectDate(context, false),
               child: InputDecorator(
@@ -332,10 +551,11 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
               value: selectedCustomer,
               isExpanded: true,
               hint: const Text('Select Customer'),
-              items: customers.map((String value) {
+              items: customers.map((dynamic value) {
                 return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value, overflow: TextOverflow.ellipsis),
+                  value: value['Cus_Mas_Sno'].toString(),
+                  onTap: () => {cusMasSno = value['Cus_Mas_Sno']},
+                  child: Text(value['Customer_Name'], overflow: TextOverflow.ellipsis),
                 );
               }).toList(),
               onChanged: (newValue) {
@@ -397,8 +617,10 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
             ),
             
             const SizedBox(height: 16),
-            const TextField(
-              decoration: InputDecoration(
+
+            TextField(
+              controller: remarks,
+              decoration: const InputDecoration(
                 labelText: 'Invoice remarks (Optional)',
                 border: OutlineInputBorder(),
                 hintText: 'Enter invoice remarks',
@@ -502,7 +724,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
             // Submit button
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: submitInvoice,
+              onPressed: _onSubmitButtonPressed,
               child: const Text('Submit'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blueAccent,
