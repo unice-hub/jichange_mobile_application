@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:learingdart/core/api/invoice_apis.dart';
+import 'package:learingdart/core/entities/full_invoice_data.dart';
+import 'package:learingdart/core/entities/invoice_data.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../invoices_section.dart';
@@ -26,9 +28,11 @@ class CreatedInvoiceTab extends StatefulWidget {
 
 class _CreatedInvoiceTabState extends State<CreatedInvoiceTab> {
   String searchQuery = "";
-  String _token = 'Not logged in';
+  // String _token = 'Not logged in';
   bool isLoading = true;
   List<InvoiceData> createdInvoices = [];
+  // List<RawInvoice> findRawInvoice  = [];
+  
   
   @override
   void initState() {
@@ -45,60 +49,74 @@ class _CreatedInvoiceTabState extends State<CreatedInvoiceTab> {
   }
 
   Future<void> _fetchInvoicesData() async {
+  try {
     final prefs = await SharedPreferences.getInstance();
     int instituteID = prefs.getInt('instID') ?? 0;
     int userID = prefs.getInt('userID') ?? 0;
-    final Map<String,int> body = {
+
+    // Body of the API request
+    final Map<String, int> body = {
       "compid": instituteID
     };
+
+    // Start loading
+    setState(() {
+      isLoading = true;
+    });
+
+    // Make the API request
     final getchDetails = await InvoiceApis.getchDetails.sendRequest(body: body);
-    log(getchDetails.toString());
-              setState(() {
-            createdInvoices = (getchDetails['response'] as List)
-                .map((item) => InvoiceData.fromJson(item, userID))
-                .toList();
-            isLoading = false;
-          });
+
+    // Check if the response is valid
+    if (getchDetails['response'] != null) {
+      setState(() {
+        createdInvoices = (getchDetails['response'] as List)
+            .map((item) => InvoiceData.fromJson(item, userID))
+            .toList();
+      });
+    } else {
+      // Handle empty or invalid response
+      _showErrorDialog("Invalid response from the server.");
+    }
+  } 
+  on http.ClientException {
+        _showErrorDialog("No internet connection. Please check your network.");
+  } on HttpException {
+    // Handle server-related errors
+    _showErrorDialog("Couldn't retrieve data from the server.");
+  } on FormatException {
+    // Handle invalid response format (JSON parsing errors)
+    _showErrorDialog("Invalid response format.");
+  } catch (e) {
+    // Handle any other errors
+    _showErrorDialog("An unexpected error occurred: $e");
+  } finally {
+    // Stop loading in any case
+    setState(() {
+      isLoading = false;
+    });
   }
+}
 
-  // Future<void> _fetchInvoicesData() async {
-  //   const url = 'http://192.168.100.50:98/api/Invoice/GetchDetails';
-    
-  //   try {
-  //     final prefs = await SharedPreferences.getInstance();
-  //     int instituteID = prefs.getInt('instID') ?? 0;
-  //     int userID = prefs.getInt('userID') ?? 0;
-  //     log(userID.toString());
+// Function to show error dialog
+void _showErrorDialog(String message) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text("Error"),
+      content: Text(message),
+      actions: <Widget>[
+        TextButton(
+          child: const Text("OK"),
+          onPressed: () {
+            Navigator.of(ctx).pop();
+          },
+        ),
+      ],
+    ),
+  );
+}
 
-  //     final response = await http.post(
-  //       Uri.parse(url),
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         'Accept': 'application/json',
-  //         'Authorization': 'Bearer $_token',
-  //       },
-  //       body: jsonEncode({"compid": instituteID}),
-  //     );
-
-  //     if (response.statusCode == 200) {
-  //       final Map<String, dynamic> responseBody = jsonDecode(response.body);
-  //       if (responseBody['response'] is List) {
-  //         setState(() {
-  //           createdInvoices = (responseBody['response'] as List)
-  //               .map((item) => InvoiceData.fromJson(item, userID))
-  //               .toList();
-  //           isLoading = false;
-  //         });
-  //       } else {
-  //         _showSnackBar('Unexpected data format: response is not a list');
-  //       }
-  //     } else {
-  //       _showSnackBar('Error: Failed to fetch invoices');
-  //     }
-  //   } catch (e) {
-  //     _showSnackBar('Error: $e');
-  //   }
-  // }
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
@@ -187,6 +205,8 @@ class _CreatedInvoiceTabState extends State<CreatedInvoiceTab> {
     );
   }
 }
+
+
 
 class InvoiceData {
   final String customerName;
@@ -417,6 +437,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
           }),
           _buildIconActionButton(Icons.cancel, 'Cancel', () {
             // Define the action to cancel
+            _findInvoice(widget.invoice.compid.toString(), widget.invoice.invMasSno.toString());
             _showCancelPopup();
           }),
         ],
@@ -554,74 +575,26 @@ Future<void> cancelInvoice() async {
       "comno": 0, // Company number
       "ccode": widget.invoice.currencyCode, // Currency code
       "ctype": "0", // Placeholder for type information
-      // "cino": widget.invoice.controlNumber, // Control number
-      "twvat": "", // Total without VAT
-      "vtamou": "", // VAT amount
+      "cino": "0", // Control number
+      "twvat": 0, // Total without VAT
+      "vtamou": 0, // VAT amount
       "total": widget.invoice.total.toString(), // Total amount
       "Inv_remark": "", // Invoice remarks
       "lastrow": 0, // Last row
-      // "userid": userID, // User ID
-
-      // Invoice details section
       "details": [
         {
           "Inv_Mas_Sno": widget.invoice.invMasSno,
-          // "Inv_Det_Sno": widget.invoice.invDetSno,
           "Invoice_Date": widget.invoice.invoiceDate,
           "Payment_Type": widget.invoice.paymentType,
           "Invoice_No": widget.invoice.invoiceNumber,
-          "Due_Date": widget.invoice.dueDate,
           "Invoice_Expired_Date": widget.invoice.expiryDate,
-          // "Chus_Mas_No": widget.invoice.invMasNo,
-          "Chus_Name": widget.invoice.customerName,
-          "Com_Mas_Sno": widget.invoice.compid,
-          // "Company_Name": widget.invoice.companyName,
-          // "Inv_Remarks": null,
-          // "Remarks": widget.invoice.remarks,
-          // "vat_category": null,
-          "Currency_Code": widget.invoice.currencyCode,
-          // "Currency_Name": widget.invoice.currencyName,
-          // "Total_Without_Vt": widget.invoice.totalWithoutVAT,
-          // "Total_Vt": widget.invoice.totalVAT,
-          // "Total": widget.invoice.total,
-          // "Item_Qty": widget.invoice.itemQty,
-          // "Item_Unit_Price": widget.invoice.itemUnitPrice,
-          // "Item_Total_Amount": widget.invoice.itemTotalAmount,
-          // "Vat_Percentage": widget.invoice.vatPercentage,
-          // "Vat_Amount": widget.invoice.vatAmount,
-          // "Item_Without_vat": widget.invoice.itemWithoutVAT,
-          // "Item_Description": widget.invoice.itemDescription,
-          "AuditBy": "Admin", // Audit by user
-          // "warrenty": widget.invoice.warranty, // Warranty details
-          // "Vat_Type": widget.invoice.vatType,
-          // "goods_status": widget.invoice.goodsStatus,
-          // "delivery_status": widget.invoice.deliveryStatus,
-          // "Audit_Date": DateTime.now().toIso8601String(),
-          // "grand_count": widget.invoice.grandCount,
-          // "daily_count": widget.invoice.dailyCount,
-          // "approval_status": widget.invoice.approvalStatus,
-          // "approval_date": DateTime.now().toIso8601String(),
-          // "p_date": widget.invoice.pDate,
-          // "Customer_ID_Type": widget.invoice.customerIDType,
-          // "Customer_ID_No": widget.invoice.customerIDNo,
-          // "Zreport_Sno": widget.invoice.zreportSno,
-          // "Zreport_Status": widget.invoice.zreportStatus,
-          // "Zreport_Status1": widget.invoice.zreportStatus1,
-          // "Zreport_Date": widget.invoice.zreportDate,
-          // "Zreport_Date1": widget.invoice.zreportDate1,
-          // "Zreport_Date2": widget.invoice.zreportDate2,
-          // "Control_No": widget.invoice.controlNumber,
           "Reason": _reasonController.text, // Reason for cancellation
           "Status": widget.invoice.status,
           "Mobile": "",
-          "Email": "",
         }
       ],
 
       "sno": widget.invoice.invMasSno,
-      // "warrenty": widget.invoice.warranty, // Warranty details
-      // "goods_status": widget.invoice.goodsStatus, // Goods status
-      // "delivery_status": widget.invoice.deliveryStatus, // Delivery status
       "reason": _reasonController.text, // Cancellation reason
       "userid": userID, // User ID
     };
@@ -637,9 +610,7 @@ Future<void> cancelInvoice() async {
     );
 
     if (response.statusCode == 200) {
-      final Map<String, dynamic> responseBody = jsonDecode(response.body);
-      // Handle success, e.g., showing a snackbar or downloading the PDF
-      _showSnackBar('Invoice cancelled successfully $responseBody');
+      _showSnackBar('Invoice cancelled successfully');
     } else {
       _showSnackBar('Failed to cancel the invoice');
     }
@@ -648,17 +619,36 @@ Future<void> cancelInvoice() async {
   }
 }
 
+   List<RawInvoice> findRawInvoice  = [];
+  Future<Map<String,dynamic>> findInvoice(String compid, String invno) async {
+    return await InvoiceApis.findInvoice.sendRequest(urlParam: '?compid=$compid&inv=$invno');
+  }
 
+  Future<void> _findInvoice(String compid, String invno) async {
+  try {
+        final exists = await findInvoice(compid,invno);
 
-    // ScaffoldMessenger.of(context).showSnackBar(
-    //   SnackBar(content: Text('Invoice "${widget.invoice.invoiceNumber}" cancelled')),
-    // );
-    // Add logic here to trigger the cancellation API or further actions
+        // Checking if the "response" field is true or false
+        if (exists['response'] != null) {
 
-  // }
+          setState(() {
+            findRawInvoice = (exists['response'] as List)
+                .map((item) => RawInvoice.fromJson(item))
+                .toList();
+          });
+          
+        } else {
+          setState(() {
+            _showSnackBar ('Failed to find the invoice'); // No error message as invoice does not exist
+          });
 
-
- 
+      }
+  } catch (e) {
+    setState(() {
+      _showSnackBar ('Error checking invoice number'); // Error in the request
+    });
+  }
+}
 
 Future<void> _downloadInvoicePDF(String compid, String inv) async {
   // Base URL of the API
@@ -756,8 +746,6 @@ Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPresse
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
-
-
 
   Widget _buildActionButton(String label, VoidCallback onPressed) {
     return ElevatedButton(

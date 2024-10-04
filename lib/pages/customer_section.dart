@@ -451,7 +451,7 @@ void _viewCustomer(Customer customer) async {
 
       } else {
         // Other exceptions
-        _showErrorDialog('An unexpected error occurred. Please try again.\n' + e.toString());
+        _showErrorDialog('An unexpected error occurred. Please try again.\n$e');
         log(e.toString());
         
       }

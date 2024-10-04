@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:learingdart/core/enums/request_method.dart';
@@ -78,27 +76,15 @@ class RequestHandler {
       final ResponseBody responseBody =
           json.decode(utf8.decode(response.bodyBytes));
 
-      /// if status equals null return the error response
-      // if (responseBody['status'].runtimeType == bool) {
-      //   return responseBody;
-      // }
-      // return LocalResponseModel.errorResponse(message: responseBody['message'][0])
-      //     .toMap();
-      // final Iterable<dynamic> message = responseBody['message'];
-      // final dynamic res = responseBody['response'];
-      // if (message.isNotEmpty && res as int == 0) {
-      //   throw message.first;
-      // }
-      // else {
-      //   return res;
-      // }
       return responseBody;
+
     } catch (e) {
       if (kDebugMode) {
         print('There is an issue with : $urlString');
         print(e);
       }
-      return LocalResponseModel.errorResponse().toMap();
+      rethrow;
+      //return LocalResponseModel.errorResponse().toMap();
     }
 }
 
