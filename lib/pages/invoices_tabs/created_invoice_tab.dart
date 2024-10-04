@@ -1,8 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:learingdart/core/api/invoice_apis.dart';
-import 'package:learingdart/core/entities/full_invoice_data.dart';
-import 'package:learingdart/core/entities/invoice_data.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../invoices_section.dart';
@@ -370,24 +368,39 @@ class _InvoiceCardState extends State<_InvoiceCard> {
   }
 
   Widget _buildApprovalRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Text('Approve:'),
-        ElevatedButton(
-          onPressed: () {
-            // Define the action to perform when the button is pressed
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: widget.invoice.approve == 'Access' ? Colors.blue : Colors.yellow,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-          child: Text(widget.invoice.approve, style: const TextStyle(color: Colors.white)),
-        ),
-      ],
-    );
-  }
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      const Text('Approve:'),
+      widget.invoice.approve == 'Access'
+          ? ElevatedButton(
+              onPressed: () {
+                // Define the action to perform when the button is pressed
+                _showAccessConfirmationPopup();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Access',
+                style: TextStyle(color: Colors.black),
+              ),
+            )
+          : const Text(
+              ' No Access ',
+              style: TextStyle(
+                backgroundColor: Colors.yellow,
+                color: Colors.black, // Color for 'No Access' text
+                // fontWeight: FontWeight.bold,
+              ),
+            ),
+    ],
+  );
+}
 
   Widget _buildPaymentTypeContainer() {
     return Container(
@@ -434,6 +447,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
           }),
           _buildIconActionButton(Icons.edit, 'Edit', () {
             // Define the action to edit the invoice
+            Navigator.pushNamed(context, '/create_invoice');
           }),
           _buildIconActionButton(Icons.cancel, 'Cancel', () {
             // Define the action to cancel
@@ -535,6 +549,127 @@ void _confirmCancellation() {
   cancelInvoice();
 }
 
+void _showAccessConfirmationPopup() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Cancel Invoice'),
+          content: Text(
+            'Are you sure you want to approve invoice "${widget.invoice.invoiceNumber}"?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the popup
+              },
+              child: const Text('Close'),
+            ),
+            TextButton(
+              onPressed: () {
+                _confirmApprovellation();
+              },
+              child: const Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _confirmApprovellation() {
+  Navigator.pop(context); // Close the confirmation popup
+  approvelInvoice();
+}
+
+bool isLoading = true;
+
+Future<void> approvelInvoice() async {
+  try {
+    // SharedPreferences to get stored values
+    final prefs = await SharedPreferences.getInstance();
+    int instituteID = prefs.getInt('instID') ?? 0;
+    int userID = prefs.getInt('userID') ?? 0;
+    String token = prefs.getString('token') ?? ''; // Token from SharedPreferences
+
+    // Define your API URL
+    const String url = 'http://192.168.100.50:98/api/Invoice/AddInvoice';
+
+    // Prepare the body with necessary details
+    Map<String, dynamic> requestBody = {
+      "compid": instituteID, // Company ID
+      "invno": widget.invoice.invoiceNumber, // Invoice number
+      "auname": "", // Actual user name
+      "date": DateTime.now().toIso8601String(), // Current date
+      "edate": DateTime.now().toIso8601String(), // End date
+      "goods_status": "Approved",
+      "iedate": DateTime.now().toIso8601String(), // Invoice expired date
+      "ptype": widget.invoice.paymentType, // Payment type
+      "chus": widget.invoice.invMasNo, // Customer number
+      "comno": 0, // Company number
+      "ccode": widget.invoice.currencyCode, // Currency code
+      "ctype": "0", // Placeholder for type information
+      "cino": "0", // Control number
+      "twvat": 0, // Total without VAT
+      "vtamou": 0, // VAT amount
+      "total": widget.invoice.total.toString(), // Total amount
+      "Inv_remark": "", // Invoice remarks
+      "lastrow": 0, // Last row
+      "details": [
+        {
+          "Inv_Mas_Sno": widget.invoice.invMasSno,
+          "Invoice_Date": widget.invoice.invoiceDate,
+          "Payment_Type": widget.invoice.paymentType,
+          "Invoice_No": widget.invoice.invoiceNumber,
+          "Invoice_Expired_Date": widget.invoice.expiryDate,
+          "Reason": _reasonController.text, // Reason for cancellation
+          "Status": widget.invoice.status,
+          "Mobile": "",
+        }
+      ],
+
+      "sno": widget.invoice.invMasSno,
+      "reason": _reasonController.text, // Cancellation reason
+      "userid": userID, // User ID
+    };
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(requestBody),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        isLoading = false;
+        
+      });
+
+      _showSnackBar('Invoice approved successfully');
+    } else {
+      _showSnackBar('Failed to approve the invoice');
+    }
+  } catch (e) {
+    if (e is http.ClientException) {
+          // Network error
+          _showErrorDialog('Network error. Please check your connection and try again.');
+
+        } else {
+          // Other exceptions
+          _showErrorDialog('An unexpected error occurred. Please try again.');
+          
+        }
+    setState(() {
+      // _showSnackBar ('Error checking invoice number'); // Error in the request
+      isLoading = false;
+    });
+  }
+}
+
 String _token = 'Not logged in';
 
  @override
@@ -550,6 +685,8 @@ String _token = 'Not logged in';
       });
       
     }
+
+// bool isLoading = true;
 
 Future<void> cancelInvoice() async {
   try {
@@ -610,16 +747,33 @@ Future<void> cancelInvoice() async {
     );
 
     if (response.statusCode == 200) {
+      setState(() {
+        isLoading = false;
+        
+      });
+
       _showSnackBar('Invoice cancelled successfully');
     } else {
       _showSnackBar('Failed to cancel the invoice');
     }
   } catch (e) {
-    _showSnackBar('Error: $e');
+    if (e is http.ClientException) {
+          // Network error
+          _showErrorDialog('Network error. Please check your connection and try again.');
+
+        } else {
+          // Other exceptions
+          _showErrorDialog('An unexpected error occurred. Please try again.');
+          
+        }
+    setState(() {
+      // _showSnackBar ('Error checking invoice number'); // Error in the request
+      isLoading = false;
+    });
   }
 }
 
-   List<RawInvoice> findRawInvoice  = [];
+  //  List<RawInvoice> findRawInvoice  = [];
   Future<Map<String,dynamic>> findInvoice(String compid, String invno) async {
     return await InvoiceApis.findInvoice.sendRequest(urlParam: '?compid=$compid&inv=$invno');
   }
@@ -631,11 +785,11 @@ Future<void> cancelInvoice() async {
         // Checking if the "response" field is true or false
         if (exists['response'] != null) {
 
-          setState(() {
-            findRawInvoice = (exists['response'] as List)
-                .map((item) => RawInvoice.fromJson(item))
-                .toList();
-          });
+          // setState(() {
+          //   findRawInvoice = (exists['response'] as List)
+          //       .map((item) => RawInvoice.fromJson(item))
+          //       .toList();
+          // });
           
         } else {
           setState(() {
@@ -643,12 +797,43 @@ Future<void> cancelInvoice() async {
           });
 
       }
+  } 
+    on http.ClientException {
+        _showErrorDialog("No internet connection. Please check your network.");
+  } on HttpException {
+    // Handle server-related errors
+    _showErrorDialog("Couldn't retrieve data from the server.");
+  } on FormatException {
+    // Handle invalid response format (JSON parsing errors)
+    _showErrorDialog("Invalid response format.");
   } catch (e) {
+    // Handle any other errors
+    _showErrorDialog("An unexpected error occurred: $e");
+  } finally {
+    // Stop loading in any case
     setState(() {
-      _showSnackBar ('Error checking invoice number'); // Error in the request
+      isLoading = false;
     });
   }
+  
 }
+
+// Show error dialog in case of failure
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
 Future<void> _downloadInvoicePDF(String compid, String inv) async {
   // Base URL of the API
