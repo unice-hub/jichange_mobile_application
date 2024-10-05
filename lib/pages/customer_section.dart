@@ -492,7 +492,7 @@ void _viewCustomer(Customer customer) async {
 }
 
 
- void _showAddCustomerSheet(BuildContext context) {
+void _showAddCustomerSheet(BuildContext context) {
   // Controllers for input fields
   final nameController = TextEditingController();
   final emailController = TextEditingController();

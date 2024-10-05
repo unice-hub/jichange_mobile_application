@@ -9,6 +9,7 @@ InvoiceApis(
       super.isAuth = false});
 
   static final getchDetails = InvoiceApis(path: '/GetchDetails', method: RequestMethod.post);
+  static final addDCode = InvoiceApis(path: '/AddDCode', method: RequestMethod.post);
   static final isExistInvoice = InvoiceApis(method: RequestMethod.get,path: '/IsExistInvoice');
   static final findInvoice = InvoiceApis(method: RequestMethod.get,path: '/FindInvoice');
 }

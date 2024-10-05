@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:learingdart/core/api/invoice_apis.dart';
 // import 'package:learingdart/pages/invoices_tabs/created_invoice_tab.dart';
 import '../invoices_section.dart'; // Import Invoice class
 import 'dart:convert';
@@ -163,7 +166,7 @@ class _GeneratedInvoiceTabState extends State<GeneratedInvoiceTab> {
 class InvoiceData {
   final String customerName;
   final String invoiceNumber;
-  final String control_No;
+  final String controlNo;
   final String invoiceDate;
   final String approve;
   final String paymentType;
@@ -173,11 +176,16 @@ class InvoiceData {
   final String currencyCode;
   final String dueDate;
   final String expiryDate;
+  final int invMasSno;
+  final int compid;
+  final String companyName;
+  final String controlNumber;
+   final int invMasNo;
 
   InvoiceData(
     this.customerName,
     this.invoiceNumber,
-    this.control_No,
+    this.controlNo,
     this.invoiceDate,
     this.approve,
     this.paymentType,
@@ -187,6 +195,11 @@ class InvoiceData {
     this.currencyCode,
     this.dueDate,
     this.expiryDate,
+    this.invMasSno,
+    this.compid,
+    this.companyName,
+    this.controlNumber,
+    this.invMasNo,
   );
 
   factory InvoiceData.fromJson(Map<String, dynamic> json, int userID) {
@@ -203,6 +216,12 @@ class InvoiceData {
       json['Currency_Code'],
       json['Due_Date'],
       json['Invoice_Expired_Date'],
+      json['Inv_Mas_Sno'],
+      json['Com_Mas_Sno'],
+      json['Company_Name'],
+      json['Control_No'],
+      json['Chus_Mas_No'] ?? '',
+      
     );
   }
 }
@@ -223,6 +242,8 @@ class _InvoiceCard extends StatefulWidget {
 
 class _InvoiceCardState extends State<_InvoiceCard> {
   bool _isExpanded = false;
+
+  final TextEditingController _reasonController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -245,7 +266,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
               const SizedBox(height: 5),
               _buildInvoiceRow('Invoice N°:', widget.invoice.invoiceNumber ),
               const SizedBox(height: 5),
-              _buildInvoiceRow('Control N°:', widget.invoice.control_No),
+              _buildInvoiceRow('Control N°:', widget.invoice.controlNo),
               const SizedBox(height: 5),
               // _buildApprovalRow(),
               const SizedBox(height: 5),
@@ -326,31 +347,326 @@ class _InvoiceCardState extends State<_InvoiceCard> {
     );
   }
 
- Widget _buildActionButtons() {
+Widget _buildActionButtons() {
   return Column(
     children: [
       const SizedBox(height: 10),
       const Divider(),
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildIconActionButton(Icons.visibility, 'View Details', () {
-            // Define the action to view details
-          }),
-          _buildIconActionButton(Icons.picture_as_pdf, 'Download PDF', () {
-            // Define the action to download PDF
-          }),
-          _buildIconActionButton(Icons.edit, 'Edit', () {
-            // Define the action to edit the invoice
-          }),
-          _buildIconActionButton(Icons.cancel, 'Cancel', () {
-            // Define the action to cancel
-          }),
-        ],
+        children: widget.invoice.deliveryStatus == 'Unsent'
+          ? [
+              _buildIconActionButton(Icons.restart_alt, 'Amend', () {
+                // Define the action to amend
+              }),
+              _buildIconActionButton(Icons.local_shipping, 'Deliver', () {
+                // Define the action to deliver
+                _showShippingPopup();
+              }),
+              _buildIconActionButton(Icons.cancel, 'Cancel', () {
+                // Define the action to cancel
+                _showCancelPopup();
+              }),
+              _buildIconActionButton(Icons.visibility, 'View Details', () {
+                // Define the action to view details
+              }),
+              _buildIconActionButton(Icons.download, 'Download', () {
+                // Define the action to download PDF
+              }),
+            ]
+          : [
+              _buildIconActionButton(Icons.visibility, 'View Details', () {
+                // Define the action to view details
+              }),
+              _buildIconActionButton(Icons.download, 'Download', () {
+                // Define the action to download PDF
+              }),
+            ],
       ),
     ],
   );
 }
+
+
+  void _showShippingPopup() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Cancel Invoice'),
+          content: Text(
+            'Are you sure you want to deliver items for invoice  "${widget.invoice.invoiceNumber}"?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the popup
+              },
+              child: const Text('Close'),
+            ),
+          TextButton(
+            onPressed: () {
+              _confirmApprovellation();
+            },
+              child: const Text('Confirm'),
+          ),
+        ],
+      );
+    },
+  );   
+}
+
+void _confirmApprovellation() {
+  Navigator.pop(context); // Close the confirmation popup
+  deliverlInvoice();
+}
+
+ Future<void> deliverlInvoice() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // int instituteID = prefs.getInt('instID') ?? 0;
+      int userID = prefs.getInt('userID') ?? 0;
+
+      // Body of the API request
+      final Map<String, int> body = {
+        // "compid": instituteID
+        "sno": widget.invoice.invMasSno,
+        "user_id": userID
+      };
+
+      // Start loading
+      setState(() {
+        isLoading = true;
+      });
+
+      // Make the API request
+      final addDCode = await InvoiceApis.addDCode.sendRequest(body: body);
+
+      // Check if the response is valid
+      if (addDCode['response'] != null) {
+        _showErrorDialog("successful.");
+      } else {
+        // Handle empty or invalid response
+        _showErrorDialog("Invalid response from the server.");
+      }
+    } 
+    on http.ClientException {
+          _showErrorDialog("No internet connection. Please check your network.");
+    } on HttpException {
+      // Handle server-related errors
+      _showErrorDialog("Couldn't retrieve data from the server.");
+    } on FormatException {
+      // Handle invalid response format (JSON parsing errors)
+      _showErrorDialog("Invalid response format.");
+    } catch (e) {
+      // Handle any other errors
+      _showErrorDialog("An unexpected error occurred: $e");
+    } finally {
+      // Stop loading in any case
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+void _showCancelPopup() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Cancel Invoice'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Reason'),
+              const SizedBox(height: 8),
+              TextField(
+                //to get the data form the textfild 
+                controller: _reasonController,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Enter reason for cancellation',
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Once cancelled, changes cannot be undone. Please proceed with caution.',
+                style: TextStyle(color: Colors.red),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the popup
+              },
+              child: const Text('Close'),
+            ),
+            TextButton(
+              onPressed: () {
+                _validateAndProceed();
+              },
+              child: const Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+   void _validateAndProceed() {
+    if (_reasonController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please provide a reason for cancellation')),
+      );
+    } else {
+      Navigator.pop(context); // Close the first popup
+      _showConfirmationPopup();
+    }
+  }
+
+  void _showConfirmationPopup() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Cancel Invoice'),
+          content: Text(
+            'Are you sure you want to cancel invoice "${widget.invoice.invoiceNumber}"?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the popup
+              },
+              child: const Text('Close'),
+            ),
+            TextButton(
+              onPressed: () {
+                _confirmCancellation();
+              },
+              child: const Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _confirmCancellation() {
+  Navigator.pop(context); // Close the confirmation popup
+  cancelInvoice();
+}
+
+bool isLoading = true;
+
+Future<void> cancelInvoice() async {
+  try {
+    // SharedPreferences to get stored values
+    final prefs = await SharedPreferences.getInstance();
+    int instituteID = prefs.getInt('instID') ?? 0;
+    int userID = prefs.getInt('userID') ?? 0;
+    String token = prefs.getString('token') ?? ''; // Token from SharedPreferences
+
+    // Define your API URL
+    const String url = 'http://192.168.100.50:98/api/Invoice/AddCancel';
+
+    // Prepare the body with necessary details
+    Map<String, dynamic> requestBody = {
+      "compid": instituteID, // Company ID
+      "invno": widget.invoice.invoiceNumber, // Invoice number
+      "auname": "", // Actual user name
+      "date": DateTime.now().toIso8601String(), // Current date
+      "edate": DateTime.now().toIso8601String(), // End date
+      "iedate": DateTime.now().toIso8601String(), // Invoice expired date
+      "ptype": widget.invoice.paymentType, // Payment type
+      "chus": widget.invoice.invMasNo, // Customer number
+      "comno": 0, // Company number
+      "ccode": widget.invoice.currencyCode, // Currency code
+      "ctype": "0", // Placeholder for type information
+      "cino": "0", // Control number
+      "twvat": 0, // Total without VAT
+      "vtamou": 0, // VAT amount
+      "total": widget.invoice.total.toString(), // Total amount
+      "Inv_remark": "", // Invoice remarks
+      "lastrow": 0, // Last row
+      "details": [
+        {
+          "Inv_Mas_Sno": widget.invoice.invMasSno,
+          "Invoice_Date": widget.invoice.invoiceDate,
+          "Payment_Type": widget.invoice.paymentType,
+          "Invoice_No": widget.invoice.invoiceNumber,
+          "Invoice_Expired_Date": widget.invoice.expiryDate,
+          "Reason": _reasonController.text, // Reason for cancellation
+          "Status": widget.invoice.status,
+          "Mobile": "",
+        }
+      ],
+
+      "sno": widget.invoice.invMasSno,
+      "reason": _reasonController.text, // Cancellation reason
+      "userid": userID, // User ID
+    };
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(requestBody),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        isLoading = false;
+        
+      });
+
+      _showSnackBar('Invoice cancelled successfully');
+    } else {
+      _showSnackBar('Failed to cancel the invoice');
+    }
+  } catch (e) {
+    if (e is http.ClientException) {
+          // Network error
+          _showErrorDialog('Network error. Please check your connection and try again.');
+
+        } else {
+          // Other exceptions
+          _showErrorDialog('An unexpected error occurred. Please try again.');
+          
+        }
+    setState(() {
+      // _showSnackBar ('Error checking invoice number'); // Error in the request
+      isLoading = false;
+    });
+  }
+}
+void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+
+// Show error dialog in case of failure
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
 
 Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPressed) {
   return Column(

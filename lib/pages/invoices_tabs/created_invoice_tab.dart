@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:learingdart/core/api/invoice_apis.dart';
+import 'package:learingdart/pages/edit_invoice.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../invoices_section.dart';
@@ -47,54 +48,54 @@ class _CreatedInvoiceTabState extends State<CreatedInvoiceTab> {
   }
 
   Future<void> _fetchInvoicesData() async {
-  try {
-    final prefs = await SharedPreferences.getInstance();
-    int instituteID = prefs.getInt('instID') ?? 0;
-    int userID = prefs.getInt('userID') ?? 0;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      int instituteID = prefs.getInt('instID') ?? 0;
+      int userID = prefs.getInt('userID') ?? 0;
 
-    // Body of the API request
-    final Map<String, int> body = {
-      "compid": instituteID
-    };
+      // Body of the API request
+      final Map<String, int> body = {
+        "compid": instituteID
+      };
 
-    // Start loading
-    setState(() {
-      isLoading = true;
-    });
-
-    // Make the API request
-    final getchDetails = await InvoiceApis.getchDetails.sendRequest(body: body);
-
-    // Check if the response is valid
-    if (getchDetails['response'] != null) {
+      // Start loading
       setState(() {
-        createdInvoices = (getchDetails['response'] as List)
-            .map((item) => InvoiceData.fromJson(item, userID))
-            .toList();
+        isLoading = true;
       });
-    } else {
-      // Handle empty or invalid response
-      _showErrorDialog("Invalid response from the server.");
+
+      // Make the API request
+      final getchDetails = await InvoiceApis.getchDetails.sendRequest(body: body);
+
+      // Check if the response is valid
+      if (getchDetails['response'] != null) {
+        setState(() {
+          createdInvoices = (getchDetails['response'] as List)
+              .map((item) => InvoiceData.fromJson(item, userID))
+              .toList();
+        });
+      } else {
+        // Handle empty or invalid response
+        _showErrorDialog("Invalid response from the server.");
+      }
+    } 
+    on http.ClientException {
+          _showErrorDialog("No internet connection. Please check your network.");
+    } on HttpException {
+      // Handle server-related errors
+      _showErrorDialog("Couldn't retrieve data from the server.");
+    } on FormatException {
+      // Handle invalid response format (JSON parsing errors)
+      _showErrorDialog("Invalid response format.");
+    } catch (e) {
+      // Handle any other errors
+      _showErrorDialog("An unexpected error occurred: $e");
+    } finally {
+      // Stop loading in any case
+      setState(() {
+        isLoading = false;
+      });
     }
-  } 
-  on http.ClientException {
-        _showErrorDialog("No internet connection. Please check your network.");
-  } on HttpException {
-    // Handle server-related errors
-    _showErrorDialog("Couldn't retrieve data from the server.");
-  } on FormatException {
-    // Handle invalid response format (JSON parsing errors)
-    _showErrorDialog("Invalid response format.");
-  } catch (e) {
-    // Handle any other errors
-    _showErrorDialog("An unexpected error occurred: $e");
-  } finally {
-    // Stop loading in any case
-    setState(() {
-      isLoading = false;
-    });
   }
-}
 
 // Function to show error dialog
 void _showErrorDialog(String message) {
@@ -441,13 +442,27 @@ class _InvoiceCardState extends State<_InvoiceCard> {
           _buildIconActionButton(Icons.visibility, 'View Details', () {
             // Define the action to view details
           }),
-          _buildIconActionButton(Icons.picture_as_pdf, 'Download PDF', () {
+          _buildIconActionButton(Icons.download, 'Download', () {
             // Define the action to download PDF
             _downloadInvoicePDF(widget.invoice.compid.toString(), widget.invoice.invMasSno.toString());
           }),
           _buildIconActionButton(Icons.edit, 'Edit', () {
             // Define the action to edit the invoice
-            Navigator.pushNamed(context, '/create_invoice');
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => EditInvoicePage(
+                  invoiceNumber:widget.invoice.invoiceNumber,
+                  invoiceDate:widget.invoice.invoiceDate,
+                  invoiceDueDate:widget.invoice.dueDate,
+                  invoiceExpiryDate:widget.invoice.expiryDate,
+                  customer:widget.invoice.customerName,
+                  paymentType:widget.invoice.paymentType,
+                  currency:widget.invoice.currencyCode,
+                ),
+              ),
+            );
+            // Navigator.pushNamed(context, '/edit_invoice');
           }),
           _buildIconActionButton(Icons.cancel, 'Cancel', () {
             // Define the action to cancel
@@ -472,6 +487,7 @@ void _showCancelPopup() {
               const Text('Reason'),
               const SizedBox(height: 8),
               TextField(
+                //to get the data form the textfild 
                 controller: _reasonController,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
@@ -575,9 +591,9 @@ void _showAccessConfirmationPopup() {
         );
       },
     );
-  }
+}
 
-  void _confirmApprovellation() {
+void _confirmApprovellation() {
   Navigator.pop(context); // Close the confirmation popup
   approvelInvoice();
 }

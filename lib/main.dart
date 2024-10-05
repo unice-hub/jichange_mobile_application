@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:learingdart/pages/edit_invoice.dart';
 import 'pages/home_section.dart';
 import 'pages/customer_section.dart';
 import 'pages/vendor_users_section.dart';
@@ -33,6 +34,7 @@ class MyApp extends StatelessWidget {
         '/register': (context) => const VendorRegistrationPage(),
         '/profile': (context) => const ProfilePage(),
         '/create_invoice': (context) => const CreateInvoicePage(),
+        // '/edit_invoice': (context) => const EditInvoicePage(),
       },
     );
   }
