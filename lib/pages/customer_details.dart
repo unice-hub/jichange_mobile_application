@@ -91,14 +91,39 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
         _showSnackBar('Error: Failed to fetch invoices');
       }
     } catch (e) {
-      _showSnackBar('Error: $e');
-      log(e.toString());
+      if (e is http.ClientException) {
+        // Network error
+        _showErrorDialog('Network error. Please check your connection and try again.');
+
+      } else {
+        // Other exceptions
+        _showErrorDialog('An unexpected error occurred. Please try again.');
+        
+      }
     }
   }
 
-   void _showSnackBar(String message) {
+  // Show error dialog in case of failure
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
+
   void _filterTransactions(String query) {
     setState(() {
       _filteredTransactions = _transactions

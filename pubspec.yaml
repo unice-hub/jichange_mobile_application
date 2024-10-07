@@ -35,7 +35,7 @@ dependencies:
   shared_preferences: ^2.0.13
   path_provider: ^2.0.11
   permission_handler: ^10.2.0
- 
+  font_awesome_flutter: ^10.7.0
   #To handle the internet connectivity
   # connectivity_plus: ^2.3.1
 

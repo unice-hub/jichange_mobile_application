@@ -95,6 +95,7 @@ class _CreatedInvoiceTabState extends State<CreatedInvoiceTab> {
         isLoading = false;
       });
     }
+    
   }
 
 // Function to show error dialog
@@ -173,6 +174,7 @@ void _showErrorDialog(String message) {
     );
   }
 
+  
   Widget _buildInvoiceList(List<InvoiceData> invoices) {
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -800,13 +802,6 @@ Future<void> cancelInvoice() async {
 
         // Checking if the "response" field is true or false
         if (exists['response'] != null) {
-
-          // setState(() {
-          //   findRawInvoice = (exists['response'] as List)
-          //       .map((item) => RawInvoice.fromJson(item))
-          //       .toList();
-          // });
-          
         } else {
           setState(() {
             _showSnackBar ('Failed to find the invoice'); // No error message as invoice does not exist
@@ -896,8 +891,18 @@ Future<void> _downloadInvoicePDF(String compid, String inv) async {
     }
   } catch (e) {
     // Handle any exception
-    log('Error: $e');
-    _showSnackBar('Error downloading the PDF: $e');
+    if (e is http.ClientException) {
+          // Network error
+          _showErrorDialog('Network error. Please check your connection and try again.');
+
+        } else {
+          // Other exceptions
+          _showErrorDialog('An unexpected error occurred. Please try again.');
+          
+        }
+      setState(() {
+        isLoading = false;
+      });
   }
 }
 

@@ -1,6 +1,9 @@
 // import 'dart:ffi';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:learingdart/core/api/invoice_apis.dart';
@@ -355,10 +358,18 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
         );
       }
     } catch (e) {
-      log('Error submitting invoice: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred. Please try again.')),
-      );
+       if (e is http.ClientException) {
+          // Network error
+          _showErrorDialog('Network error. Please check your connection and try again.');
+
+        } else {
+          // Other exceptions
+          _showErrorDialog('An unexpected error occurred. Please try again.');
+          
+        }
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -724,11 +735,14 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _onSubmitButtonPressed,
-              child: const Text('Submit'),
+              
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
+                backgroundColor: Colors.blue,
                 minimumSize: const Size(double.infinity, 48),
+                
               ),
+              child: const Text('Submit'),
+              
             ),
           ],
         ),

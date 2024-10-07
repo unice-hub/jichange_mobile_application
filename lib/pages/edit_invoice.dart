@@ -189,27 +189,35 @@ class _EditInvoicePageState extends State<EditInvoicePage> {
 
 
   Future<void> _isExistInvoice(String compid, String invno) async {
+    try {
+          final exists = await isExistInvoice(compid,invno);
 
-  try {
-        final exists = await isExistInvoice(compid,invno);
+          // Checking if the "response" field is true or false
+          if (exists['response'] == true) {
+            setState(() {
+              invoiceErrorMessage = 'Invoice number already exists'; // Display the error
+            });
+          } else {
+            setState(() {
+              invoiceErrorMessage = null; // No error message as invoice does not exist
+            });
 
-        // Checking if the "response" field is true or false
-        if (exists['response'] == true) {
-          setState(() {
-            invoiceErrorMessage = 'Invoice number already exists'; // Display the error
-          });
+        }
+    } catch (e) {
+      if (e is http.ClientException) {
+          // Network error
+          _showErrorDialog('Network error. Please check your connection and try again.');
+
         } else {
-          setState(() {
-            invoiceErrorMessage = null; // No error message as invoice does not exist
-          });
-
-      }
-  } catch (e) {
-    setState(() {
-      invoiceErrorMessage = 'Error checking invoice number'; // Error in the request
-    });
+          // Other exceptions
+          _showErrorDialog('An unexpected error occurred. Please try again.');
+          
+        }
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
-}
 
   // Show error dialog in case of failure
   void _showErrorDialog(String message) {
@@ -348,10 +356,18 @@ class _EditInvoicePageState extends State<EditInvoicePage> {
         );
       }
     } catch (e) {
-      log('Error submitting invoice: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred. Please try again.')),
-      );
+      if (e is http.ClientException) {
+          // Network error
+          _showErrorDialog('Network error. Please check your connection and try again.');
+
+        } else {
+          // Other exceptions
+          _showErrorDialog('An unexpected error occurred. Please try again.');
+          
+        }
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 

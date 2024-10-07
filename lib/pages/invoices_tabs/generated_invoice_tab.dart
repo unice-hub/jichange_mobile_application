@@ -80,8 +80,37 @@ class _GeneratedInvoiceTabState extends State<GeneratedInvoiceTab> {
         _showSnackBar('Error: Failed to fetch invoices');
       }
     } catch (e) {
-      _showSnackBar('Error: $e');
+      // _showSnackBar('Error: $e');
+      if (e is http.ClientException) {
+          // Network error
+          _showErrorDialog('Network error. Please check your connection and try again.');
+
+        } else {
+          // Other exceptions
+          _showErrorDialog('An unexpected error occurred. Please try again.');
+          
+        }
+      setState(() {
+        isLoading = false;
+      });
     }
+  }
+
+   // Show error dialog in case of failure
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showSnackBar(String message) {
@@ -387,8 +416,7 @@ Widget _buildActionButtons() {
   );
 }
 
-
-  void _showShippingPopup() {
+void _showShippingPopup() {
     showDialog(
       context: context,
       builder: (context) {
@@ -513,9 +541,9 @@ void _showCancelPopup() {
         );
       },
     );
-  }
+}
 
-   void _validateAndProceed() {
+void _validateAndProceed() {
     if (_reasonController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please provide a reason for cancellation')),
@@ -524,9 +552,9 @@ void _showCancelPopup() {
       Navigator.pop(context); // Close the first popup
       _showConfirmationPopup();
     }
-  }
+}
 
-  void _showConfirmationPopup() {
+void _showConfirmationPopup() {
     showDialog(
       context: context,
       builder: (context) {
@@ -645,9 +673,10 @@ Future<void> cancelInvoice() async {
     });
   }
 }
+
 void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-  }
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+}
 
 
 // Show error dialog in case of failure
@@ -665,7 +694,7 @@ void _showSnackBar(String message) {
         ],
       ),
     );
-  }
+}
 
 
 Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPressed) {

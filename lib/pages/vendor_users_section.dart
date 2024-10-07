@@ -75,7 +75,36 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
       }
     } catch (e) {
       _showSnackBar('Error: $e');
+      if (e is http.ClientException) {
+          // Network error
+          _showErrorDialog('Network error. Please check your connection and try again.');
+
+        } else {
+          // Other exceptions
+          _showErrorDialog('An unexpected error occurred. Please try again.');
+          
+        }
+      setState(() {
+        isLoading = false;
+      });
     }
+  }
+
+   // Show error dialog in case of failure
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   // Method to fetch Vendor Users data from the API
@@ -118,6 +147,18 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
       }
     } catch (e) {
       _showSnackBar('Error: $e');
+      if (e is http.ClientException) {
+          // Network error
+          _showErrorDialog('Network error. Please check your connection and try again.');
+
+        } else {
+          // Other exceptions
+          _showErrorDialog('An unexpected error occurred. Please try again.');
+          
+        }
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -205,8 +246,6 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
       ),
     );
   }
-
-
 
   //to displya usercard 
   Widget _buildUserCard(VendorUser user) {
@@ -329,6 +368,18 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
       }
     } catch (e) {
       _showSnackBar('Error: $e');
+      if (e is http.ClientException) {
+          // Network error
+          _showErrorDialog('Network error. Please check your connection and try again.');
+
+        } else {
+          // Other exceptions
+          _showErrorDialog('An unexpected error occurred. Please try again.');
+          
+        }
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -358,6 +409,18 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
       }
     } catch (e) {
       _showSnackBar('Error: $e');
+      if (e is http.ClientException) {
+          // Network error
+          _showErrorDialog('Network error. Please check your connection and try again.');
+
+        } else {
+          // Other exceptions
+          _showErrorDialog('An unexpected error occurred. Please try again.');
+          
+        }
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 

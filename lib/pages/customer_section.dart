@@ -95,6 +95,9 @@ class _CustomerSectionState extends State<CustomerSection> {
         _showErrorDialog('An unexpected error occurred. Please try again.');
         
       }
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -142,6 +145,9 @@ class _CustomerSectionState extends State<CustomerSection> {
         _showErrorDialog('An unexpected error occurred. Please try again.');
         
       }
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -205,6 +211,9 @@ class _CustomerSectionState extends State<CustomerSection> {
           _showErrorDialog('An unexpected error occurred. Please try again.');
           
         }
+        setState(() {
+        isLoading = false;
+      });
       }
   }
 
@@ -451,10 +460,12 @@ void _viewCustomer(Customer customer) async {
 
       } else {
         // Other exceptions
-        _showErrorDialog('An unexpected error occurred. Please try again.\n$e');
-        log(e.toString());
+        _showErrorDialog('An unexpected error occurred. Please try again.\n $e');
         
       }
+      setState(() {
+        isLoading = false;
+      });
       return null;
     }
   }
@@ -909,6 +920,10 @@ void _showQuickAlert(BuildContext context, String title, String message, bool is
         _showErrorDialog('An unexpected error occurred. Please try again.');
         
       }
+      setState(() {
+        isLoading = false;
+      });
+      
     }
   }
 
