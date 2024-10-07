@@ -440,14 +440,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
       const Divider(),
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildIconActionButton(Icons.visibility, 'View Details', () {
-            // Define the action to view details
-          }),
-          _buildIconActionButton(Icons.download, 'Download', () {
-            // Define the action to download PDF
-            _downloadInvoicePDF(widget.invoice.compid.toString(), widget.invoice.invMasSno.toString());
-          }),
+        children:  [
           _buildIconActionButton(Icons.edit, 'Edit', () {
             // Define the action to edit the invoice
             Navigator.push(
@@ -465,12 +458,23 @@ class _InvoiceCardState extends State<_InvoiceCard> {
               ),
             );
             // Navigator.pushNamed(context, '/edit_invoice');
-          }),
+          }, Colors.blue),
+
           _buildIconActionButton(Icons.cancel, 'Cancel', () {
             // Define the action to cancel
             _findInvoice(widget.invoice.compid.toString(), widget.invoice.invMasSno.toString());
             _showCancelPopup();
-          }),
+          }, Colors.red),
+
+          _buildIconActionButton(Icons.visibility, 'View Details', () {
+            // Define the action to view details
+          }, Colors.yellow),
+
+          _buildIconActionButton(Icons.download, 'Download', () {
+            // Define the action to download PDF
+            _downloadInvoicePDF(widget.invoice.compid.toString(), widget.invoice.invMasSno.toString());
+          }, Colors.black),
+          
         ],
       ),
     ],
@@ -937,23 +941,36 @@ void downloadFile(String url) async {
   print('File downloaded to $filePath');
 }
 
-Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPressed) {
+Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPressed, Color iconColor) {
   return Column(
     children: [
-      IconButton(
-        icon: Icon(icon, color: Theme.of(context).colorScheme.primary),
-        onPressed: onPressed,
+      Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.rectangle,
+          border: Border.all(color: iconColor, width: 2),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),        // Flat edge
+            topRight: Radius.circular(16),       // Curved edge
+            bottomLeft: Radius.circular(16),     // Curved edge
+            bottomRight: Radius.circular(16),     // Flat edge
+          ), // Apply caved corner effect
+        ),
+        child: IconButton(
+          icon: Icon(icon, color: iconColor),
+          onPressed: onPressed,
+        ),
       ),
       Text(label, style: const TextStyle(fontSize: 12)),
     ],
   );
 }
 
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-  }
 
-  Widget _buildActionButton(String label, VoidCallback onPressed) {
+void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+}
+
+Widget _buildActionButton(String label, VoidCallback onPressed) {
     return ElevatedButton(
       onPressed: onPressed,
       child: Text(label),

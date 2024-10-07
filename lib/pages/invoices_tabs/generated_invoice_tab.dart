@@ -387,29 +387,29 @@ Widget _buildActionButtons() {
           ? [
               _buildIconActionButton(Icons.restart_alt, 'Amend', () {
                 // Define the action to amend
-              }),
+              }, Colors.purple),
               _buildIconActionButton(Icons.local_shipping, 'Deliver', () {
                 // Define the action to deliver
                 _showShippingPopup();
-              }),
+              }, Colors.green),
               _buildIconActionButton(Icons.cancel, 'Cancel', () {
                 // Define the action to cancel
                 _showCancelPopup();
-              }),
+              },Colors.red),
               _buildIconActionButton(Icons.visibility, 'View Details', () {
                 // Define the action to view details
-              }),
+              }, Colors.yellow),
               _buildIconActionButton(Icons.download, 'Download', () {
                 // Define the action to download PDF
-              }),
+              }, Colors.black),
             ]
           : [
               _buildIconActionButton(Icons.visibility, 'View Details', () {
                 // Define the action to view details
-              }),
+              }, Colors.yellow),
               _buildIconActionButton(Icons.download, 'Download', () {
                 // Define the action to download PDF
-              }),
+              }, Colors.black),
             ],
       ),
     ],
@@ -697,19 +697,31 @@ void _showSnackBar(String message) {
 }
 
 
-Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPressed) {
+Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPressed, Color iconColor) {
   return Column(
     children: [
-      IconButton(
-        icon: Icon(icon, color: Theme.of(context).colorScheme.primary),
-        onPressed: onPressed,
+      Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.rectangle,
+          border: Border.all(color: iconColor, width: 2),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),        // Flat edge
+            topRight: Radius.circular(16),       // Curved edge
+            bottomLeft: Radius.circular(16),     // Curved edge
+            bottomRight: Radius.circular(16),     // Flat edge
+          ), // Apply caved corner effect
+        ),
+        child: IconButton(
+          icon: Icon(icon, color: iconColor),
+          onPressed: onPressed,
+        ),
       ),
       Text(label, style: const TextStyle(fontSize: 12)),
     ],
   );
 }
 
-  Widget _buildActionButton(String label, VoidCallback onPressed) {
+Widget _buildActionButton(String label, VoidCallback onPressed) {
     return ElevatedButton(
       onPressed: onPressed,
       child: Text(label),
