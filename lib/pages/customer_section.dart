@@ -334,30 +334,40 @@ class _CustomerSectionState extends State<CustomerSection> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    IconButton(
-                      icon: Icon(Icons.remove_red_eye_outlined, color: Theme.of(context).colorScheme.primary),
-                      onPressed: () {
-                        // Handle view action
-                        //  Navigator.push(
-                        //   // context,
-                        //   // MaterialPageRoute(builder: (context) => const CustomerDetailsPage(name: 'Cust_Name', email: 'Email', mobile: 'Phone')), // Navigate to customer_details.dart
-                        // );
-                        _viewCustomer(customer);
+                    _buildIconActionButton(Icons.remove_red_eye_outlined,'View Details', () {
+                       _viewCustomer(customer);
+                    }, Colors.yellow),
+
+                    // IconButton(
+                    //   icon: Icon(Icons.remove_red_eye_outlined, color: Theme.of(context).colorScheme.primary),
+                    //   onPressed: () {
+  
+                    //     _viewCustomer(customer);
                         
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.edit, color: Theme.of(context).colorScheme.primary),
-                      onPressed: () {
-                        _showEditCustomerSheet(context, customer);
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
-                      onPressed: () {
-                        _confirmDeleteCustomer(context, customer);
-                      },
-                    ),
+                    //   },
+                    // ),
+
+                     _buildIconActionButton(Icons.edit, 'Edit', () {
+                      _showEditCustomerSheet(context, customer);
+                    }, Colors.blue),
+
+                    // IconButton(
+                    //   icon: Icon(Icons.edit, color: Theme.of(context).colorScheme.primary),
+                    //   onPressed: () {
+                    //     _showEditCustomerSheet(context, customer);
+                    //   },
+                    // ),
+
+                     _buildIconActionButton(Icons.delete, "Delete", () {
+                      _confirmDeleteCustomer(context, customer);
+                    }, Colors.red),
+
+                    // IconButton(
+                    //   icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
+                    //   onPressed: () {
+                    //     _confirmDeleteCustomer(context, customer);
+                    //   },
+                    // ),
                   ],
                 ),
               ],
@@ -366,9 +376,33 @@ class _CustomerSectionState extends State<CustomerSection> {
         ],
       ),
     );
-  }
+}
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPressed, Color iconColor) {
+  return Column(
+    children: [
+      Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.rectangle,
+          border: Border.all(color: iconColor, width: 2),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),        // Flat edge
+            topRight: Radius.circular(16),       // Curved edge
+            bottomLeft: Radius.circular(16),     // Curved edge
+            bottomRight: Radius.circular(16),     // Flat edge
+          ), // Apply caved corner effect
+        ),
+        child: IconButton(
+          icon: Icon(icon, color: iconColor),
+          onPressed: onPressed,
+        ),
+      ),
+      Text(label, style: const TextStyle(fontSize: 12)),
+    ],
+  );
+}
+
+Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
       children: [
         Icon(icon, color: Theme.of(context).colorScheme.primary),
@@ -376,7 +410,7 @@ class _CustomerSectionState extends State<CustomerSection> {
         Text('$label: $value', style: Theme.of(context).textTheme.bodyLarge),
       ],
     );
-  }
+}
 
 void _showConfirmationDialog(BuildContext context, String name, String email, String mobile) {
   showDialog(

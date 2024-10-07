@@ -281,18 +281,28 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    IconButton(
-                      icon: Icon(Icons.send, color: Theme.of(context).colorScheme.primary),
-                      onPressed: () {
-                        _showResendCredentialsDialog(context, user);
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.edit, color: Theme.of(context).colorScheme.primary),
-                      onPressed: () {
-                        _showEditVendorUserSheet(context, user);
-                      },
-                    ),
+                    _buildIconActionButton(Icons.send, () {
+                      _showResendCredentialsDialog(context, user);
+                    }, Colors.black),
+
+                    _buildIconActionButton(Icons.edit, () {
+                      _showEditVendorUserSheet(context, user);
+                    }, Colors.blue),
+
+                    // IconButton(
+
+                    //   icon: Icon(Icons.send, color: Theme.of(context).colorScheme.primary),
+                    //   onPressed: () {
+                    //     _showResendCredentialsDialog(context, user);
+                    //   },
+                    // ),
+                    // IconButton(
+                    //   icon: Icon(Icons.edit, color: Theme.of(context).colorScheme.primary),
+                    //   onPressed: () {
+                    //     _showEditVendorUserSheet(context, user);
+                    //   },
+                    // ),
+
                   ],
                 ),
               ],
@@ -302,6 +312,30 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
       ),
     );
   }
+
+  Widget _buildIconActionButton(IconData icon, VoidCallback onPressed, Color iconColor) {
+  return Column(
+    children: [
+      Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.rectangle,
+          border: Border.all(color: iconColor, width: 2),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),        // Flat edge
+            topRight: Radius.circular(16),       // Curved edge
+            bottomLeft: Radius.circular(16),     // Curved edge
+            bottomRight: Radius.circular(16),     // Flat edge
+          ), // Apply caved corner effect
+        ),
+        child: IconButton(
+          icon: Icon(icon, color: iconColor),
+          onPressed: onPressed,
+        ),
+      ),
+      // Text(label, style: const TextStyle(fontSize: 12)),
+    ],
+  );
+}
 
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
