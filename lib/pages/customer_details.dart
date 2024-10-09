@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:learingdart/pages/create_invoice_for_specific_customer.dart';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -233,6 +234,16 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Action for floating button
+          // Define the action to add the invoice
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CreateInvoiceForSpecificCustomer(
+                  customer: widget.name,
+                  customerSno: widget.custSno,
+                ),
+              ),
+            );
         },
         backgroundColor: Theme.of(context).colorScheme.primary,
         child: const Icon(Icons.add),

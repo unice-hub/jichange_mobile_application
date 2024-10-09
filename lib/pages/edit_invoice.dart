@@ -1,6 +1,8 @@
 
 // import 'dart:ffi';
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -17,6 +19,8 @@ class EditInvoicePage extends StatefulWidget {
   final String customer;
   final String paymentType;
   final String currency;
+  final int customerSno;
+  final int invMasSno;
 
   const EditInvoicePage({
     super.key,
@@ -27,6 +31,8 @@ class EditInvoicePage extends StatefulWidget {
     required this.customer,
     required this.paymentType,
     required this.currency,
+    required this.customerSno,
+    required this.invMasSno,
     
     });
 
@@ -40,6 +46,7 @@ class _EditInvoicePageState extends State<EditInvoicePage> {
   int compid = 0;
   bool isLoading = true;
 
+  int?invMasSno;
   String? selectedCustomer;
   String? selectedPaymentType;
   String? selectedCurrency;
@@ -89,6 +96,7 @@ class _EditInvoicePageState extends State<EditInvoicePage> {
     // _isExistInvoice(compid, invno);
   }
   
+
   Future<void> _fetchCustomerName() async {
     const url = 'http://192.168.100.50:98/api/Invoice/GetCustomersS';
 
@@ -112,6 +120,22 @@ class _EditInvoicePageState extends State<EditInvoicePage> {
         if (response.statusCode == 200) {
           final jsonResponse = json.decode(response.body);
           customers = jsonResponse['response'];
+          setState(() {
+            // log(customers.length.toString());
+            final cust = customers.firstWhere((cust) => cust['Cus_Mas_Sno'] == widget.customerSno);
+            selectedCustomer = cust['Cus_Mas_Sno'].toString();
+            cusMasSno = cust['Cus_Mas_Sno'];
+            invoiceNumberController.text = widget.invoiceNumber.toString();
+            selectedPaymentType = widget.paymentType.toString();
+            invoiceDate = DateTime.parse(widget.invoiceDate);
+            dueDate = DateTime.parse(widget.invoiceDueDate);
+            expiryDate = DateTime.parse(widget.invoiceExpiryDate);
+            // _selectDate(context, false);
+            selectedCurrency = widget.currency.toString();
+            _findInvoice(instituteID.toString(), widget.invMasSno.toString());
+
+
+          });
           
         } else {
           throw Exception('Failed to load branches');
@@ -133,6 +157,79 @@ class _EditInvoicePageState extends State<EditInvoicePage> {
       // print('Error fetching branches: $e');
     }
   }
+
+  //to get findInvoice API 
+   //  List<RawInvoice> findRawInvoice  = [];
+  // Future to find invoice from API
+Future<Invoice1?> findInvoice(String compid, String invno) async {
+  final response = await InvoiceApis.findInvoice.sendRequest(urlParam: '?compid=$compid&inv=$invno');
+
+  if (response['response'] != null) {
+    return Invoice1.fromJson(response['response']);
+  } else {
+    return null;
+  }
+}
+
+// Error handling and fetching invoice
+Future<void> _findInvoice(String compid, String invno) async {
+  try {
+    // Get the invoice from the API
+    final Invoice1? exists = await findInvoice(compid, invno);
+
+    // Check if the invoice exists
+    if (exists != null) {
+      // Filter details where itemDescription is "Eggs"
+      // List<InvoiceDetail> filteredDetails = exists.details.where((detail) {
+      //   return detail.itemDescription == "Eggs";
+      // }).toList();
+
+      // Get all details
+      List<InvoiceDetail> filteredDetails = exists.details;
+      
+
+      if (filteredDetails.isNotEmpty) {
+        
+        
+         // Loop through each detail and set the controllers
+        setState(() {
+          for (InvoiceDetail detail in filteredDetails) {
+            invMasSno = detail.invMasSno;
+            descriptionController.text = detail.itemDescription;
+            quantityController.text = detail.itemQty.toString();
+            unitPriceController.text = detail.itemUnitPrice.toString();
+
+            // Call addItem for each detail
+            addItem();
+          }
+        });
+      } else {
+        setState(() {
+          _showErrorDialog('No items found with the description "Eggs"');
+        });
+      }
+    } else {
+      setState(() {
+        _showErrorDialog('Failed to find the invoice');
+      });
+    }
+  } catch (e) {
+    if (e is http.ClientException) {
+      _showErrorDialog("No internet connection. Please check your network.");
+    } else if (e is HttpException) {
+      _showErrorDialog("Couldn't retrieve data from the server.");
+    } else if (e is FormatException) {
+      _showErrorDialog("Invalid response format.");
+    } else {
+      _showErrorDialog("An unexpected error occurred: $e");
+    }
+  } finally {
+    setState(() {
+      isLoading = false;
+    });
+  }
+}
+
 
   Future<void> _fetchCurrency() async {
     const url = 'http://192.168.100.50:98/api/Invoice/GetCurrency';
@@ -158,7 +255,8 @@ class _EditInvoicePageState extends State<EditInvoicePage> {
           final jsonResponse = json.decode(response.body);
           final List<dynamic> currencyCode = jsonResponse['response'];
           setState(() {
-             currency = currencyCode.map((branch) => branch['Currency_Code'] as String).toList();
+             currency = currencyCode.map((code) => code['Currency_Code'] as String).toList();
+             //final ccode = currency.firstWhere((ccode) => ccode['Currency_Code'] == widget.currency);
             isLoading = false;
           });
           
@@ -218,6 +316,8 @@ class _EditInvoicePageState extends State<EditInvoicePage> {
       });
     }
   }
+
+
 
   // Show error dialog in case of failure
   void _showErrorDialog(String message) {
@@ -309,14 +409,14 @@ class _EditInvoicePageState extends State<EditInvoicePage> {
       'userid': userId,
       'vtamou': 0,
       'compid': instituteID,
-      'invno': invoiceNumberController.text,
+      'invno': widget.invoiceNumber,
       'auname': totalAmount.toString(), // Example data, adjust as needed
       'date': invoiceDate!.toIso8601String(),
       'edate': dueDate!.toIso8601String(),
       'iedate': expiryDate!.toIso8601String(),
       'lastrow': 0,
       'ptype': selectedPaymentType,
-      'sno': 0,
+      'sno': invMasSno,
       'chus': cusMasSno, // Example customer number
       'ccode': selectedCurrency,
       'total': totalAmount.toString(),
@@ -377,6 +477,7 @@ class _EditInvoicePageState extends State<EditInvoicePage> {
       _showConfirmationDialog();
     }
   }
+
   Future<void> _selectDate(BuildContext context, bool isInvoiceDate) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -449,6 +550,11 @@ class _EditInvoicePageState extends State<EditInvoicePage> {
     }
   }
 
+  // Calculate the total of all added items
+  double calculateTotalOfAllItems() {
+    return addedItems.fold(0, (sum, item) => sum + item['total']);
+  }
+
   void submitInvoice() {
     if (addedItems.isNotEmpty) {
       // Perform your submission logic here
@@ -489,61 +595,57 @@ class _EditInvoicePageState extends State<EditInvoicePage> {
              TextField(
               controller: invoiceNumberController,
               enabled: false, 
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 // labelText: 'Invoice number',
-                border: const OutlineInputBorder(),
-                hintText: widget.invoiceNumber,
+                border: OutlineInputBorder(),
+                // hintText: widget.invoiceNumber,
                 // errorText: invoiceErrorMessage,// Display error message
               ),
             ),
             if (invoiceErrorMessage != null) 
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(
-                  invoiceErrorMessage!,
-                  style: const TextStyle(color: Colors.red),
-                ),
+              const Padding(
+                padding: EdgeInsets.only(top: 8.0),
+                // child: Text(
+                //   invoiceErrorMessage!,
+                //   style: const TextStyle(color: Colors.red),
+                // ),
               ),
             const SizedBox(height: 16),
 
            InkWell(
-              onTap: null, // Disable onTap to prevent interaction
+              // onTap: () => _selectDate(context, false),
               child: InputDecorator(
                 decoration: const InputDecoration(
-                  // labelText: widget.invoiceDate, // Can be added back if needed
-                  hintText: null, // No hint text, just displaying the value
+                  labelText: 'Invoice Date',
                   suffixIcon: Icon(Icons.calendar_today),
                   border: OutlineInputBorder(),
-                  enabled: false, // Disable input
+                  enabled: false,
                 ),
                 child: Text(
-                  widget.invoiceDate != null
-                    ? widget.invoiceDate.substring(0, widget.invoiceDate.lastIndexOf('T')) // Display formatted date from widget.invoiceDate
-                    : invoiceDate!.toLocal().toString().split(' ')[0], // Fallback to `invoiceDate` if available   
+                  invoiceDate == null ? 'Choose a date' : invoiceDate!.toLocal().toString().split(' ')[0],
+                  style: const TextStyle(
+                    color: Colors.grey, // Makes the text faded
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 16),
 
 
-            InkWell(
+           InkWell(
               onTap: () => _selectDate(context, false),
               child: InputDecorator(
                 decoration: const InputDecoration(
-                  labelText: 'Invoice Due Date', // Label for the field
-                  suffixIcon: Icon(Icons.calendar_today), // Calendar icon to indicate date selection
-                  border: OutlineInputBorder(), // Field border
+                  labelText: 'Invoice Due Date',
+                  suffixIcon: Icon(Icons.calendar_today),
+                  border: OutlineInputBorder(),
                 ),
                 child: Text(
-                  // Check if the user has selected a date, otherwise use widget.invoiceDueDate
-                  dueDate == null 
-                    ? (widget.invoiceDueDate.substring(0, widget.invoiceDate.lastIndexOf('T'))) // Display widget.invoiceDueDate if available, otherwise show 'Choose a date'
-                    : dueDate!.toLocal().toString().split(' ')[0], // If a date is selected, show it in 'yyyy-MM-dd' format
+                  dueDate == null ? 'Choose a date' : dueDate!.toLocal().toString().split(' ')[0],
                 ),
               ),
             ),
-            const SizedBox(height: 16), // Adds space below the input field
-
+            const SizedBox(height: 16),
 
             InkWell(
               onTap: () => _selectExpiryDate(context),
@@ -554,12 +656,7 @@ class _EditInvoicePageState extends State<EditInvoicePage> {
                   border: OutlineInputBorder(),
                 ),
                 child: Text(
-                  // Check if the user has selected a date, otherwise use widget.invoiceDueDate
-                  expiryDate == null 
-                  ? (widget.invoiceExpiryDate.substring(0, widget.invoiceDate.lastIndexOf('T'))) // Display widget.invoiceDueDate if available, otherwise show 'Choose a date'
-                    : expiryDate !.toLocal().toString().split(' ')[0], // If a date is selected, show it in 'yyyy-MM-dd' format
-                
-                  // expiryDate == null ? 'Choose a date' : expiryDate!.toLocal().toString().split(' ')[0],
+                  expiryDate == null ? 'Choose a date' : expiryDate!.toLocal().toString().split(' ')[0],
                 ),
               ),
             ),
@@ -568,34 +665,29 @@ class _EditInvoicePageState extends State<EditInvoicePage> {
             isLoading
             ? const Center(child: CircularProgressIndicator())
             : DropdownButtonFormField<String>(
-                value: selectedCustomer, // Value to display the selected customer
-                isExpanded: true,
-                items: customers.map((dynamic value) {
-                  // Check if widget.customer exists in the customer list and pre-select the respective customer
-                  if (value['Customer_Name'] == widget.customer && selectedCustomer == null) {
-                    selectedCustomer = value['Customer_Name'].toString(); // Preselect customer based on Cus_Mas_Sno
-                    cusMasSno = value['Cus_Mas_Sno']; // Set Cus_Mas_Sno for the matched customer
-                  }
-                  return DropdownMenuItem<String>(
-                    value: value['Cus_Mas_Sno'].toString(),
-                    onTap: () => {cusMasSno = value['Cus_Mas_Sno']}, // Update cusMasSno when a customer is selected
-                    child: Text(
-                      value['Customer_Name'],
-                      overflow: TextOverflow.ellipsis, // Handle long customer names with ellipsis
-                    ),
-                  );
-                }).toList(),
-                onChanged: (newValue) {
-                  setState(() {
-                    selectedCustomer = newValue; // Update the selected customer based on user selection
-                  });
-                },
-                decoration: const InputDecoration(
-                  labelText: 'Customer', // Label for the dropdown field
-                  border: OutlineInputBorder(), // Border style for the dropdown
-                ),
+              value: selectedCustomer,
+              isExpanded: true,
+              hint: const Text('Select Customer'),
+              items: customers.map((dynamic value) {
+                return DropdownMenuItem<String>(
+                  value: value['Cus_Mas_Sno'].toString(),
+                  onTap: () => {cusMasSno = value['Cus_Mas_Sno']},
+                  child: Text(value['Customer_Name'], overflow: TextOverflow.ellipsis),
+                );
+              }).toList(),
+              onChanged: (newValue) {
+                setState(() {
+                  selectedCustomer = newValue;
+                   cusMasSno = newValue != null ? customers.firstWhere((customer) => customer['Cus_Mas_Sno'].toString() == newValue)['Cus_Mas_Sno'] : widget.customerSno;
+                });
+              },
+              decoration: const InputDecoration(
+                labelText: 'Customer',
+                border: OutlineInputBorder(),
               ),
-        const SizedBox(height: 16), // Adds space below the dropdown
+            ),
+            const SizedBox(height: 16),
+ // Adds space below the dropdown
 
             DropdownButtonFormField<String>(
               value: selectedPaymentType,
@@ -748,19 +840,95 @@ class _EditInvoicePageState extends State<EditInvoicePage> {
               },
             ),
 
+            // Show total of all added items
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'Total of all items: ${calculateTotalOfAllItems().toStringAsFixed(2)}',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+
             // Submit button
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _onSubmitButtonPressed,
-              child: const Text('Submit'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 minimumSize: const Size(double.infinity, 48),
               ),
+              child: const Text('Submit', style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class InvoiceDetail {
+  final int invMasSno;
+  final double itemQty;
+  final double itemUnitPrice;
+  final double itemTotalAmount;
+  final String itemDescription;
+
+  InvoiceDetail({
+    required this.invMasSno,
+    required this.itemQty,
+    required this.itemUnitPrice,
+    required this.itemTotalAmount,
+    required this.itemDescription,
+  });
+
+  // Factory method to create an InvoiceDetail object from JSON
+  factory InvoiceDetail.fromJson(Map<String, dynamic> json) {
+    return InvoiceDetail(
+      invMasSno: json['Inv_Mas_Sno'],
+      itemQty: json['Item_Qty'],
+      itemUnitPrice: json['Item_Unit_Price'],
+      itemTotalAmount: json['Item_Total_Amount'],
+      itemDescription: json['Item_Description'] ?? '',
+    );
+  }
+}
+
+class Invoice1 {
+  final int invMasSno;
+  final String invoiceNo;
+  final String paymentType;
+  final String invoiceDate;
+  final String dueDate;
+  final String chusName;
+  final double total;
+  final List<InvoiceDetail> details;
+
+  Invoice1({
+    required this.invMasSno,
+    required this.invoiceNo,
+    required this.paymentType,
+    required this.invoiceDate,
+    required this.dueDate,
+    required this.chusName,
+    required this.total,
+    required this.details,
+  });
+
+  // Factory method to create an Invoice object from JSON
+  factory Invoice1.fromJson(Map<String, dynamic> json) {
+    var detailsFromJson = json['details'] as List;
+    List<InvoiceDetail> detailList = detailsFromJson.map((item) => InvoiceDetail.fromJson(item)).toList();
+
+    return Invoice1(
+      invMasSno: json['Inv_Mas_Sno'],
+      invoiceNo: json['Invoice_No'],
+      paymentType: json['Payment_Type'],
+      invoiceDate: json['Invoice_Date'],
+      dueDate: json['Due_Date'],
+      chusName: json['Chus_Name'],
+      total: json['Total'],
+      details: detailList,
     );
   }
 }

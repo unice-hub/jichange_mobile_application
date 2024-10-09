@@ -283,6 +283,7 @@ class InvoiceData {
       json['Company_Name'],
       json['Control_No'],
       
+      
       // json['Remarks'] ?? '',
       // json['goods_status'] ?? '',
       // json['approval_status'] ?? '',
@@ -454,6 +455,8 @@ class _InvoiceCardState extends State<_InvoiceCard> {
                   customer:widget.invoice.customerName,
                   paymentType:widget.invoice.paymentType,
                   currency:widget.invoice.currencyCode,
+                  customerSno:widget.invoice.invMasNo,
+                  invMasSno:widget.invoice.invMasSno,
                 ),
               ),
             );

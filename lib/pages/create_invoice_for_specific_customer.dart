@@ -1,5 +1,3 @@
-// import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -8,15 +6,22 @@ import 'package:shared_preferences/shared_preferences.dart';
 // import 'dart:convert';
 import 'dart:developer';
 
+class CreateInvoiceForSpecificCustomer extends StatefulWidget {
+  final String customer;
+  final int customerSno;
 
-class CreateInvoicePage extends StatefulWidget {
-  const CreateInvoicePage({super.key});
+  const CreateInvoiceForSpecificCustomer({
+    super.key,
+    required this.customer,
+    required this.customerSno,
+
+    });
 
   @override
-  _CreateInvoicePageState createState() => _CreateInvoicePageState();
+  _CreateInvoiceForSpecificCustomerState createState() => _CreateInvoiceForSpecificCustomerState();
 }
 
-class _CreateInvoicePageState extends State<CreateInvoicePage> {
+class _CreateInvoiceForSpecificCustomerState extends State<CreateInvoiceForSpecificCustomer> {
   String searchQuery = "";
   String _token = 'Not logged in';
   int compid = 0;
@@ -50,6 +55,8 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
   void initState() {
     super.initState();
     _loadSessionInfo() ;
+    log('the size is ');
+    log(customers.length.toString());
 
      // Add a listener to the invoice number field to check if it exists
     invoiceNumberController.addListener(() {
@@ -94,6 +101,13 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
         if (response.statusCode == 200) {
           final jsonResponse = json.decode(response.body);
           customers = jsonResponse['response'];
+          setState(() {
+            log(customers.length.toString());
+            final cust = customers.firstWhere((cust) => cust['Cus_Mas_Sno'] == widget.customerSno);
+            selectedCustomer = cust['Cus_Mas_Sno'].toString();
+            cusMasSno = cust['Cus_Mas_Sno'];
+
+          });
           
           // setState(() {
           //    customers = customerName.map((branch) => branch['Customer_Name'] ['Cus_Mas_Sno'] as String).toList();
@@ -244,7 +258,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
         expiryDate == null ||
         selectedCustomer == null ||
         selectedPaymentType == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all required fields')),
       );
       return false;
@@ -378,8 +392,6 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
     }
   }
 
-
-
   Future<void> _selectDate(BuildContext context, bool isInvoiceDate) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -493,7 +505,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            
+
              TextField(
               controller: invoiceNumberController,
               decoration: const InputDecoration(
@@ -542,6 +554,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
               ),
             ),
             const SizedBox(height: 16),
+            
             InkWell(
               onTap: () => _selectExpiryDate(context),
               child: InputDecorator(
@@ -559,7 +572,6 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
 
             isLoading
             ? const Center(child: CircularProgressIndicator())
-
             : DropdownButtonFormField<String>(
               value: selectedCustomer,
               isExpanded: true,
@@ -571,11 +583,13 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
                   child: Text(value['Customer_Name'], overflow: TextOverflow.ellipsis),
                 );
               }).toList(),
-              onChanged: (newValue) {
-                setState(() {
-                  selectedCustomer = newValue;
-                });
-              },
+              onChanged: null,
+              // onChanged: (newValue) {
+              //   setState(() {
+              //     selectedCustomer = newValue;
+              //      cusMasSno = newValue != null ? customers.firstWhere((customer) => customer['Cus_Mas_Sno'].toString() == newValue)['Cus_Mas_Sno'] : widget.customerSno;
+              //   });
+              // },
               decoration: const InputDecoration(
                 labelText: 'Customer',
                 border: OutlineInputBorder(),
@@ -770,4 +784,3 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
     );
   }
 }
-
