@@ -343,7 +343,8 @@ Future<void> _findInvoice(String compid, String invno) async {
         dueDate == null ||
         expiryDate == null ||
         selectedCustomer == null ||
-        selectedPaymentType == null) {
+        selectedPaymentType == null
+        ) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all required fields')),
       );

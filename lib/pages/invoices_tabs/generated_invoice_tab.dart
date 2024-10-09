@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:learingdart/core/api/invoice_apis.dart';
+import 'package:learingdart/pages/amend_invoice.dart';
 // import 'package:learingdart/pages/invoices_tabs/created_invoice_tab.dart';
 import '../invoices_section.dart'; // Import Invoice class
 import 'dart:convert';
@@ -387,6 +388,22 @@ Widget _buildActionButtons() {
           ? [
               _buildIconActionButton(Icons.restart_alt, 'Amend', () {
                 // Define the action to amend
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AmendInvoicePage(
+                      invoiceNumber:widget.invoice.invoiceNumber,
+                      invoiceDate:widget.invoice.invoiceDate,
+                      invoiceDueDate:widget.invoice.dueDate,
+                      invoiceExpiryDate:widget.invoice.expiryDate,
+                      customer:widget.invoice.customerName,
+                      paymentType:widget.invoice.paymentType,
+                      currency:widget.invoice.currencyCode,
+                      customerSno:widget.invoice.invMasNo,
+                      invMasSno:widget.invoice.invMasSno,
+                    ),
+                  ),
+                );
               }, Colors.purple),
               _buildIconActionButton(Icons.local_shipping, 'Deliver', () {
                 // Define the action to deliver
