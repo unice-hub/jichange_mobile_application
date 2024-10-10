@@ -1,6 +1,7 @@
 // import 'dart:ffi';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:learingdart/core/api/invoice_apis.dart';
@@ -218,6 +219,241 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
     });
   }
 }
+
+//API to add new customer
+ Future<void> _addCustomerAPI(String name, String email, String mobile) async {
+    const url = 'http://192.168.100.50:98/api/Customer/AddCustomer';
+    final prefs = await SharedPreferences.getInstance();
+        int instituteID = prefs.getInt('instID') ?? 0;
+        int userID= prefs.getInt('userID') ?? 0;
+
+    final body = jsonEncode({
+        "CSno": 0,
+        "compid": instituteID, // Replace with your actual company ID
+        "CName": name,
+        "PostboxNo": "",
+        "Address": "",
+        "regid": 0,
+        "distsno": 0,
+        "wardsno": 0,
+        "Tinno": "",
+        "VatNo": "",
+        "CoPerson": "",
+        "Mail": email,
+        "Mobile_Number": mobile,
+        "dummy": true,
+        "check_status": "",
+        "userid": userID
+      });
+
+      try {
+        final response = await http.post(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $_token'
+          },
+          body: body,
+        );
+
+        if (response.statusCode == 200) {
+          // Handle success response
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Customer added successfully')),
+          );
+          _fetchCustomerName(); // Refresh customer list
+        } else {
+          // Handle error response
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to add customer: ${response.body}')),
+          );
+        }
+      } catch (e) {
+
+        if (e is http.ClientException) {
+          // Network error
+          _showErrorDialog('Network error. Please check your connection and try again.');
+
+        } else {
+          // Other exceptions
+          _showErrorDialog('An unexpected error occurred. Please try again.');
+          
+        }
+        setState(() {
+        isLoading = false;
+      });
+      }
+  }
+
+  void _showConfirmationDialog1(BuildContext context, String name, String email, String mobile) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Add Customer'),
+        content: const Text('Are you sure you want to add this customer? Would you also like to attach an invoice to this customer?'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+            },
+            child: const Text('CLOSE'),
+          ),
+          
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+              _addCustomerAPI(name, email, mobile); // Call API to add customer
+            },
+            child: const Text('CONFIRM'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+void _showAddCustomerSheet(BuildContext context) {
+  // Controllers for input fields
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final mobileController = TextEditingController();
+
+  // Email validation regex pattern
+  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+  // Mobile number validation regex pattern (digits only)
+  final mobileRegex = RegExp(r'^\d+$');
+
+  // State variables for error messages
+  String? nameError;
+  String? emailError;
+  String? mobileError;
+
+  // Use StatefulBuilder to maintain local state in the bottom sheet
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true, // Allows the sheet to expand when the keyboard appears
+    builder: (BuildContext context) {
+      return StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom, // Adjust for keyboard
+            ),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      'Add New Customer',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 16.0),
+                    
+                    // Name field with validation message
+                    TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Name',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        errorText: nameError, // Show error message if nameError is not null
+                      ),
+                    ),
+                    const SizedBox(height: 8.0),
+                    
+                    // Email field with validation message
+                    TextField(
+                      controller: emailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        errorText: emailError, // Show error message if emailError is not null
+                      ),
+                    ),
+                    const SizedBox(height: 8.0),
+                    
+                    // Mobile field with validation message
+                    TextField(
+                      controller: mobileController,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: InputDecoration(
+                        labelText: 'Mobile Number',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        errorText: mobileError, // Show error message if mobileError is not null
+                      ),
+                      keyboardType: TextInputType.phone, // Set the keyboard to number
+                    ),
+                    const SizedBox(height: 16.0),
+                    
+                    ElevatedButton(
+                      onPressed: () {
+                        String name = nameController.text.trim();
+                        String email = emailController.text.trim();
+                        String mobile = mobileController.text.trim();
+
+                        // Reset error messages before validation
+                        setState(() {
+                          nameError = null;
+                          emailError = null;
+                          mobileError = null;
+                        });
+
+                        // Validation
+                        bool isValid = true;
+
+                        if (name.isEmpty) {
+                          setState(() {
+                            nameError = 'Please enter your name';
+                          });
+                          isValid = false;
+                        }
+
+                        if (email.isEmpty || !emailRegex.hasMatch(email)) {
+                          setState(() {
+                            emailError = 'Please enter a valid email address';
+                          });
+                          isValid = false;
+                        }
+
+                        if (mobile.isEmpty || !mobileRegex.hasMatch(mobile)) {
+                          setState(() {
+                            mobileError = 'Please enter a valid mobile number';
+                          });
+                          isValid = false;
+                        }
+
+                        // If all fields are valid, proceed with the action
+                        if (isValid) {
+                          _showConfirmationDialog1(context, name, email, mobile);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                      ),
+                      child: const Text('Add Customer'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
 
   // Show error dialog in case of failure
   void _showErrorDialog(String message) {
@@ -576,11 +812,19 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
                   selectedCustomer = newValue;
                 });
               },
-              decoration: const InputDecoration(
-                labelText: 'Customer',
-                border: OutlineInputBorder(),
-              ),
-            ),
+                decoration: InputDecoration(
+                      labelText: 'Customer',
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: () {
+                          // Add action for the add button
+                          _showAddCustomerSheet(context);
+                          // You can navigate to a page to add a customer or show a dialog
+                        },
+                      ),
+                    ),
+                  ),
             const SizedBox(height: 16),
 
             DropdownButtonFormField<String>(
@@ -770,4 +1014,9 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
     );
   }
 }
+
+
+
+
+
 

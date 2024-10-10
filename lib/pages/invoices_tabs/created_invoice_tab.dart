@@ -397,7 +397,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
           : const Text(
               ' No Access ',
               style: TextStyle(
-                backgroundColor: Colors.yellow,
+                backgroundColor: Color(0xFFFFEB3B),
                 color: Colors.black, // Color for 'No Access' text
                 // fontWeight: FontWeight.bold,
               ),
@@ -471,7 +471,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
 
           _buildIconActionButton(Icons.visibility, 'View Details', () {
             // Define the action to view details
-          }, Colors.yellow),
+          }, const Color.fromRGBO(255, 187, 210, 1.0)),
 
           _buildIconActionButton(Icons.download, 'Download', () {
             // Define the action to download PDF

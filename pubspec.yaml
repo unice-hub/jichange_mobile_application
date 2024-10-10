@@ -37,6 +37,7 @@ dependencies:
   permission_handler: ^10.2.0
   font_awesome_flutter: ^10.7.0
   dropdown_search: ^5.0.2
+  fl_chart: ^0.69.0 # Check for the latest version on pub.dev
   #To handle the internet connectivity
   # connectivity_plus: ^2.3.1
 

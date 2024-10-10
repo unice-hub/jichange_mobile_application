@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:learingdart/core/api/invoice_apis.dart';
-import 'package:learingdart/pages/invoices_tabs/generated_invoice_tab.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'dart:convert';
 import 'dart:developer';
@@ -782,9 +781,9 @@ Future<void> _findInvoice(String compid, String invno) async {
             TextField(
               controller: remarks,
               decoration: const InputDecoration(
-                labelText: 'Invoice remarks (Optional)',
+                labelText: 'Reason',
                 border: OutlineInputBorder(),
-                hintText: 'Enter invoice remarks',
+                hintText: 'Enter reason',
                 // errorText: remarkErrorMessage,
               ),
             ),
