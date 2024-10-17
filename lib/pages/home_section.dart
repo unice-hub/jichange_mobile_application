@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+// import 'package:intl/intl.dart';
 import 'package:learingdart/bar%20graph/bar_graph.dart';
+import 'package:learingdart/pages/invoices_tabs/generated_invoice_tab.dart';
+import 'package:learingdart/pie%20chart/pie_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -12,13 +15,19 @@ class HomeSection extends StatefulWidget {
 }
 
 class _HomeSectionState extends State<HomeSection> {
+  String searchQuery = "";
   String _token = 'Not logged in';
   int _userID = 0;
   int _instID = 0;
-  String _userName = 'Unknown';
-  int _braid = 0;
+  // String _userName = 'Unknown';
+  // int _braid = 0;
 
   bool isLoading = true;
+  List<InvoiceData> generatedInvoices = [];
+
+   // Define invoiceSummary to hold the fixed and flexible invoice counts
+  List<int> invoiceSummary = [0, 0];
+
   Map<String, String> overviewData = {
     "Transaction": "0",
     "Customer": "0",
@@ -40,10 +49,11 @@ class _HomeSectionState extends State<HomeSection> {
       _token = prefs.getString('token') ?? 'Not logged in';
       _userID = prefs.getInt('userID') ?? 0;
       _instID = prefs.getInt('instID') ?? 0;
-      _userName = prefs.getString('userName') ?? 'Unknown';
-      _braid = prefs.getInt('braid') ?? 0;
+      // _userName = prefs.getString('userName') ?? 'Unknown';
+      // _braid = prefs.getInt('braid') ?? 0;
     });
     _fetchOverview();
+     _fetchInvoicesData();
   }
 
   Future<void> _fetchOverview() async {
@@ -82,6 +92,65 @@ class _HomeSectionState extends State<HomeSection> {
     }
   }
 
+  Future<void> _fetchInvoicesData() async {
+    const url = 'http://192.168.100.50:98/api/Invoice/GetSignedDetails';
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      int instituteID = prefs.getInt('instID') ?? 0;
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode({"compid": instituteID}),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
+        if (responseBody['response'] is List) {
+          setState(() {
+            generatedInvoices = (responseBody['response'] as List)
+                .map((item) => InvoiceData.fromJson(item, _userID))
+                .toList();
+
+            // Count the number of fixed and flexible invoices
+          int fixedCount = generatedInvoices
+              .where((invoice) => invoice.paymentType == 'Fixed')
+              .length;
+          int flexibleCount = generatedInvoices
+              .where((invoice) => invoice.paymentType == 'Flexible')
+              .length;
+
+          // Pass the data to the pie chart
+          _updatePieChartData(fixedCount, flexibleCount);
+
+            isLoading = false;
+          });
+        } else {
+          _showErrorDialog('Unexpected data format: response is not a list');
+        }
+      } else {
+        _showErrorDialog('Error: Failed to fetch invoices');
+      }
+    } catch (e) {
+      _showErrorDialog('An unexpected error occurred. Please try again.');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  // Update the pie chart with the new data
+  void _updatePieChartData(int fixed, int flexible) {
+    setState(() {
+      invoiceSummary = [fixed.toInt(), flexible.toInt()];
+    });
+  }
+
+
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
@@ -100,6 +169,11 @@ class _HomeSectionState extends State<HomeSection> {
 
   @override
   Widget build(BuildContext context) {
+     final filteredInvoices = generatedInvoices.where((invoice) {
+      return invoice.customerName.toLowerCase().contains(searchQuery.toLowerCase()) ||
+          invoice.invoiceNumber.toLowerCase().contains(searchQuery.toLowerCase());
+    }).toList();
+
     return Scaffold(
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -155,26 +229,83 @@ class _HomeSectionState extends State<HomeSection> {
 
                     const Text(
                       'Generated invoice summary',
-
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 10),
+
+                    // Information section about the pie chart
+                    Container(
+                      padding: const EdgeInsets.all(12.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.5),
+                            spreadRadius: 2,
+                            blurRadius: 5,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Chart Summary',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 10),
+                          _buildChartInfoRow(
+                            label: 'Fixed Invoices:',
+                            value: '${invoiceSummary[0].toInt()}',
+                            color: const Color.fromARGB(255, 131, 75, 204),
+                          ),
+                          const SizedBox(height: 5),
+                          _buildChartInfoRow(
+                            label: 'Flexible Invoices:',
+                            value: '${invoiceSummary[1].toInt()}',
+                            color: const Color.fromARGB(255, 51, 134, 88),
+                          ),
+                          
+                        ],
+                      ),
+                    ),
+
                     Container(
                       height: 200,
                       color: Colors.grey[200],
-                      child: const Center(child: Text('Pie Chart Placeholder')),
+                      child: MyPieChart(
+                        invoiceSummary: invoiceSummary, // Fixed and Flexible invoices
+                      ),
                     ),
                     const SizedBox(height: 20),
+
                     const Text(
                       'Generated invoice(s)',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 10),
-                    _buildGeneratedInvoiceTable(),
+                    _buildSearchField(),
+                    // _buildGeneratedInvoiceTable(),
+                    _buildInvoiceList(filteredInvoices),
                   ],
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildSearchField() {
+
+    
+    return TextField(
+      onChanged: (value) => setState(() => searchQuery = value),
+      decoration: InputDecoration(
+        prefixIcon: const Icon(Icons.search),
+        labelText: 'Search',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+      ),
     );
   }
 
@@ -214,42 +345,100 @@ class _HomeSectionState extends State<HomeSection> {
     );
   }
 
-  Widget _buildGeneratedInvoiceTable() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: DataTable(
-        columns: const <DataColumn>[
-          DataColumn(label: Text('No.')),
-          DataColumn(label: Text('Customer name')),
-          DataColumn(label: Text('Invoice No')),
-          DataColumn(label: Text('Invoice Date')),
-          DataColumn(label: Text('Payment type')),
-          DataColumn(label: Text('Total Amount')),
-        ],
-        rows: const <DataRow>[
-          DataRow(
-            cells: <DataCell>[
-              DataCell(Text('1')),
-              DataCell(Text('Joshua')),
-              DataCell(Text('App/108')),
-              DataCell(Text('Tue Oct 08 2024')),
-              DataCell(Text('Flexible')),
-              DataCell(Text('11,425 TZS')),
-            ],
-          ),
-        ],
-      ),
+   Widget _buildInvoiceList(List<InvoiceData> invoices) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: invoices.length,
+      itemBuilder: (context, index) {
+        return _InvoiceCard(invoice: invoices[index]);
+      },
     );
   }
+  
+}
+
+ class _InvoiceCard extends StatelessWidget {
+  final InvoiceData invoice;
+
+  const _InvoiceCard({super.key, required this.invoice});
+
+    @override
+    Widget build(BuildContext context) {
+      return Card(
+        elevation: 4,
+        child: InkWell(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildInvoiceRow('Customer name:', invoice.customerName),
+                 const SizedBox(height: 5),
+                _buildInvoiceRow('Invoice N°:', invoice.invoiceNumber ),
+                const SizedBox(height: 5),
+                _buildInvoiceRow('Invoice Date:', formatDate(invoice.invoiceDate)),
+                const SizedBox(height: 5),
+                _buildInvoiceRow('Payment type:', _buildPaymentTypeContainer()),
+                const SizedBox(height: 5),
+                _buildInvoiceRow('Total:', "${invoice.total}  ${invoice.currencyCode}"),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    Widget _buildInvoiceRow(String label, dynamic value) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label),
+          value is Widget ? value : Text(value.toString()),
+        ],
+      );
+    }
+
+    Widget _buildPaymentTypeContainer() {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(
+          color: invoice.paymentType == 'Fixed' ? const Color.fromARGB(255, 240, 154, 255) : Colors.greenAccent,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          invoice.paymentType,
+          style: TextStyle(color: invoice.paymentType == 'Fixed' ? const Color.fromARGB(255, 131, 75, 204) : const Color.fromARGB(255, 51, 134, 88)),
+        ),
+      );
+    }
+  }
+
+  Widget _buildChartInfoRow({
+  required String label,
+  required String value,
+  required Color color,
+}) {
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Row(
+        children: [
+          Container(
+            width: 12,
+            height: 12,
+            color: color,
+          ),
+          const SizedBox(width: 8),
+          Text(label),
+        ],
+      ),
+      Text(
+        value,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ],
+  );
 }

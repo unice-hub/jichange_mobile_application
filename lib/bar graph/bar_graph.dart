@@ -60,7 +60,7 @@ class MyBarGraph extends StatelessWidget {
         ),
         rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         bottomTitles: const AxisTitles(
-          axisNameWidget: const Padding(
+          axisNameWidget: Padding(
             padding: EdgeInsets.only(top: 1),  // Add padding for bottom axis title
             child: Text('Status', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
           ),
@@ -79,7 +79,8 @@ class MyBarGraph extends StatelessWidget {
                   BarChartRodData(
                     toY: data.y,
                     // color: Colors.grey[800],
-                    color: Colors.purple,  // You can customize the color
+                    // color: Colors.purple,  // You can customize the color
+                    color: _getColor(data.x),
                     width: 95,
                     borderRadius: BorderRadius.circular(4),
                     backDrawRodData: BackgroundBarChartRodData(
@@ -103,6 +104,19 @@ class MyBarGraph extends StatelessWidget {
   }
 }
 
+ Color _getColor(int index) {
+    switch (index) {
+      case 0:
+        return Colors.purple;// Fixed Invoices
+      case 1:
+        return Colors.purple;// Flexible Invoices
+      case 2:
+        return Colors.purple;// Flexible Invoices
+      default:
+        return Colors.grey;
+    }
+  }
+
 Widget getBottomTitles(double value, TitleMeta meta) {
   const style = TextStyle(
     color: Colors.grey,
@@ -125,5 +139,5 @@ Widget getBottomTitles(double value, TitleMeta meta) {
       break;
   }
 
-  return SideTitleWidget(axisSide: meta.axisSide, child: text, space: 10,);
+  return SideTitleWidget(axisSide: meta.axisSide, space: 10, child: text,);
 }
