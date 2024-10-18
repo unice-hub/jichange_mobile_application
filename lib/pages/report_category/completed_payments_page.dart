@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CompletedPaymentsPage extends StatefulWidget {
   const CompletedPaymentsPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _CompletedPaymentsPageState createState() => _CompletedPaymentsPageState();
 }
 
@@ -15,39 +17,83 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
   String? selectedInvoiceNumber;
   DateTime? fromDate;
   DateTime? toDate;
+  String _token = 'Not logged in';
 
-  List<String> branches = ['Magomeni', 'Ilala', 'Kawe','joshua speaker urio'];
-  List<String> vendors = ['Me&U Apparel', 'Vendor A', 'Vendor B','joshua speaker urio'];
-  List<String> customers = ['All', 'Customer A', 'Customer B','joshua speaker urio'];
-  List<String> invoiceNumbers = ['All', 'Invoice A', 'Invoice B','joshua speaker urio'];
+  List<String> branches = ['Magomeni', 'Ilala', 'Kawe', 'Joshua Speaker Urio'];
+  List<String> vendors = ['Me&U Apparel', 'Vendor A', 'Vendor B', 'Joshua Speaker Urio'];
+  List<String> customers = ['All', 'Customer A', 'Customer B', 'Joshua Speaker Urio'];
+  List<String> invoiceNumbers = ['All', 'Invoice A', 'Invoice B', 'Joshua Speaker Urio'];
 
-  // Dummy data for filtered results
-  final List<Map<String, String>> filteredResults = [
-    {
-      'Payment Date': 'Thu Aug 22 2024',
-      'Payer': 'Min Man',
-      'Customer': 'Mini Man',
-      'Invoice N°': 'ap01',
-      'Control N°': 'T00060198',
-      'Payment Method': 'MNO',
-      'Transaction N°': 'AC9102900000',
-      'Status': 'Not sent',
-      'Receipt N°': 'TZSC339030',
-      'Total Amount': '2,262,500 TZS',
-      'Paid Amount': '2,262,500 TZS',
-      'Payment Type': 'Fixed',
-    },
-    // Additional entries can go here
-  ];
+  List<Map<String, dynamic>> invoices = [];
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSessionInfo();
+    fetchInvoices();
+  }
+
+  Future<void> _loadSessionInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _token = prefs.getString('token') ?? 'Not logged in';
+    });
+  }
+
+  Future<void> fetchInvoices() async {
+    setState(() => isLoading = true);
+    const url = 'http://192.168.100.50:98/api/RepCompInvoice/GetInvReport';
+    final prefs = await SharedPreferences.getInstance();
+    int instituteID = prefs.getInt('instID') ?? 0;
+    int userID = prefs.getInt('userID') ?? 0;
+
+    final Map<String, dynamic> requestBody = {
+      "companyIds": [40140],
+      "customerIds": [0],
+      "stdate": "",
+      "enddate": "",
+      "allowCancelInvoice": true,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          invoices = List<Map<String, dynamic>>.from(data['response']);
+        });
+      } else {
+        showError('Failed to load invoices. Status: ${response.statusCode}');
+      }
+    } catch (e) {
+      showError('Error fetching data: $e');
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  void showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
 
   Future<void> _selectDate(BuildContext context, bool isFrom) async {
-    final DateTime? picked = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-    if (picked != null && picked != (isFrom ? fromDate : toDate)) {
+    if (picked != null) {
       setState(() {
         if (isFrom) {
           fromDate = picked;
@@ -83,21 +129,15 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
             Row(
               children: [
                 Expanded(
-                  flex: 1,
                   child: DropdownButtonFormField<String>(
                     value: selectedBranch,
                     isExpanded: true,
                     hint: const Text('Select Branch'),
-                    items: branches.map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value, overflow: TextOverflow.ellipsis),
-                      );
+                    items: branches.map((value) {
+                      return DropdownMenuItem(value: value, child: Text(value));
                     }).toList(),
                     onChanged: (newValue) {
-                      setState(() {
-                        selectedBranch = newValue;
-                      });
+                      setState(() => selectedBranch = newValue);
                     },
                     decoration: const InputDecoration(
                       labelText: 'Branch',
@@ -107,21 +147,15 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  flex: 1,
                   child: DropdownButtonFormField<String>(
                     value: selectedVendor,
                     isExpanded: true,
                     hint: const Text('Select Vendor'),
-                    items: vendors.map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value, overflow: TextOverflow.ellipsis),
-                      );
+                    items: vendors.map((value) {
+                      return DropdownMenuItem(value: value, child: Text(value));
                     }).toList(),
                     onChanged: (newValue) {
-                      setState(() {
-                        selectedVendor = newValue;
-                      });
+                      setState(() => selectedVendor = newValue);
                     },
                     decoration: const InputDecoration(
                       labelText: 'Vendor',
@@ -135,21 +169,15 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
             Row(
               children: [
                 Expanded(
-                  flex: 1,
                   child: DropdownButtonFormField<String>(
                     value: selectedCustomer,
                     isExpanded: true,
                     hint: const Text('Select Customer'),
-                    items: customers.map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value, overflow: TextOverflow.ellipsis),
-                      );
+                    items: customers.map((value) {
+                      return DropdownMenuItem(value: value, child: Text(value));
                     }).toList(),
                     onChanged: (newValue) {
-                      setState(() {
-                        selectedCustomer = newValue;
-                      });
+                      setState(() => selectedCustomer = newValue);
                     },
                     decoration: const InputDecoration(
                       labelText: 'Customer',
@@ -159,21 +187,15 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  flex: 1,
                   child: DropdownButtonFormField<String>(
                     value: selectedInvoiceNumber,
                     isExpanded: true,
                     hint: const Text('Select Invoice Number'),
-                    items: invoiceNumbers.map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value, overflow: TextOverflow.ellipsis),
-                      );
+                    items: invoiceNumbers.map((value) {
+                      return DropdownMenuItem(value: value, child: Text(value));
                     }).toList(),
                     onChanged: (newValue) {
-                      setState(() {
-                        selectedInvoiceNumber = newValue;
-                      });
+                      setState(() => selectedInvoiceNumber = newValue);
                     },
                     decoration: const InputDecoration(
                       labelText: 'Invoice Number',
@@ -227,72 +249,28 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
               child: const Text('Submit'),
             ),
             const SizedBox(height: 16),
-            // Export buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Export to Excel logic here
-                  },
-                  icon: const Icon(Icons.download),
-                  label: const Text('Export to Excel'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Export to PDF logic here
-                  },
-                  icon: const Icon(Icons.picture_as_pdf),
-                  label: const Text('Export to PDF'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            
-            // Filtered Results Section
             Expanded(
-              child: ListView.builder(
-                itemCount: filteredResults.length,
-                itemBuilder: (context, index) {
-                  final item = filteredResults[index];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    child: ExpansionTile(
-                      title: Text('Invoice N°: ${item['Invoice N°']}'),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Customer: ${item['Customer']}'),
-                          Text('Total Amount: ${item['Total Amount']}'),
-                          Text('Status: ${item['Status']}'),
-                        ],
-                      ),
-                      children: [
-                        ListTile(
-                          title: Text('Control N°: ${item['Control N°']}'),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: invoices.length,
+                      itemBuilder: (context, index) {
+                        final invoice = invoices[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: ExpansionTile(
+                            title: Text('Invoice No: ${invoice['Invoice_No']}'),
+                            subtitle: Text('Customer: ${invoice['Chus_Name']}'),
                             children: [
-                              Text('Payment Date: ${item['Payment Date']}'),
-                              Text('Paid Amount: ${item['Paid Amount']}'),
-                              Text('Payment Method: ${item['Payment Method']}'),
-                              Text('Transaction N°: ${item['Transaction N°']}'),
-                              Text('Receipt N°: ${item['Receipt N°']}'),
+                              ListTile(
+                                title: const Text('Details'),
+                                subtitle: Text('Total Amount: ${invoice['Total']} TZS'),
+                              ),
                             ],
                           ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
           ],
         ),

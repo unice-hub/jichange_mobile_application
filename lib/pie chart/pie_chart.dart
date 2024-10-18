@@ -14,8 +14,7 @@ class MyPieChart extends StatelessWidget {
   Widget build(BuildContext context) {
     // Initialize pie data
     PieData myPieData = PieData(
-     fixedInvoices: invoiceSummary[0],
-      flexibleInvoices: invoiceSummary[1],
+     invoiceCounts: invoiceSummary
     );
 
     myPieData.initializePieData();
@@ -35,6 +34,7 @@ class MyPieChart extends StatelessWidget {
             ),
           );
         }).toList(),
+        
         centerSpaceRadius: 40,
         sectionsSpace: 4,
         startDegreeOffset: 90+90+90,
@@ -42,12 +42,16 @@ class MyPieChart extends StatelessWidget {
     );
   }
 
+  
+
   Color _getColor(int index) {
     switch (index) {
       case 0:
         return const Color.fromARGB(255, 131, 75, 204);// Fixed Invoices
       case 1:
         return const Color.fromARGB(255, 51, 134, 88);// Flexible Invoices
+      case 2:
+        return const Color.fromARGB(255, 194, 6, 252);// Flexible Invoices
       default:
         return Colors.grey;
     }

@@ -336,7 +336,7 @@ class _CustomerSectionState extends State<CustomerSection> {
                   children: [
                     _buildIconActionButton(Icons.remove_red_eye_outlined,'View Details', () {
                        _viewCustomer(customer);
-                    }, Colors.yellow),
+                    }, const Color.fromARGB(255, 128, 116, 12)),
 
                     // IconButton(
                     //   icon: Icon(Icons.remove_red_eye_outlined, color: Theme.of(context).colorScheme.primary),

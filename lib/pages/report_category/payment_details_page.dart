@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PaymentDetailsPage extends StatefulWidget {
   const PaymentDetailsPage({super.key});
@@ -12,9 +15,67 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
   String? selectedCustomer;
   DateTime? fromDate;
   DateTime? toDate;
+  String _token = 'Not logged in';
 
   List<String> vendors = ['Me&U Apparel', 'Vendor 2', 'Vendor 3', 'joshua speaker urio'];
   List<String> customers = ['All', 'Customer 1', 'Customer 2', 'joshua speaker urio'];
+
+  List<Map<String, dynamic>> invoices = [];
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSessionInfo();
+    fetchInvoices();
+  }
+
+  Future<void> _loadSessionInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _token = prefs.getString('token') ?? 'Not logged in';
+    });
+  }
+
+  Future<void> fetchInvoices() async {
+    setState(() => isLoading = true);
+    const url = 'http://192.168.100.50:98/api/RepCompInvoice/GetInvReport';
+    final prefs = await SharedPreferences.getInstance();
+    int instituteID = prefs.getInt('instID') ?? 0;
+    int userID = prefs.getInt('userID') ?? 0;
+
+    final Map<String, dynamic> requestBody = {
+      "companyIds": [40140],
+      "customerIds": [0],
+      "stdate": "",
+      "enddate": "",
+      "allowCancelInvoice": true,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          invoices = List<Map<String, dynamic>>.from(data['response']);
+          isLoading = false;
+        });
+      } else {
+        showError('Failed to load invoices. Status: ${response.statusCode}');
+      }
+    } catch (e) {
+      showError('Error fetching data: $e');
+    }
+  }
 
   // Function to pick a date
   Future<void> _selectDate(BuildContext context, bool isFromDate) async {
@@ -33,6 +94,11 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         }
       });
     }
+  }
+
+   void showError(String message) {
+    setState(() => isLoading = false);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -90,18 +156,50 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                       ],
                     ),
                     const SizedBox(height: 16.0),
+                    isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : invoices.isEmpty
+                    ? const Center(child: Text('No invoices available'))
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: invoices.length,
+                        itemBuilder: (context, index) {
+                          final invoice = invoices[index];
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            child: ExpansionTile(
+                              title: Text('Invoice No: ${invoice['Invoice_No']}'),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Customer: ${invoice['Chus_Name']}'),
+                                  Text('Total Amount: ${invoice['Total']} TZS'),
+                                  Text('Status: ${invoice['Status']}'),
+                                ],
+                              ),
+                              children: [
+                                ListTile(
+                                  title: const Text('Details'),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Control No: ${invoice['Control_No']}'),
+                                      Text('Payment Type: ${invoice['Payment_Type']}'),
+                                      Text('Invoice Date: ${invoice['Invoice_Date'].split("T")[0]}'),
+                                      Text('Due Date: ${invoice['Due_Date'].split("T")[0]}'),
+                                      Text('Posted by: ${invoice['AuditBy']}'),
+                                      Text('Status: ${invoice['goods_status']}'),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                   ],
                 ),
-              ),
-            ),
-
-            // Display the filtered payment details
-            Expanded(
-              child: ListView.builder(
-                itemCount: 3, // Number of payment details
-                itemBuilder: (context, index) {
-                  return _buildPaymentCard(index);
-                },
               ),
             ),
           ],
@@ -209,72 +307,6 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
           child: const Text('SUBMIT'),
         ),
       ],
-    );
-  }
-
-  Widget _buildPaymentCard(int index) {
-    // Sample payment data (replace with actual data)
-    final paymentDetails = {
-      'paymentDate': 'Thu Aug 22 2024',
-      'customer': 'Mini Man',
-      'invoiceNumber': 'APP/082301',
-      'paymentType': 'Fixed',
-      'status': 'Completed',
-      'totalAmount': '2,262,500 TZS',
-      'paidAmount': '2,262,500 TZS',
-      'balance': '0 TZS',
-      'controlNumber': 'T00060198',
-      'transactionNumber': 'AC910209000',
-      'receiptNumber': 'TZSC393030',
-    };
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16.0),
-      elevation: 4.0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.0),
-      ),
-      child: ExpansionTile(
-        title: Text(paymentDetails['invoiceNumber']!),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Customer: ${paymentDetails['customer']}'),
-            Text('Total Amount: ${paymentDetails['totalAmount']}'),
-            Text('Payment Date: ${paymentDetails['paymentDate']}'),
-          ],
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Invoice N°: ${paymentDetails['invoiceNumber']}'),
-                Text('Payment Type: ${paymentDetails['paymentType']}'),
-                Text('Status: ${paymentDetails['status']}'),
-                Text('Paid Amount: ${paymentDetails['paidAmount']}'),
-                Text('Balance: ${paymentDetails['balance']}'),
-                Text('Control N°: ${paymentDetails['controlNumber']}'),
-                Text('Transaction N°: ${paymentDetails['transactionNumber']}'),
-                Text('Receipt N°: ${paymentDetails['receiptNumber']}'),
-                const SizedBox(height: 8.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.visibility, color: Colors.amber),
-                      onPressed: () {
-                        // View action
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

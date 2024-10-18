@@ -1,22 +1,16 @@
 import 'package:learingdart/pie%20chart/individual_pie.dart';
 
 class PieData {
-  final int fixedInvoices;
-  final int flexibleInvoices;
-
-  PieData({
-    required this.fixedInvoices,
-    required this.flexibleInvoices,
-  });
-
+  final List<int> invoiceCounts; // Accepts dynamic counts
   List<IndividualPie> pieData = [];
 
-  // Initialize pie data
+  PieData({required this.invoiceCounts});
+
+  // Initialize pie data dynamically
   void initializePieData() {
-    pieData = [
-      IndividualPie(x: 0, y: fixedInvoices),
-      IndividualPie(x: 1, y: flexibleInvoices),
-    ];
+    pieData = List.generate(
+      invoiceCounts.length,
+      (index) => IndividualPie(x: index, y: invoiceCounts[index]),
+    );
   }
 }
-

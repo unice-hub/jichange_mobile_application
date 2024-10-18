@@ -410,12 +410,12 @@ class _InvoiceCardState extends State<_InvoiceCard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: widget.invoice.paymentType == 'Fixed' ? Colors.purpleAccent : Colors.greenAccent,
+        color: widget.invoice.paymentType == 'Fixed' ? const Color.fromARGB(255, 240, 154, 255) : Colors.greenAccent,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         widget.invoice.paymentType,
-        style: TextStyle(color: widget.invoice.paymentType == 'Fixed' ? Colors.white : Colors.black),
+        style: TextStyle(color: widget.invoice.paymentType == 'Fixed' ? const Color.fromARGB(255, 131, 75, 204) : const Color.fromARGB(34, 51, 134, 88)),
       ),
     );
   }
@@ -424,12 +424,12 @@ class _InvoiceCardState extends State<_InvoiceCard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: widget.invoice.status == 'Active' ? Colors.blueAccent : Colors.redAccent,
+        color: widget.invoice.status == 'Active' ? const Color.fromARGB(45, 68, 137, 255) : Colors.redAccent,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         widget.invoice.status,
-        style: const TextStyle(color: Colors.white),
+        style: const TextStyle(color: Colors.blueAccent),
       ),
     );
   }
@@ -471,7 +471,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
 
           _buildIconActionButton(Icons.visibility, 'View Details', () {
             // Define the action to view details
-          }, const Color.fromRGBO(255, 187, 210, 1.0)),
+          }, const Color.fromARGB(255, 128, 116, 12)),
 
           _buildIconActionButton(Icons.download, 'Download', () {
             // Define the action to download PDF

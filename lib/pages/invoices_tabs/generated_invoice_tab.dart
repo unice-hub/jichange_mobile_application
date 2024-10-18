@@ -353,12 +353,12 @@ class _InvoiceCardState extends State<_InvoiceCard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: widget.invoice.paymentType == 'Fixed' ? Colors.purpleAccent : Colors.greenAccent,
+        color: widget.invoice.paymentType == 'Fixed' ? const Color.fromARGB(255, 240, 154, 255) : Colors.greenAccent,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         widget.invoice.paymentType,
-        style: TextStyle(color: widget.invoice.paymentType == 'Fixed' ? Colors.white : Colors.black),
+        style: TextStyle(color: widget.invoice.paymentType == 'Fixed' ? const Color.fromARGB(255, 131, 75, 204) : const Color.fromARGB(255, 51, 134, 88)),
       ),
     );
   }
@@ -415,7 +415,7 @@ Widget _buildActionButtons() {
               },Colors.red),
               _buildIconActionButton(Icons.visibility, 'View Details', () {
                 // Define the action to view details
-              }, Colors.yellow),
+              }, const Color.fromARGB(255, 128, 116, 12)),
               _buildIconActionButton(Icons.download, 'Download', () {
                 // Define the action to download PDF
               }, Colors.black),
@@ -423,7 +423,7 @@ Widget _buildActionButtons() {
           : [
               _buildIconActionButton(Icons.visibility, 'View Details', () {
                 // Define the action to view details
-              }, Colors.yellow),
+              }, const Color.fromARGB(255, 128, 116, 12)),
               _buildIconActionButton(Icons.download, 'Download', () {
                 // Define the action to download PDF
               }, Colors.black),
