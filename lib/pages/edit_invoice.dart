@@ -555,6 +555,7 @@ Future<void> _findInvoice(String compid, String invno) async {
   double calculateTotalOfAllItems() {
     return addedItems.fold(0, (sum, item) => sum + item['total']);
   }
+  
 
   void submitInvoice() {
     if (addedItems.isNotEmpty) {
@@ -846,7 +847,8 @@ Future<void> _findInvoice(String compid, String invno) async {
             Align(
               alignment: Alignment.centerRight,
               child: Text(
-                'Total of all items: ${calculateTotalOfAllItems().toStringAsFixed(2)}',
+                
+                'Total of all items: ${calculateTotalOfAllItems()}',
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),

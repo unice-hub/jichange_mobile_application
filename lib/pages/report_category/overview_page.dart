@@ -37,6 +37,10 @@ class _OverviewPageState extends State<OverviewPage> {
     "Expired": "0",
   };
 
+  Map<String, String> detailsData = {
+    "Total": "0",
+  };
+
   @override
   void initState() {
     super.initState();
@@ -54,6 +58,7 @@ class _OverviewPageState extends State<OverviewPage> {
     });
     _fetchOverview();
      _fetchInvoicesData();
+     _getchDetails();
   }
 
   Future<void> _fetchOverview() async {
@@ -91,6 +96,48 @@ class _OverviewPageState extends State<OverviewPage> {
       });
     }
   }
+  
+  Future<void> _getchDetails() async {
+  const url = 'http://192.168.100.50:98/api/Invoice/GetchDetails';
+
+  try {
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
+      body: jsonEncode({"compid": _instID}),
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      final responseData = jsonResponse['response'];
+
+      // Calculate total number of invoices and sum of all 'Total' fields
+      int invoiceCount = responseData.length;
+      double totalInvoiceAmount = responseData.fold(0.0, (sum, item) {
+        return sum + (item['Total'] ?? 0.0);
+      });
+
+      // Update the UI state with the new data
+      setState(() {
+        detailsData['Due'] = invoiceCount.toString();
+        detailsData['Expired'] = totalInvoiceAmount.toStringAsFixed(2);
+        isLoading = false;
+      });
+    } else {
+      throw Exception('Failed to load details data');
+    }
+  } catch (e) {
+    _showErrorDialog('An error occurred while fetching details data.\n${e.toString()}');
+    setState(() {
+      isLoading = false;
+    });
+  }
+}
+
 
   Future<void> _fetchInvoicesData() async {
     const url = 'http://192.168.100.50:98/api/Invoice/GetSignedDetails';
@@ -126,7 +173,6 @@ class _OverviewPageState extends State<OverviewPage> {
 
           // Pass the data to the pie chart
           _updatePieChartData(fixedCount, flexibleCount);
-
             isLoading = false;
           });
         } else {
@@ -313,11 +359,17 @@ class _OverviewPageState extends State<OverviewPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildOverviewCard(overviewData['Customer'] ?? '0', 'Customer(s)'),
-                        _buildOverviewCard(overviewData['Due'] ?? '0', 'Due'),
-                        _buildOverviewCard(overviewData['Expired'] ?? '0', 'Expired'),
+                       _buildOverviewCard(overviewData['Customer'] ?? '0', 'Customer(s)'),
+                       _buildOverviewCard(detailsData['Due'] ?? '0','Total Created\n Invoices',),
+                       _buildOverviewCard(detailsData['Expired'] ?? '0','Total Invoice\n Amount',),
+                      //  _buildOverviewCard(overviewData['Customer'] ?? '0', 'Customer(s)'),
+                      //  _buildOverviewCard(detailsData['Due'] ?? '0','Total Created\n Invoices',),
+                      //  _buildOverviewCard('1000000000000','Total Invoice\n Amount',),
                       ],
                     ),
+                    const SizedBox(height: 10),
+                    const SizedBox(height: 10),
+                    const SizedBox(height: 10),
                   ],
                 ),
               ),
@@ -325,7 +377,37 @@ class _OverviewPageState extends State<OverviewPage> {
     );
   }
 
+ 
+
   Widget _buildOverviewCard(String value, String title) {
+    // Convert value to a formatted string with commas
+    String formattedValue;
+    try {
+      // double formatted = NubemrFormat('#,##0').format(double.parse(value)) as double;
+      int number = double.parse(value).toInt();
+      
+      String formatNumber(int num) {
+      if (num >= 1e15) {
+        return '${(num / 1e15)}Q'; // Quadrillions
+      } else if (num >= 1e12) {
+        return '${(num / 1e12)}T'; // Trillions
+      } else if (num >= 1e9) {
+        return '${(num / 1e9)}B'; // Billions
+      } else if (num >= 1e6) {
+        return '${(num / 1e6)}M'; // Millions
+      } else if (num >= 1e3) {
+        return '${(num / 1e3)}K'; // Thousands
+      } else {
+        return num.toString(); // Default format for smaller numbers
+      }
+    }
+      // formattedValue = formatNumber(formatted);
+      formattedValue = formatNumber(number);
+    } catch (e) {
+      formattedValue = value; // Fallback if parsing fails
+    }
+
+
     return Container(
       width: MediaQuery.of(context).size.width / 3.5,
       height: 100,
@@ -347,21 +429,22 @@ class _OverviewPageState extends State<OverviewPage> {
           Text(
             title,
             style: const TextStyle(fontSize: 16),
+           
           ),
           const SizedBox(height: 5),
           Text(
-            value,
+            formattedValue,
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 5),
-          
         ],
       ),
     );
   }
+
 }
 
  

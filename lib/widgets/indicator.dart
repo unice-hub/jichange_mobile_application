@@ -6,11 +6,11 @@ class Indicator extends StatelessWidget {
   final bool isSquare;
 
   const Indicator({
-    Key? key,
+    super.key,
     required this.color,
     required this.text,
     this.isSquare = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
