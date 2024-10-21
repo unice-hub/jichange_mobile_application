@@ -848,7 +848,7 @@ Future<void> _findInvoice(String compid, String invno) async {
               alignment: Alignment.centerRight,
               child: Text(
                 
-                'Total of all items: ${calculateTotalOfAllItems()}',
+                'Total of all items: ${calculateTotalOfAllItems().toStringAsFixed(2)}',
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),

@@ -78,6 +78,50 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
     }
   }
 
+  Future<void> filterInvoices() async {
+  setState(() => isLoading = true);
+  const url = 'http://192.168.100.50:98/api/RepCompInvoice/GetInvReport';
+  final prefs = await SharedPreferences.getInstance();
+  int instituteID = prefs.getInt('instID') ?? 0;
+  int userID = prefs.getInt('userID') ?? 0;
+
+  // Prepare the request body with selected values
+  final Map<String, dynamic> requestBody = {
+    "companyIds": [40140],
+    "customerIds": selectedCustomer != null && selectedCustomer != 'All'
+        ? [customers.indexOf(selectedCustomer!)]
+        : [],
+    "stdate": fromDate != null ? fromDate!.toIso8601String() : "",
+    "enddate": toDate != null ? toDate!.toIso8601String() : "",
+    "allowCancelInvoice": true,
+  };
+
+  try {
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
+      body: jsonEncode(requestBody),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        invoices = List<Map<String, dynamic>>.from(data['response']);
+        isLoading = false;
+      });
+    } else {
+      showError('Failed to filter invoices. Status: ${response.statusCode}');
+    }
+  } catch (e) {
+    showError('Error filtering invoices: $e');
+  }
+}
+
+
   Future<void> _selectDate(BuildContext context, bool isFrom) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -124,6 +168,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: selectedVendor,
+                    isExpanded: true,
                     hint: const Text('Select Vendor'),
                     items: vendors.map((String value) {
                       return DropdownMenuItem<String>(
@@ -142,6 +187,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: selectedCustomer,
+                    isExpanded: true,
                     hint: const Text('Select Customer'),
                     items: customers.map((String value) {
                       return DropdownMenuItem<String>(
@@ -200,6 +246,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
             ElevatedButton(
               onPressed: () {
                 // Implement filtering logic here
+                 filterInvoices();
               },
               child: const Text('Submit'),
             ),

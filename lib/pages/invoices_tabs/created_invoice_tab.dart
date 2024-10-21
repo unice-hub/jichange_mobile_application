@@ -281,7 +281,7 @@ class InvoiceData {
       json['Inv_Mas_Sno'],
       json['Com_Mas_Sno'],
       json['Company_Name'],
-      json['Control_No'],
+      json['Control_No'] ?? '',
       
       
       // json['Remarks'] ?? '',

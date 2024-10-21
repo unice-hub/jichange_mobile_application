@@ -250,7 +250,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                   );
                 }).toList(),
                 onChanged: (value) {
-                  setState(() {
+                  setState(() { 
                     selectedCustomer = value;
                   });
                 },

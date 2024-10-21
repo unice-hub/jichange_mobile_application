@@ -36,7 +36,7 @@ class MyPieChart extends StatelessWidget {
         }).toList(),
         
         centerSpaceRadius: 40,
-        sectionsSpace: 4,
+        sectionsSpace: 1,
         startDegreeOffset: 90+90+90,
       ),
     );
