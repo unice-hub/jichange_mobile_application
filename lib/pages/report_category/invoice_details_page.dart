@@ -37,6 +37,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _token = prefs.getString('token') ?? 'Not logged in';
+      
     });
   }
 
@@ -46,6 +47,9 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
 
     try {
       final prefs = await SharedPreferences.getInstance();
+      int instituteID = prefs.getInt('instID') ?? 0;
+      int userID = prefs.getInt('userID') ?? 0;
+      // log(userID.toString());
       final response = await http.post(
         Uri.parse(url),
         headers: {
@@ -53,7 +57,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
           'Authorization': 'Bearer $_token',
         },
         body: jsonEncode({
-          "companyIds": [40140],
+          "companyIds": [instituteID],
           "customerIds": customerIds.isNotEmpty ? customerIds : [0],
           "stdate": fromDate?.toIso8601String() ?? "",
           "enddate": toDate?.toIso8601String() ?? "",
@@ -84,6 +88,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
 
     try {
       final prefs = await SharedPreferences.getInstance();
+      int instituteID = prefs.getInt('instID') ?? 0;
       final response = await http.post(
         Uri.parse(url),
         headers: {
@@ -91,7 +96,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
           'Authorization': 'Bearer $_token',
         },
         body: jsonEncode({
-          "companyIds": [40140],
+          "companyIds": [instituteID],
           
         }),
       );
@@ -102,7 +107,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
           customers = (data['response'] as List)
               .map((e) => CustDetData.fromJson(e))
               .toList();
-          var y = new CustDetData(custSno: 0,custName: 'All',phone: '',postedDate: '',companySno: 0); 
+          var y = CustDetData(custSno: 0,custName: 'All',phone: '',postedDate: '',companySno: 0); 
           customers.insert(0, y);
         });
       } else {
