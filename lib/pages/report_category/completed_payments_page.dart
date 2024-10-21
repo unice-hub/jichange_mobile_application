@@ -146,6 +146,7 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
                   ),
                 ),
                 const SizedBox(width: 16),
+
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: selectedVendor,
@@ -164,6 +165,8 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
                   ),
                 ),
               ],
+
+              
             ),
             const SizedBox(height: 16),
             Row(
