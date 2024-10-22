@@ -17,12 +17,14 @@ String? selectedVendor;
   DateTime? fromDate;
   DateTime? toDate;
   String _token = 'Not logged in';
-   List<int> customerIds = [];
+ String customerIds = "";
+ String selectPage = "";
 
   List<String> vendors = ['Me&U Apparel'];
  
   List<InvoiceData> invoices = [];
-  List<CustDetData> customers = [];
+  List<String> auditTypes = [];
+  List<String> page = [];
   bool isLoading = false;
 
   @override
@@ -31,6 +33,8 @@ String? selectedVendor;
     _loadSessionInfo();
     fetchInvoices();
     getcustDetReport();
+    getpage();
+
   }
 
   Future<void> _loadSessionInfo() async {
@@ -42,12 +46,13 @@ String? selectedVendor;
 
   Future<void> fetchInvoices() async {
     setState(() => isLoading = true);
-    const url = 'http://192.168.100.50:98/api/Invoice/GetchTransact_B';
+    const url = 'http://192.168.100.50:98/api/AuditTrail/report';
 
     try {
       final prefs = await SharedPreferences.getInstance();
       int instituteID = prefs.getInt('instID') ?? 0;
       int userID = prefs.getInt('userID') ?? 0;
+      int braid = prefs.getInt('braid')?? 0;
       // log(userID.toString());
       final response = await http.post(
         Uri.parse(url),
@@ -56,18 +61,21 @@ String? selectedVendor;
           'Authorization': 'Bearer $_token',
         },
         body: jsonEncode({
-          "companyIds": [instituteID],
-          "customerIds": customerIds.isNotEmpty ? customerIds : [0],
-          "stdate": fromDate?.toIso8601String() ?? "",
-          "enddate": toDate?.toIso8601String() ?? "",
-          "allowCancelInvoice": false,
+          "tbname": selectPage.isNotEmpty ? selectPage: "",
+          "Startdate": fromDate?.toIso8601String() ?? "",
+          "Enddate": toDate?.toIso8601String() ?? "",
+          "act": customerIds.isNotEmpty ? customerIds : "",
+          "branch": braid,
+          "pageNumber": 1,
+          "pageSize": 5,
+          "userid": userID
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          invoices = (data['response'] as List)
+          invoices = (data['response']['content'] as List)
               .map((e) => InvoiceData.fromJson(e))
               .toList();
         });
@@ -82,38 +90,76 @@ String? selectedVendor;
   }
 
   Future<void> getcustDetReport() async {
-    setState(() => isLoading = true);
-    const url = 'http://192.168.100.50:98/api/InvoiceRep/GetCustDetails';
+   final prefs = await SharedPreferences.getInstance();
+   int instituteID = prefs.getInt('instID') ?? 0;
+   int userID = prefs.getInt('userID') ?? 0;
+
+    // Base URL of the API
+  const String baseUrl = 'http://192.168.100.50:98/api/AuditTrail/GetAvailableAuditTypes';
+
+  // Constructing the full URL with query parameters
+  String url = '$baseUrl?userid=$userID';
 
     try {
       final prefs = await SharedPreferences.getInstance();
       int instituteID = prefs.getInt('instID') ?? 0;
-      final response = await http.post(
+      final response = await http.get(
         Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $_token',
         },
-        body: jsonEncode({
-          "companyIds": [instituteID],
-          
-        }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          customers = (data['response'] as List)
-              .map((e) => CustDetData.fromJson(e))
-              .toList();
-          var y = CustDetData(custSno: 0,custName: 'All',phone: '',postedDate: '',companySno: 0); 
-          customers.insert(0, y);
-        });
+  
+        auditTypes = (data['response'] as List).map((e) => e.toString()).toList();
+      });
       } else {
         showError('Failed to load customers. Status: ${response.statusCode}');
       }
     } catch (e) {
       showError('Error fetching data: $e');
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> getpage() async {
+   final prefs = await SharedPreferences.getInstance();
+   int instituteID = prefs.getInt('instID') ?? 0;
+   int userID = prefs.getInt('userID') ?? 0;
+
+    // Base URL of the API
+  const String baseUrl = 'http://192.168.100.50:98/api/AuditTrail/GetAvailablePages';
+
+  // Constructing the full URL with query parameters
+  String url = '$baseUrl?userid=$userID';
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      int instituteID = prefs.getInt('instID') ?? 0;
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+  
+        page = (data['response'] as List).map((e) => e.toString()).toList();
+      });
+      } else {
+        showError('Failed to select page Status: ${response.statusCode}');
+      }
+    } catch (e) {
+      showError('Error select page: $e');
     } finally {
       setState(() => isLoading = false);
     }
@@ -186,14 +232,27 @@ String? selectedVendor;
       children: [
         Row(
           children: [
+
             Expanded(
               child: DropdownButtonFormField<String>(
                 value: selectedVendor,
-                hint: const Text('Select Vendor'),
-                items: vendors.map((vendor) {
-                  return DropdownMenuItem(value: vendor, child: Text(vendor));
+                isExpanded: true,
+                hint: const Text('Select Page'),
+                items: page.map((String type) {
+                  return DropdownMenuItem(
+                      value: type, 
+                      child: Text(
+                        type,
+                        overflow: TextOverflow.ellipsis,
+                      )
+                    );
                 }).toList(),
-                onChanged: (value) => setState(() => selectedVendor = value),
+                onChanged: (value) {
+                  setState(() {
+                    selectedVendor = value;
+                    selectPage = value ?? "";
+                  });
+                },
                 decoration: const InputDecoration(
                   labelText: 'Vendor',
                   border: OutlineInputBorder(),
@@ -201,16 +260,17 @@ String? selectedVendor;
               ),
             ),
             const SizedBox(width: 16),
+
             Expanded(
               child: DropdownButtonFormField<String>(
                 value: selectedCustomer,
                 isExpanded: true,
-                hint: const Text('Select Customer'),
-                items: customers.map((custDet) {
+                hint: const Text('Select Actions'),
+                items: auditTypes.map((String type) {
                   return DropdownMenuItem<String>(
-                    value: custDet.custSno.toString(),
+                    value: type,
                     child: Text(
-                      "${custDet.custName} - ${custDet.phone}",
+                      type,
                       overflow: TextOverflow.ellipsis,
                     ),
                   );
@@ -218,11 +278,11 @@ String? selectedVendor;
                 onChanged: (value) {
                   setState(() {
                     selectedCustomer = value;
-                    customerIds = [int.parse(value!)];
+                    customerIds = value ?? "";
                   });
                 },
                 decoration: const InputDecoration(
-                  labelText: 'Customer',
+                  labelText: 'Actions',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -230,6 +290,7 @@ String? selectedVendor;
           ],
         ),
         const SizedBox(height: 16),
+
         Row(
           children: [
             Expanded(
@@ -249,6 +310,7 @@ String? selectedVendor;
                 ),
               ),
             ),
+
             const SizedBox(width: 16),
             Expanded(
               child: InkWell(
@@ -298,62 +360,83 @@ String? selectedVendor;
       physics: const NeverScrollableScrollPhysics(),
       itemCount: invoices.length,
       itemBuilder: (context, index) {
-        return _InvoiceCard(invoice: invoices[index], custDet: customers[index],);
+        return _InvoiceCard(invoice: invoices[index]);
       },
     );
   }
 }
 
-class _InvoiceCard extends StatelessWidget {
+class _InvoiceCard extends StatefulWidget {
   final InvoiceData invoice;
-  final CustDetData custDet;
+  
 
-  const _InvoiceCard({super.key, required this.invoice, required this.custDet});
+  const _InvoiceCard({required this.invoice});
 
- @override
+  @override
+  _InvoiceCardState createState() => _InvoiceCardState();
+}
+
+class _InvoiceCardState extends State<_InvoiceCard> {
+  bool _isExpanded = false;
+
+  @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildInvoiceRow('Payment Date:', formatDate(invoice.paymentDate)),
-            const SizedBox(height: 5),
-            _buildInvoiceRow('Customer:', invoice.customerName),
-            const SizedBox(height: 5),
-            _buildInvoiceRow('Invoice N°:', invoice.invoiceSno),
-            const SizedBox(height: 5),
-            _buildInvoiceRow('Payment type:', _buildPaymentTypeContainer(invoice)),
-            const SizedBox(height: 5),
-            _buildInvoiceRow('Status:', invoice.status),
-            const SizedBox(height: 5),
-            _buildInvoiceRow('Total Amount:', "${invoice.requestedAmount} ${invoice.currencyCode}"),
-            const SizedBox(height: 5),
-            _buildInvoiceRow('Paid Amount:', "${invoice.paidAmount} ${invoice.currencyCode}"),
-            const SizedBox(height: 5),
-            _buildInvoiceRow('Balance:', "${invoice.balance} ${invoice.currencyCode}"),
-            const SizedBox(height: 5),
-            _buildInvoiceRow('Control N°:', invoice.controlNumber),
-            const SizedBox(height: 5),
-            _buildInvoiceRow('Payment Method:', invoice.transChannel),
-            const SizedBox(height: 5),
-            _buildInvoiceRow('Transaction N°:', invoice.paymentTransNo),
-            const SizedBox(height: 5),
-            _buildInvoiceRow('Receipt N°:', invoice.receiptNo),
-            const SizedBox(height: 5),
-            _buildInvoiceRow('Action(s):', _buildIconActionButton(Icons.visibility, '', () {
-            // Define the action to view details
-          }, const Color.fromARGB(255, 128, 116, 12)),),
-          ],
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _isExpanded = !_isExpanded; // Toggle expansion
+          });
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildInvoiceRow('Title:', "'${widget.invoice.columnsName}' into '${widget.invoice.tableName}'"),
+              const SizedBox(height: 5),
+              _buildInvoiceRow('Type:', widget.invoice.auditType),
+              const SizedBox(height: 5),
+              _buildInvoiceRow('User:', widget.invoice.auditorNam),
+              const SizedBox(height: 5),
+              if (_isExpanded) ...[
+                Container(
+                  color: Colors.grey, // Set background color to gray
+                  padding: const EdgeInsets.all(8.0), // Optional: add some padding
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(widget.invoice.columnsName),
+                      const SizedBox(height: 5),
+                      Text('Field was left blank: ${widget.invoice.auditDate}'),
+                      const SizedBox(height: 5),
+                      Text(widget.invoice.ipAddress),
+                      const SizedBox(height: 5),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPressed, Color iconColor) {
+  Widget _buildInvoiceRow(String label, dynamic value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label),
+        value is Widget ? value : Text(value.toString()),
+      ],
+    );
+  }
+}
+
+
+Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPressed, Color iconColor) {
   return Column(
     children: [
       Container(
@@ -377,12 +460,12 @@ class _InvoiceCard extends StatelessWidget {
   );
 }
 
-  String formatDate(String dateStr) {
+String formatDate(String dateStr) {
   DateTime dateTime = DateTime.parse(dateStr);
   return DateFormat('EEE MMM dd yyyy').format(dateTime);
 }
 
-  Widget _buildInvoiceRow(String label, dynamic value) {
+Widget _buildInvoiceRow(String label, dynamic value) {
     return Row( 
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -390,122 +473,44 @@ class _InvoiceCard extends StatelessWidget {
         value is Widget ? value : Text(value.toString()),
       ],
     );
-  }
-
-   Widget _buildPaymentTypeContainer(InvoiceData invoice) {
-    final isFixed = invoice.paymentType == 'Fixed';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: isFixed ? const Color(0xFFF09AFF) : Colors.greenAccent,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        invoice.paymentType,
-        style: TextStyle(
-          color: isFixed ? const Color(0xFF834BCC) : const Color(0xFF338658),
-        ),
-      ),
-    );
-  }
 }
 
-
-
 class InvoiceData {
-  final int sno;
-  final String paymentSno;
-  final String paymentDate;
-  final String paymentType;
-  final String payerName;
-  final String paymentTransNo;
-  final String status;
-  final String currencyCode;
-  final double requestedAmount;
-  final double paidAmount;
-  final String controlNumber;
-  final String? remarks;
-  final String? paymentDesc;
-  final String? transChannel;
-  final String? institutionId;
-  final String companyName;
-  final String customerName;
-  final String invoiceSno;
-  final double balance;
-  final String receiptNo;
+  final double auditSno;
+  final String auditType;
+  final String tableName;
+  final String columnsName;
+  final String auditBy;
+  final String auditorNam;
+  final String ipAddress;
+  final String auditDate;
 
   InvoiceData({
-    required this.sno,
-    required this.paymentSno,
-    required this.paymentDate,
-    required this.paymentType,
-    required this.payerName,
-    required this.paymentTransNo,
-    required this.status,
-    required this.currencyCode,
-    required this.requestedAmount,
-    required this.paidAmount,
-    required this.controlNumber,
-    this.remarks,
-    this.paymentDesc,
-    this.transChannel,
-    this.institutionId,
-    required this.companyName,
-    required this.customerName,
-    required this.invoiceSno,
-    required this.balance,
-    required this.receiptNo,
+    required this.auditSno,
+    required this.auditType,
+    required this.tableName,
+    required this.columnsName,
+    required this.auditBy,
+    required this.auditorNam,
+    required this.ipAddress,
+    required this.auditDate,
+    
   });
 
   factory InvoiceData.fromJson(Map<String, dynamic> json) {
     return InvoiceData(
-      sno: json['SNO'] ?? 0,
-      paymentSno: json['Payment_SNo'] ?? '',
-      paymentDate: json['Payment_Date']?.split('T')[0] ?? '',
-      paymentType: json['Payment_Type'] ?? '',
-      payerName: json['Payer_Name'] ?? '',
-      paymentTransNo: json['Payment_Trans_No'] ?? '',
-      status: json['Status'] ?? '',
-      currencyCode: json['Currency_Code'] ?? '',
-      requestedAmount: (json['Requested_Amount'] ?? 0).toDouble(),
-      paidAmount: (json['PaidAmount'] ?? 0).toDouble(),
-      controlNumber: json['Control_No'] ?? '',
-      remarks: json['Remarks'],
-      paymentDesc: json['Payment_Desc'],
-      transChannel: json['Trans_Channel'],
-      institutionId: json['Institution_ID'],
-      companyName: json['Company_Name'] ?? '',
-      customerName: json['Customer_Name'] ?? '',
-      invoiceSno: json['Invoice_Sno'] ?? '',
-      balance: (json['Balance'] ?? 0).toDouble(),
-      receiptNo: json['Receipt_No'],
+      auditSno: json['Audit_Sno'] ?? 0,
+      auditType: json['Audit_Type'] ?? '',
+      tableName: json['Table_Name'] ?? '',
+      columnsName: json['ColumnsName'] ?? '',
+      auditBy: json['AuditBy'] ?? '',
+      auditorNam: json['AuditorName'] ?? '',
+      ipAddress: json['ipAddress'] ?? '',
+      auditDate: json['Audit_Date'] ?? '',
+      
     );
   }
 }
 
 
-class CustDetData {
-  final int custSno;
-  final int companySno;
-  final String custName;
-  final String? phone;
-  final String? postedDate;
 
-  CustDetData({
-    required this.custSno,
-    required this.companySno,
-    required this.custName,
-    this.phone,
-    this.postedDate,
-  });
-
-  factory CustDetData.fromJson(Map<String, dynamic> json) {
-    return CustDetData(
-      custSno: json['Cust_Sno'] ?? 0,
-      companySno: json['CompanySno'] ?? 0,
-      custName: json['Cust_Name'] ?? '',
-      phone: json['Phone'],
-      postedDate: json['Posted_Date']?.split('T')[0], // Extract date only
-    );
-  }
-}
