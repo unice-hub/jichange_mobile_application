@@ -4,15 +4,15 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class PaymentDetailsPage extends StatefulWidget {
-  const PaymentDetailsPage({super.key});
+class AuditTrailsPage extends StatefulWidget {
+  const AuditTrailsPage({super.key});
 
   @override
-  _PaymentDetailsPageState createState() => _PaymentDetailsPageState();
+  _AuditTrailsPageState createState() => _AuditTrailsPageState();
 }
 
-class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
-  String? selectedVendor;
+class _AuditTrailsPageState extends State<AuditTrailsPage>  {
+String? selectedVendor;
   String? selectedCustomer;
   DateTime? fromDate;
   DateTime? toDate;
@@ -146,7 +146,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Payment Details', style: TextStyle(color: Colors.white)),
+        title: const Text('Audit Trails', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.primary,
         elevation: 0,
@@ -509,4 +509,3 @@ class CustDetData {
     );
   }
 }
-

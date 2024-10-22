@@ -19,7 +19,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
   String _token = 'Not logged in';
    List<int> customerIds = [];
 
-  List<String> vendors = ['Me&U Apparel', 'Vendor A', 'Vendor B', 'Joshua Speaker Urio'];
+  List<String> vendors = ['Me&U Apparel'];
  
   List<InvoiceData> invoices = [];
   List<CustDetData> customers = [];
@@ -149,9 +149,10 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
         title: const Text('Invoice Details', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.primary,
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () => Navigator.pushNamed(context, '/profile'),
           ),
         ],

@@ -5,6 +5,7 @@ import 'package:learingdart/pages/report_category/invoice_details_page.dart';
 import 'package:learingdart/pages/report_category/completed_payments_page.dart';
 import 'package:learingdart/pages/report_category/amendments_details_page.dart';
 import 'package:learingdart/pages/report_category/cancelled_invoice_page.dart';
+import 'package:learingdart/pages/report_category/audit_trails_page.dart';
 
 class ReportsSection extends StatelessWidget {
   const ReportsSection({super.key});
@@ -52,6 +53,12 @@ class ReportsSection extends StatelessWidget {
           Icons.cancel,
           'Cancelled Invoice',
           const CancelledInvoicePage(),
+        ),
+        _buildReportCard(
+          context,
+          Icons.fact_check,
+          'Audit Trails',
+          const AuditTrailsPage(),
         ),
       ],
     );
