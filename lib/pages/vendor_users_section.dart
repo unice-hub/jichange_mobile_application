@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +15,8 @@ class VendorUsersSection extends StatefulWidget {
 class _VendorUsersSectionState extends State<VendorUsersSection> {
   List<VendorUser> vendorUsers = [];
   List<VendorUserRole> vendorUsersRole = [];
+  List<int> vendorUsersRoleIds = [];
+  String? selectedVendorUsersRole;
   List<VendorUser> filteredUsers = [];
   String searchQuery = "";
   String _token = 'Not logged in';
@@ -162,6 +165,82 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
     }
   }
 
+  // Method to edit vendor data from the API
+  Future<void> _modifyVendorAPI(VendorUser user, String fullName, String name, String email, String mobile, String sno, String usertype) async {
+    const url = 'http://192.168.100.50:98/api/CompanyUsers/AddCompanyUser'; 
+    final prefs = await SharedPreferences.getInstance();
+    int instituteID = prefs.getInt('instID') ?? 0;
+    int userID = prefs.getInt('userID') ?? 0;
+
+    final body = jsonEncode({
+      "pos": vendorUsersRoleIds.toString().isNotEmpty ? vendorUsersRoleIds.toString() : "0",
+      "auname": fullName,
+      "mob": mobile,
+      "uname": name,
+      "mail": email,
+      "sno": sno,
+      "compid": instituteID,
+      "chname": usertype,
+      "userid": userID
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token'
+        },
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        // Show success dialog
+        _showQuickAlert(context, 'Success', 'Vendor modified successfully!', true);
+        _fetchVendorUsersData();// Refresh Vendor list
+        _fetchVendorUsersRoleData();// Refresh Vendor list
+      } else {
+        // Show error dialog
+        _showQuickAlert(context, 'Error', 'Failed to modify Vendor: ${response.body}', false);
+      }
+    } catch (e) {
+      if (e is http.ClientException) {
+        // Network error
+        _showErrorDialog('Network error. Please check your connection and try again.');
+
+      } else {
+        // Other exceptions
+        _showErrorDialog('An unexpected error occurred. Please try again.');
+        
+      }
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void _showQuickAlert(BuildContext context, String title, String message, bool isSuccess) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
@@ -250,11 +329,11 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
   //to displya usercard 
   Widget _buildUserCard(VendorUser user) {
     return Card(
-      elevation: 3.0,
+      elevation: 4.0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.0),
       ),
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      // margin: const EdgeInsets.symmetric(vertical: 8.0),
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         title: Text(user.username, style: Theme.of(context).textTheme.titleMedium),
@@ -288,21 +367,6 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
                     _buildIconActionButton(Icons.edit, () {
                       _showEditVendorUserSheet(context, user);
                     }, Colors.blue),
-
-                    // IconButton(
-
-                    //   icon: Icon(Icons.send, color: Theme.of(context).colorScheme.primary),
-                    //   onPressed: () {
-                    //     _showResendCredentialsDialog(context, user);
-                    //   },
-                    // ),
-                    // IconButton(
-                    //   icon: Icon(Icons.edit, color: Theme.of(context).colorScheme.primary),
-                    //   onPressed: () {
-                    //     _showEditVendorUserSheet(context, user);
-                    //   },
-                    // ),
-
                   ],
                 ),
               ],
@@ -458,55 +522,222 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
     }
   }
 
-  //Editing vendor users
-  void _showEditVendorUserSheet(BuildContext context, VendorUser user) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (BuildContext context) {
-        return Padding(
-          padding: MediaQuery.of(context).viewInsets,
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Text(
-                    'Edit Vendor User',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 16.0),
-                  _buildEditableTextField('Username', user.username),
-                  const SizedBox(height: 16.0),
-                  _buildEditableTextField('Full Name', user.fullName),
-                  const SizedBox(height: 16.0),
-                  _buildEditableTextField('Email', user.email),
-                  const SizedBox(height: 16.0),
-                  _buildEditableTextField('Mobile Number', user.mobileNumber),
-                  const SizedBox(height: 16.0),
-                  // _buildEditableTextField('Role', user1.role),
-                  const SizedBox(height: 16.0),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16.0),
+
+void _showEditVendorUserSheet(BuildContext context, VendorUser user) {
+  final nameController = TextEditingController(text: user.username);
+  final fullNameController = TextEditingController(text: user.fullName);
+  final emailController = TextEditingController(text: user.email);
+  final mobileController = TextEditingController(text: user.mobileNumber);
+  final snoController = TextEditingController(text: user.id.toString());
+  final usertypeController = TextEditingController(text: user.usertype.toString());
+
+  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+  final mobileRegex = RegExp(r'^\d+$');
+
+  String? nameError;
+  String? fullNameError;
+  String? emailError;
+  String? mobileError;
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (BuildContext context) {
+      return StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      'Edit Vendor',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 16.0),
+
+                    // Role Dropdown
+                    DropdownButtonFormField<String>(
+                      value: selectedVendorUsersRole,
+                      isExpanded: true,
+                      hint: const Text('Select Role'),
+                      items: vendorUsersRole.map((role) {
+                        return DropdownMenuItem<String>(
+                          value: role.sno.toString(),
+                          child: Text(
+                            "${role.role} ",
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedVendorUsersRole = value;
+                          vendorUsersRoleIds = [int.parse(value!)];
+                        });
+                      },
+                      decoration: const InputDecoration(
+                        labelText: 'Customer',
+                        border: OutlineInputBorder(),
                       ),
                     ),
-                    child: const Text('Save Changes'),
-                  ),
-                ],
+                    const SizedBox(height: 16.0),
+
+                    // Name field
+                    TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        labelText: 'User Name',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        errorText: nameError,
+                      ),
+                    ),
+                    const SizedBox(height: 8.0),
+
+                    // Full Name field
+                    TextField(
+                      controller: fullNameController,
+                      decoration: InputDecoration(
+                        labelText: 'Full Name',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        errorText: fullNameError,
+                      ),
+                    ),
+                    const SizedBox(height: 8.0),
+
+                    // Email field
+                    TextField(
+                      controller: emailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        errorText: emailError,
+                      ),
+                    ),
+                    const SizedBox(height: 8.0),
+
+                    // Mobile field
+                    TextField(
+                      controller: mobileController,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: InputDecoration(
+                        labelText: 'Mobile Number',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        errorText: mobileError,
+                      ),
+                      keyboardType: TextInputType.phone,
+                    ),
+                    const SizedBox(height: 16.0),
+
+                    // Save button
+                    ElevatedButton(
+                      onPressed: () {
+                        String name = nameController.text.trim();
+                        String fullName = fullNameController.text.trim();
+                        String email = emailController.text.trim();
+                        String mobile = mobileController.text.trim();
+                        String sno = snoController.text.trim();
+                        String usertype = usertypeController.text.trim();
+
+                        setState(() {
+                          nameError = null;
+                          fullNameError = null;
+                          emailError = null;
+                          mobileError = null;
+                        });
+
+                        bool isValid = true;
+
+                        if (name.isEmpty) {
+                          setState(() {
+                            nameError = 'Please enter your name';
+                          });
+                          isValid = false;
+                        }
+
+                        if (fullName.isEmpty) {
+                          setState(() {
+                            fullNameError = 'Please enter your full name';
+                          });
+                          isValid = false;
+                        }
+
+                        if (email.isEmpty || !emailRegex.hasMatch(email)) {
+                          setState(() {
+                            emailError = 'Please enter a valid email address';
+                          });
+                          isValid = false;
+                        }
+
+                        if (mobile.isEmpty || !mobileRegex.hasMatch(mobile)) {
+                          setState(() {
+                            mobileError = 'Please enter a valid mobile number';
+                          });
+                          isValid = false;
+                        }
+
+                        if (isValid) {
+                          _showModifyConfirmationDialog(context, user, name, fullName, email, mobile, sno, usertype);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                      ),
+                      child: const Text('Save Changes'),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
+          );
+        },
+      );
+    },
+  );
+}
 
+
+void _showModifyConfirmationDialog(BuildContext context, VendorUser user, String name, String fullName, String email, String mobile, String sno, String usertype) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Modify Vendor'),
+        content: const Text('Are you sure you want to modify this vendor?'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+            },
+            child: const Text('CLOSE'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+              _modifyVendorAPI( user, name, fullName,email, mobile, sno,usertype); // Call API to modify customer
+            },
+            child: const Text('CONFIRM'),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   Widget _buildEditableTextField(String label, String initialValue) {
     return TextField(
@@ -575,6 +806,7 @@ class VendorUser {
   final String email;
   final String mobileNumber;
   final String userpos;
+  final String usertype;
 
   VendorUser({
     required this.id,
@@ -583,6 +815,7 @@ class VendorUser {
     required this.email,
     required this.mobileNumber,
     required this.userpos,
+    required this.usertype,
   });
 
   // Factory method to create a VendorUser object from JSON
@@ -594,6 +827,7 @@ class VendorUser {
       email: json['Email'] ?? 'Unknown',
       mobileNumber: json['Mobile'] ?? 'Unknown',
       userpos: json['Userpos'] ?? 'Unknown',
+      usertype: json['Usertype'] ?? 'Unknown',
     );
   }
 }

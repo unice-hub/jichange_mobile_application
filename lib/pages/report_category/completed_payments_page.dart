@@ -271,7 +271,7 @@ Widget _buildFilters() {
                   return DropdownMenuItem<String>(
                     value: invoiceNo.invMasSno.toString(),
                     child: Text(
-                       "${invoiceNo.invoiceNos}",
+                       invoiceNo.invoiceNos,
                       overflow: TextOverflow.ellipsis,
                     ),
                   );
@@ -463,231 +463,52 @@ Widget _buildStatusContainer(InvoiceData invoice) {
 
 
 class InvoiceData {
-  final int sno;
-  final String paymentSNo;
   final String paymentDate;
   final String paymentType;
-  final String amountType;
   final String payerName;
   final String paymentTransNo;
-  final String? currency;
-  final double invoiceAmount;
-  final double invoiceAmountLocal;
   final String receiptNo;
-  final String? batchNo;
-  final String? remarks;
-  final String? authorizeId;
-  final String? secureHash;
-  final String? responseCode;
-  final String? merchant;
-  final String? message;
-  final String? card;
-  final String? token;
   final String status;
-  final String? response;
-  final String auditDate;
-  final String? auditAction;
-  final String? auditDone;
-  final int auditID;
   final double paidAmount;
-  final double modifiedAmount;
-  final double amount30;
-  final double amount70;
-  final double bot;
-  final int academicSno;
-  final String? acadYear;
-  final String? col1;
-  final String? col2;
-  final String? col3;
-  final String? termType;
-  final int feeSno;
-  final int termSno;
-  final String paymentTime;
-  final String approveDate;
-  final String? feeDataSno;
   final String currencyCode;
   final double requestedAmount;
-  final String? paymentDesc;
-  final String? payerId;
   final String transChannel;
-  final String? prWbId;
-  final String institutionId;
   final String controlNo;
-  final String? chksum;
-  final String? chargeType;
   final String invoiceSno;
-  final String? currencyType;
-  final String? postedBy;
-  final String? approvedBy;
-  final String postedDate;
-  final double amount;
-  final double surchargeFee;
-  final String? examined;
-  final String? authorized;
-  final int receiptNoService;
-  final int compMasSno;
-  final String companyName;
-  final int custMasSno;
   final String customerName;
-  final int classSno;
-  final String? className;
-  final int sectionSno;
-  final String? sectionName;
-  final double itemTotalAmount;
-  final String? errorText;
-  final double balance;
 
   InvoiceData({
-    required this.sno,
-    required this.paymentSNo,
     required this.paymentDate,
     required this.paymentType,
-    required this.amountType,
     required this.payerName,
     required this.paymentTransNo,
-    this.currency,
-    required this.invoiceAmount,
-    required this.invoiceAmountLocal,
     required this.receiptNo,
-    this.batchNo,
-    this.remarks,
-    this.authorizeId,
-    this.secureHash,
-    this.responseCode,
-    this.merchant,
-    this.message,
-    this.card,
-    this.token,
     required this.status,
-    this.response,
-    required this.auditDate,
-    this.auditAction,
-    this.auditDone,
-    required this.auditID,
     required this.paidAmount,
-    required this.modifiedAmount,
-    required this.amount30,
-    required this.amount70,
-    required this.bot,
-    required this.academicSno,
-    this.acadYear,
-    this.col1,
-    this.col2,
-    this.col3,
-    this.termType,
-    required this.feeSno,
-    required this.termSno,
-    required this.paymentTime,
-    required this.approveDate,
-    this.feeDataSno,
     required this.currencyCode,
     required this.requestedAmount,
-    this.paymentDesc,
-    this.payerId,
     required this.transChannel,
-    this.prWbId,
-    required this.institutionId,
     required this.controlNo,
-    this.chksum,
-    this.chargeType,
     required this.invoiceSno,
-    this.currencyType,
-    this.postedBy,
-    this.approvedBy,
-    required this.postedDate,
-    required this.amount,
-    required this.surchargeFee,
-    this.examined,
-    this.authorized,
-    required this.receiptNoService,
-    required this.compMasSno,
-    required this.companyName,
-    required this.custMasSno,
     required this.customerName,
-    required this.classSno,
-    this.className,
-    required this.sectionSno,
-    this.sectionName,
-    required this.itemTotalAmount,
-    this.errorText,
-    required this.balance,
+
   });
 
   factory InvoiceData.fromJson(Map<String, dynamic> json) {
     return InvoiceData(
-      sno: json['SNO'],
-      paymentSNo: json['Payment_SNo'],
       paymentDate: json['Payment_Date'],
       paymentType: json['Payment_Type'],
-      amountType: json['Amount_Type'],
       payerName: json['Payer_Name'],
       paymentTransNo: json['Payment_Trans_No'],
-      currency: json['Currency'],
-      invoiceAmount: json['Invoice_Amount'].toDouble(),
-      invoiceAmountLocal: json['Invoice_Amount_Local'].toDouble(),
       receiptNo: json['Receipt_No'],
-      batchNo: json['Batch_No'],
-      remarks: json['Remarks'],
-      authorizeId: json['Authorize_Id'],
-      secureHash: json['Secure_Hash'],
-      responseCode: json['Response_Code'],
-      merchant: json['Merchant'],
-      message: json['Message'],
-      card: json['Card'],
-      token: json['Token'],
       status: json['Status']?? "Unsent" ,
-      response: json['Response'],
-      auditDate: json['Audit_Date'],
-      auditAction: json['AuditAction'],
-      auditDone: json['AuditDone'],
-      auditID: json['AuditID'],
       paidAmount: json['PaidAmount'].toDouble(),
-      modifiedAmount: json['ModifiedAmount'].toDouble(),
-      amount30: json['Amount30'].toDouble(),
-      amount70: json['Amount70'].toDouble(),
-      bot: json['BOT'].toDouble(),
-      academicSno: json['AcademicSno'],
-      acadYear: json['Acad_Year'],
-      col1: json['Col1'],
-      col2: json['Col2'],
-      col3: json['Col3'],
-      termType: json['Term_Type'],
-      feeSno: json['Fee_Sno'],
-      termSno: json['Term_Sno'],
-      paymentTime: json['Payment_Time'],
-      approveDate: json['Approve_Date'],
-      feeDataSno: json['Fee_Data_Sno'],
       currencyCode: json['Currency_Code'],
       requestedAmount: json['Requested_Amount'].toDouble(),
-      paymentDesc: json['Payment_Desc'],
-      payerId: json['Payer_Id'],
       transChannel: json['Trans_Channel'],
-      prWbId: json['PR_WB_ID'],
-      institutionId: json['Institution_ID'],
       controlNo: json['Control_No'],
-      chksum: json['Chksum'],
-      chargeType: json['Charge_Type'],
       invoiceSno: json['Invoice_Sno'],
-      currencyType: json['Currency_Type'],
-      postedBy: json['Posted_By'],
-      approvedBy: json['Approved_By'],
-      postedDate: json['Posted_Date'],
-      amount: json['Amount'].toDouble(),
-      surchargeFee: json['Surcharge_Fee'].toDouble(),
-      examined: json['Examined'],
-      authorized: json['Authorized'],
-      receiptNoService: json['Receipt_No_Service'],
-      compMasSno: json['Comp_Mas_Sno'],
-      companyName: json['Company_Name'],
-      custMasSno: json['Cust_Mas_Sno'],
-      customerName: json['Customer_Name'],
-      classSno: json['Class_Sno'],
-      className: json['Class_Name'],
-      sectionSno: json['Section_Sno'],
-      sectionName: json['Section_Name'],
-      itemTotalAmount: json['Item_Total_Amount'].toDouble(),
-      errorText: json['Error_Text'],
-      balance: json['Balance'].toDouble(),
+      customerName: json['Customer_Name'],  
     );
   }
 }

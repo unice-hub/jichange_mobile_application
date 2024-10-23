@@ -17,8 +17,7 @@ class _CustomerSectionState extends State<CustomerSection> {
   List<Customer> customers = [];
   String searchQuery = "";
   String _token = 'Not logged in';
-  
-  bool isLoading = true; // To show loading indicator while fetching data
+  bool isLoading = true; 
 
   @override
   void initState() {
@@ -46,9 +45,6 @@ class _CustomerSectionState extends State<CustomerSection> {
       final prefs = await SharedPreferences.getInstance();
       int instituteID = prefs.getInt('instID') ?? 0;
 
-      // Log the request to debug the API call
-      // log('Making API request with token: $_token and instituteID: $instituteID');
-
       final response = await http.post(
         Uri.parse(url),
         headers: {
@@ -58,9 +54,6 @@ class _CustomerSectionState extends State<CustomerSection> {
         },
         body: jsonEncode({"vendors": [instituteID]}),
       );
-
-      // log('API Status Code: ${response.statusCode}');
-      // log('API Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = jsonDecode(response.body);
@@ -678,7 +671,7 @@ void _showAddCustomerSheet(BuildContext context) {
 }
 
 
-  void _showEditCustomerSheet(BuildContext context, Customer customer) {
+void _showEditCustomerSheet(BuildContext context, Customer customer) {
   // Controllers for input fields with initial values
   final nameController = TextEditingController(text: customer.name);
   final emailController = TextEditingController(text: customer.email);

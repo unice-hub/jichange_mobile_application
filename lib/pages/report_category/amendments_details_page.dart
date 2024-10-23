@@ -273,7 +273,7 @@ Widget _buildFilters() {
                   return DropdownMenuItem<String>(
                     value: invoiceNo.invMasSno.toString(),
                     child: Text(
-                       "${invoiceNo.invoiceNos}",
+                       invoiceNo.invoiceNos,
                       overflow: TextOverflow.ellipsis,
                     ),
                   );
