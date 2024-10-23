@@ -476,7 +476,7 @@ Widget _buildInvoiceRow(String label, dynamic value) {
 }
 
 class InvoiceData {
-  final double auditSno;
+  final int auditSno;
   final String auditType;
   final String tableName;
   final String columnsName;
