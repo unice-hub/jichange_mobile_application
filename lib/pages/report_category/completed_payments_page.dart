@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -20,11 +21,12 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
   DateTime? toDate;
   String _token = 'Not logged in';
   List<int> customerIds = [];
+  List<int> invoiceNumber1 = [];
 
   List<String> branches = ['Magomeni', 'Ilala', 'Kawe', 'Joshua Speaker Urio'];
   List<String> vendors = ['Me&U Apparel'];
   List<CustDetData> customers = [];
-  List<String> invoiceNumbers = ['All', 'Invoice A', 'Invoice B', 'Joshua Speaker Urio'];
+  List<InvoiceNumberData> invoiceNumbers = [];
 
   List<InvoiceData> invoices = [];
   bool isLoading = false;
@@ -35,6 +37,7 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
     _loadSessionInfo();
     fetchInvoices();
     getcustDetReport();
+    getPaymentReport();
   }
 
   Future<void> _loadSessionInfo() async {
@@ -52,17 +55,11 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
     int userID = prefs.getInt('userID') ?? 0;
 
     final Map<String, dynamic> requestBody = {
-      "invoiceIds": [
-        0
-      ],
-      "companyIds": [
-        40140
-      ],
-      "customerIds": [
-        0
-      ],
-      "stdate": "",
-      "enddate": "",
+      "invoiceIds": invoiceNumber1.isNotEmpty ? invoiceNumber1 : [0],
+      "companyIds": [instituteID],
+      "customerIds": customerIds.isNotEmpty ? customerIds : [0],
+      "stdate": fromDate?.toIso8601String() ?? "",
+      "enddate": toDate?.toIso8601String() ?? "",
       "allowCancelInvoice": true
     };
 
@@ -121,6 +118,47 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
               .toList();
           var y = CustDetData(custSno: 0,custName: 'All',phone: '',postedDate: '',companySno: 0); 
           customers.insert(0, y);
+        });
+      } else {
+        showError('Failed to load customers. Status: ${response.statusCode}');
+      }
+    } catch (e) {
+      showError('Error fetching data: $e');
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> getPaymentReport() async {
+    setState(() => isLoading = true);
+    const url = 'http://192.168.100.50:98/api/RepCompInvoice/GetInvReport';
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      int instituteID = prefs.getInt('instID') ?? 0;
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode({
+          "companyIds": [instituteID],
+          "customerIds": [0],
+          "stdate": "",
+          "enddate": "",
+          "allowCancelInvoice": false
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          invoiceNumbers = (data['response'] as List)
+              .map((e) => InvoiceNumberData.fromJson(e))
+              .toList();
+          var y = InvoiceNumberData(invMasSno: 0, invoiceNos: "All"); 
+          invoiceNumbers.insert(0, y);
         });
       } else {
         showError('Failed to load customers. Status: ${response.statusCode}');
@@ -200,21 +238,6 @@ Widget _buildFilters() {
           children: [
             Expanded(
               child: DropdownButtonFormField<String>(
-                value: selectedVendor,
-                hint: const Text('Select Vendor'),
-                items: vendors.map((vendor) {
-                  return DropdownMenuItem(value: vendor, child: Text(vendor));
-                }).toList(),
-                onChanged: (value) => setState(() => selectedVendor = value),
-                decoration: const InputDecoration(
-                  labelText: 'Vendor',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: DropdownButtonFormField<String>(
                 value: selectedCustomer,
                 isExpanded: true,
                 hint: const Text('Select Customer'),
@@ -231,6 +254,33 @@ Widget _buildFilters() {
                   setState(() {
                     selectedCustomer = value;
                     customerIds = [int.parse(value!)];
+                  });
+                },
+                decoration: const InputDecoration(
+                  labelText: 'Customer',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                value: selectedInvoiceNumber,
+                isExpanded: true,
+                hint: const Text('Select Invoice number'),
+                items: invoiceNumbers.map((invoiceNo) {
+                  return DropdownMenuItem<String>(
+                    value: invoiceNo.invMasSno.toString(),
+                    child: Text(
+                       "${invoiceNo.invoiceNos}",
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedInvoiceNumber = value;
+                    invoiceNumber1 = [int.parse(value!)];
                   });
                 },
                 decoration: const InputDecoration(
@@ -311,7 +361,7 @@ Widget _buildExportButtons() {
       physics: const NeverScrollableScrollPhysics(),
       itemCount: invoices.length,
       itemBuilder: (context, index) {
-        return _InvoiceCard(invoice: invoices[index], custDet: customers[index],);
+        return _InvoiceCard(invoice: invoices[index], custDet: customers[index], invoiceNo: invoiceNumbers[index],);
       },
     );
   }
@@ -320,8 +370,9 @@ Widget _buildExportButtons() {
 class _InvoiceCard extends StatelessWidget {
   final InvoiceData invoice;
   final CustDetData custDet;
+  final InvoiceNumberData invoiceNo;
 
-  const _InvoiceCard({super.key, required this.invoice, required this.custDet});
+  const _InvoiceCard({super.key, required this.invoice, required this.custDet, required this.invoiceNo});
 
  @override
   Widget build(BuildContext context) {
@@ -666,5 +717,23 @@ class CustDetData {
       phone: json['Phone'],
       postedDate: json['Posted_Date']?.split('T')[0], // Extract date only
     );
+  }
+}
+
+class InvoiceNumberData {
+  final int invMasSno;
+  final String invoiceNos;
+
+  InvoiceNumberData({
+    required this.invMasSno,
+    required this.invoiceNos,
+  });
+
+  factory InvoiceNumberData.fromJson(Map<String, dynamic> json){
+    return InvoiceNumberData(
+      invMasSno: json['Inv_Mas_Sno'],
+      invoiceNos: json['Invoice_No'],
+
+      );
   }
 }
