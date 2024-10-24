@@ -331,36 +331,14 @@ class _CustomerSectionState extends State<CustomerSection> {
                        _viewCustomer(customer);
                     }, const Color.fromARGB(255, 128, 116, 12)),
 
-                    // IconButton(
-                    //   icon: Icon(Icons.remove_red_eye_outlined, color: Theme.of(context).colorScheme.primary),
-                    //   onPressed: () {
-  
-                    //     _viewCustomer(customer);
-                        
-                    //   },
-                    // ),
-
                      _buildIconActionButton(Icons.edit, 'Edit', () {
                       _showEditCustomerSheet(context, customer);
                     }, Colors.blue),
-
-                    // IconButton(
-                    //   icon: Icon(Icons.edit, color: Theme.of(context).colorScheme.primary),
-                    //   onPressed: () {
-                    //     _showEditCustomerSheet(context, customer);
-                    //   },
-                    // ),
 
                      _buildIconActionButton(Icons.delete, "Delete", () {
                       _confirmDeleteCustomer(context, customer);
                     }, Colors.red),
 
-                    // IconButton(
-                    //   icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
-                    //   onPressed: () {
-                    //     _confirmDeleteCustomer(context, customer);
-                    //   },
-                    // ),
                   ],
                 ),
               ],
@@ -519,10 +497,6 @@ void _viewCustomer(Customer customer) async {
       ),
     );
 
-    // Log customer details for debugging purposes
-    // log("Customer name: ${customer.name}");
-    // log("Customer Email: ${customer.email}");
-    // log("Customer Mobile: ${customer.mobileNumber}");
   } else {
     // Show an error message if customer details couldn't be fetched
     _showQuickAlert(context, 'Error', 'Failed to load customer details', false);

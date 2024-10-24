@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:learingdart/core/utils/api_config.dart';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -129,8 +130,8 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
         // body: jsonEncode({"compid": instituteID}),
       );
 
-      log('API Status Code: ${response.statusCode}');
-      log('API Response Body: ${response.body}');
+      // log('API Status Code: ${response.statusCode}');
+      // log('API Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = jsonDecode(response.body);
@@ -198,8 +199,7 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
       if (response.statusCode == 200) {
         // Show success dialog
         _showQuickAlert(context, 'Success', 'Vendor modified successfully!', true);
-        _fetchVendorUsersData();// Refresh Vendor list
-        _fetchVendorUsersRoleData();// Refresh Vendor list
+        _loadSessionInfo();// Refresh Vendor list
       } else {
         // Show error dialog
         _showQuickAlert(context, 'Error', 'Failed to modify Vendor: ${response.body}', false);
@@ -218,6 +218,71 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
         isLoading = false;
       });
     }
+  }
+
+  Future<void> _addCompanyUser(String role, String name, String fullName, String email, String mobile, String sno, String usertype) async {
+    const url = 'http://192.168.100.50:98/api/CompanyUsers/AddCompanyUser';
+    final prefs = await SharedPreferences.getInstance();
+        int instituteID = prefs.getInt('instID') ?? 0;
+        int userID= prefs.getInt('userID') ?? 0;
+
+    final body = jsonEncode({
+        "pos": role,
+        "auname": fullName,
+        "mob": mobile,
+        "uname": name,
+        "mail": email,
+        "sno": 0,
+        "compid": instituteID,
+        "chname": usertype,
+        "userid": userID
+      });
+
+      try {
+        final response = await http.post(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $_token'
+          },
+          body: body,
+        );
+
+        if (response.statusCode == 200) {
+          final Map<String, dynamic> responseBody = jsonDecode(response.body);
+          if (responseBody['response'] == 0) {
+           // Extract the message from the "message" array
+            String errorMessage = responseBody['message'].isNotEmpty
+                ? responseBody['message'][0]
+                : 'An error occurred'; // Default message if empty
+
+            _showQuickAlert(context, 'Error', errorMessage, true);
+          } else {
+            // Handle success
+            _showQuickAlert(context, 'Success', 'Vendor added successfully!', true);
+            _loadSessionInfo(); // Refresh customer list
+          }
+          
+        } else {
+          // Handle error response
+          _showQuickAlert(context, 'Error', 'Failed to add Vendor: ${response.body}', false);
+        }
+      } catch (e) {
+
+        if (e is http.ClientException) {
+          // Network error
+          _showErrorDialog('Network error. Please check your connection and try again.');
+
+        } else {
+          // Other exceptions
+          _showErrorDialog('An unexpected error occurred. Please try again.');
+          
+        }
+        setState(() {
+        isLoading = false;
+      });
+      }
   }
 
   void _showQuickAlert(BuildContext context, String title, String message, bool isSuccess) {
@@ -301,16 +366,15 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
                     ? const Center(child: CircularProgressIndicator())
                     : filteredUsers.isEmpty
                         ? const Center(child: Text("No vendor users found"))
-                        : SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.6,
-                            child: ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: filteredUsers.length,
+                          : ListView.builder(
+                            shrinkWrap: true,
+                            // physics: const NeverScrollableScrollPhysics(), // Disable scrolling inside the list
+                            itemCount: filteredUsers.length,
                               itemBuilder: (context, index) {
                                 return _buildUserCard(filteredUsers[index]);
                               },
-                            ),
                           ),
+
               ],
             ),
           ),
@@ -582,7 +646,7 @@ void _showEditVendorUserSheet(BuildContext context, VendorUser user) {
                         });
                       },
                       decoration: const InputDecoration(
-                        labelText: 'Customer',
+                        labelText: 'Role',
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -739,7 +803,7 @@ void _showModifyConfirmationDialog(BuildContext context, VendorUser user, String
   );
 }
 
-  Widget _buildEditableTextField(String label, String initialValue) {
+Widget _buildEditableTextField(String label, String initialValue) {
     return TextField(
       decoration: InputDecoration(
         labelText: label,
@@ -747,56 +811,293 @@ void _showModifyConfirmationDialog(BuildContext context, VendorUser user, String
       ),
       controller: TextEditingController(text: initialValue),
     );
-  }
+}
 
-  void _showAddVendorUserSheet(BuildContext context) {
+void _showAddVendorUserSheet(BuildContext context, ) {
+  final nameController = TextEditingController();
+  final fullNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final mobileController = TextEditingController();
+  final snoController = TextEditingController();
+  final usertypeController = TextEditingController();
+
+  // Email validation regex pattern
+  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+  // Mobile number validation regex pattern (digits only)
+  final mobileRegex = RegExp(r'^\d+$');
+
+  // State variables for error messages
+  String? roleError;
+  String? nameError;
+  String? fullNameError;
+  String? emailError;
+  String? mobileError;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (BuildContext context) {
-        return Padding(
-          padding: MediaQuery.of(context).viewInsets,
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Text(
-                    'Add Vendor User',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 16.0),
-                  _buildEditableTextField('Username', ''),
-                  const SizedBox(height: 16.0),
-                  _buildEditableTextField('Full Name', ''),
-                  const SizedBox(height: 16.0),
-                  _buildEditableTextField('Email', ''),
-                  const SizedBox(height: 16.0),
-                  _buildEditableTextField('Mobile Number', ''),
-                  const SizedBox(height: 16.0),
-                  _buildEditableTextField('Role', ''),
-                  const SizedBox(height: 16.0),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                    child: const Text('Add Vendor User'),
-                  ),
-                ],
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
               ),
-            ),
-          ),
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(
+                        'Add Vendor User',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 16.0),
+
+                      /// Role Dropdown
+                      DropdownButtonFormField<String>(
+                        value: selectedVendorUsersRole,
+                        isExpanded: true,
+                        hint: const Text('Select Role'),
+                        items: vendorUsersRole.map((role) {
+                          return DropdownMenuItem<String>(
+                            value: role.sno.toString(),
+                            child: Text(
+                              "${role.role} ",
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            selectedVendorUsersRole = value;
+                            vendorUsersRoleIds = [int.parse(value!)];
+                          });
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'Role',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16.0),
+                          ),
+                          errorText: roleError, // Show error message if roleError is not null
+                        ),
+                      ),
+                      const SizedBox(height: 16.0),
+
+                      // Name field
+                      TextField(
+                        controller: nameController,
+                        decoration: InputDecoration(
+                          labelText: 'User Name',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16.0),
+                          ),
+                          errorText: nameError,
+                        ),
+                      ),
+                      const SizedBox(height: 8.0),
+
+                      // Full Name field
+                      TextField(
+                        controller: fullNameController,
+                        decoration: InputDecoration(
+                          labelText: 'Full Name',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16.0),
+                          ),
+                          errorText: fullNameError,
+                        ),
+                      ),
+                      const SizedBox(height: 8.0),
+
+                      // Email field
+                      TextField(
+                        controller: emailController,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16.0),
+                          ),
+                          errorText: emailError,
+                        ),
+                      ),
+                      const SizedBox(height: 8.0),
+
+                      // Mobile field
+                      TextField(
+                        controller: mobileController,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        decoration: InputDecoration(
+                          labelText: 'Mobile Number',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16.0),
+                          ),
+                          errorText: mobileError,
+                        ),
+                        keyboardType: TextInputType.phone,
+                      ),
+                      const SizedBox(height: 16.0),
+
+                      // Save button
+                      ElevatedButton(
+                        onPressed: () {
+                          String role = selectedVendorUsersRole ?? '';
+                          String name = nameController.text.trim();
+                          String fullName = fullNameController.text.trim();
+                          String email = emailController.text.trim();
+                          String mobile = mobileController.text.trim();
+                          String sno = snoController.text.trim();
+                          String usertype = usertypeController.text.trim();
+
+                          setState(() {
+                            roleError = null;
+                            nameError = null;
+                            fullNameError = null;
+                            emailError = null;
+                            mobileError = null;
+                          });
+
+                          bool isValid = true;
+
+                          if (role.isEmpty) {
+                            setState(() {
+                              roleError = 'Please select role';
+                            });
+                            isValid = false;
+                          }
+
+                          if (name.isEmpty) {
+                            setState(() {
+                              nameError = 'Please enter your name';
+                            });
+                            isValid = false;
+                          }
+
+                          if (fullName.isEmpty) {
+                            setState(() {
+                              fullNameError = 'Please enter your full name';
+                            });
+                            isValid = false;
+                          }
+
+                          if (email.isEmpty || !emailRegex.hasMatch(email)) {
+                            setState(() {
+                              emailError = 'Please enter a valid email address';
+                            });
+                            isValid = false;
+                          }
+
+                          if (mobile.isEmpty || !mobileRegex.hasMatch(mobile)) {
+                            setState(() {
+                              mobileError = 'Please enter a valid mobile number';
+                            });
+                            isValid = false;
+                          }
+
+                          if (isValid) {
+                            _showConfirmationDialog(context, role, name, fullName, email, mobile, sno, usertype);
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16.0),
+                          ),
+                        ),
+                        child: const Text('Save Changes'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
         );
       },
     );
   }
+
+
+void _showConfirmationDialog(BuildContext context,String role, String name, String fullName, String email, String mobile, String sno, String usertype) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Confirm'),
+        content: const Text('Save changes?'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+            },
+            child: const Text('CLOSE'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+              _addCompanyUser(role, name,fullName, email, mobile, sno, usertype); // Call API to add customer
+            },
+            child: const Text('CONFIRM'),
+          ),
+        ],
+      );
+    },
+  );
 }
+
+
+// void _showAddVendorUserSheet(BuildContext context) {
+//     showModalBottomSheet(
+//       context: context,
+//       isScrollControlled: true,
+//       builder: (BuildContext context) {
+//         return Padding(
+//           padding: MediaQuery.of(context).viewInsets,
+//           child: SingleChildScrollView(
+//             child: Padding(
+//               padding: const EdgeInsets.all(16.0),
+//               child: Column(
+//                 mainAxisSize: MainAxisSize.min,
+//                 children: <Widget>[
+//                   Text(
+//                     'Add Vendor User',
+//                     style: Theme.of(context).textTheme.titleLarge,
+//                   ),
+//                   const SizedBox(height: 16.0),
+//                   _buildEditableTextField('Username', ''),
+//                   const SizedBox(height: 16.0),
+//                   _buildEditableTextField('Full Name', ''),
+//                   const SizedBox(height: 16.0),
+//                   _buildEditableTextField('Email', ''),
+//                   const SizedBox(height: 16.0),
+//                   _buildEditableTextField('Mobile Number', ''),
+//                   const SizedBox(height: 16.0),
+//                   _buildEditableTextField('Role', ''),
+//                   const SizedBox(height: 16.0),
+//                   ElevatedButton(
+//                     onPressed: () {
+//                       Navigator.pop(context);
+//                     },
+//                     style: ElevatedButton.styleFrom(
+//                       shape: RoundedRectangleBorder(
+//                         borderRadius: BorderRadius.circular(16.0),
+//                       ),
+//                     ),
+//                     child: const Text('Add Vendor User'),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ),
+//         );
+//       },
+//     );
+//   }
+ }
+
+
+
+
 
 
 class VendorUser {
