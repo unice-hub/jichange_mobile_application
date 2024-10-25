@@ -205,7 +205,7 @@ class _CancelledInvoicePageState extends State<CancelledInvoicePage> {
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () {
-              Navigator.pushNamed(context, '/profile');
+              Navigator.pushNamed(context, '/settings');
             },
           ),
         ],

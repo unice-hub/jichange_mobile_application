@@ -147,7 +147,7 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () {
-              Navigator.pushNamed(context, '/profile');
+              Navigator.pushNamed(context, '/settings');
             },
           ),
         ],

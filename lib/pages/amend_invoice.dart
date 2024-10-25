@@ -619,7 +619,7 @@ Future<void> _findInvoice(String compid, String invno) async {
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () {
-              Navigator.pushNamed(context, '/profile');
+              Navigator.pushNamed(context, '/settings');
             },
           ),
         ],

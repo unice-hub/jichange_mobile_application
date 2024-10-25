@@ -131,7 +131,7 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
         IconButton(
           icon: const Icon(Icons.settings, color: Colors.white),
           onPressed: () {
-            Navigator.pushNamed(context, '/profile');
+            Navigator.pushNamed(context, '/settings');
           },
         ),
       ],

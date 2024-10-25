@@ -7,7 +7,7 @@ import 'pages/reports_section.dart';
 import 'pages/login/login_page.dart';
 import 'pages/login/forgot_password_page.dart';
 import 'pages/login/vendor_registration_page.dart';
-import 'pages/profile_page.dart';
+import 'pages/settings_page.dart';
 import 'pages/create_invoice.dart';
 
 void main() {
@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const HomePage(),
         '/forgot-password': (context) => const ForgotPasswordPage(),
         '/register': (context) => const VendorRegistrationPage(),
-        '/profile': (context) => const ProfilePage(),
+        '/settings': (context) => const SettingsPage(),
         '/create_invoice': (context) => const CreateInvoicePage(),
         // '/edit_invoice': (context) => const EditInvoicePage(),
       },
@@ -87,7 +87,7 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () {
-              Navigator.pushNamed(context, '/profile');
+              Navigator.pushNamed(context, '/settings');
             },
           ),
         ],

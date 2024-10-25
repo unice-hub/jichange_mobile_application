@@ -229,7 +229,7 @@ class _OverviewPageState extends State<OverviewPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () => Navigator.pushNamed(context, '/profile'),
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
           ),
         ],
       ),

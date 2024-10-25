@@ -153,7 +153,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () => Navigator.pushNamed(context, '/profile'),
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
           ),
         ],
       ),
