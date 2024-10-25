@@ -411,7 +411,8 @@ void _showConfirmationDialog(BuildContext context, String name, String email, St
     builder: (BuildContext context) {
       return AlertDialog(
         title: const Text('Add Customer'),
-        content: const Text('Are you sure you want to add this customer? Would you also like to attach an invoice to this customer?'),
+        // content: const Text('Are you sure you want to add this customer? Would you also like to attach an invoice to this customer?'),
+        content: const Text('Are you sure you want to add this customer?'),
         actions: <Widget>[
           TextButton(
             onPressed: () {
@@ -419,13 +420,24 @@ void _showConfirmationDialog(BuildContext context, String name, String email, St
             },
             child: const Text('CLOSE'),
           ),
-          TextButton(
-            onPressed: () {
-              // Navigator.of(context).pop(); // Close the dialog
-              // Handle attaching invoice logic
-            },
-            child: const Text('YES, ATTACH INVOICE'),
-          ),
+          // TextButton(
+          //   onPressed: () {
+          //     // Navigator.of(context).pop(); // Close the dialog
+          //     // Handle attaching invoice logic
+          //     Navigator.of(context).pop(); // Close the dialog
+          //     _addCustomerAPI(name, email, mobile); // Call API to add customer
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(
+          //         builder: (context) => CreateInvoiceForSpecificCustomer(
+          //           customer: name,
+          //           customerSno: custSno,
+          //         ),
+          //       ),
+          //     );
+          //   },
+          //   child: const Text('YES, ATTACH INVOICE'),
+          // ),
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop(); // Close the dialog
@@ -641,15 +653,21 @@ void _showAddCustomerSheet(BuildContext context) {
 
                         // If all fields are valid, proceed with the action
                         if (isValid) {
+                          Navigator.of(context).pop();
                           _showConfirmationDialog(context, name, email, mobile);
                         }
                       },
                       style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.0),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text('Add Customer'),
+                      child: const Text(
+                        'Add Customer',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ],
                 ),
@@ -783,15 +801,22 @@ void _showEditCustomerSheet(BuildContext context, Customer customer) {
 
                         // If all fields are valid, proceed with the action
                         if (isValid) {
+                          Navigator.of(context).pop();
                           _showModifyConfirmationDialog(context, customer, name, email, mobile);
+                          
                         }
                       },
                       style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.0),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text('Save Changes'),
+                      child: const Text(
+                        'Save Changes',
+                        style: TextStyle(color: Colors.white),
+                        ),
                     ),
                   ],
                 ),

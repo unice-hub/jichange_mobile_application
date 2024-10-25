@@ -214,11 +214,12 @@ class _VendorRegistrationPageState extends State<VendorRegistrationPage> {
                     // Handle the form submission here
                   },
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16.0, horizontal: 24.0),
-                    backgroundColor:
-                        Theme.of(context).colorScheme.primary, // Blue color
-                  ),
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
                   child: const Text(
                     'SUBMIT',
                     style: TextStyle(color: Colors.white), // White text

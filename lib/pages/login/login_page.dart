@@ -303,7 +303,7 @@ class _LoginPageState extends State<LoginPage> {
                     height: 100.0,
                   ),
                 ),
-                const SizedBox(height: 24.0),
+                const SizedBox(height: 8.0),
 
                 // "Sign in to your account" text
                 Center(
@@ -379,7 +379,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: const Text('Forgot password?'),
                   ),
                 ),
-                const SizedBox(height: 24.0),
+                const SizedBox(height: 16.0),
 
                 // Sign In Button
                 ElevatedButton(

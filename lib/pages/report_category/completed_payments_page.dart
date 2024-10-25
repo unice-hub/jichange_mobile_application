@@ -214,11 +214,23 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
           children: [
             _buildFilters(),
             const SizedBox(height: 16),
-            ElevatedButton(
+
+           ElevatedButton(
               onPressed: fetchInvoices,
-              child: const Text('Submit'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Submit',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
             const SizedBox(height: 16),
+
             _buildExportButtons(),
             const SizedBox(height: 16),
             isLoading

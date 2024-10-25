@@ -645,9 +645,11 @@ void _showEditVendorUserSheet(BuildContext context, VendorUser user) {
                           vendorUsersRoleIds = [int.parse(value!)];
                         });
                       },
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Role',
-                        border: OutlineInputBorder(),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16.0),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16.0),
@@ -754,15 +756,21 @@ void _showEditVendorUserSheet(BuildContext context, VendorUser user) {
                         }
 
                         if (isValid) {
+                          Navigator.pop(context);
                           _showModifyConfirmationDialog(context, user, name, fullName, email, mobile, sno, usertype);
                         }
                       },
                       style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.0),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text('Save Changes'),
+                      child: const Text(
+                        'Save Changes',
+                        style: TextStyle(color: Colors.white),
+                        ),
                     ),
                   ],
                 ),
@@ -996,15 +1004,21 @@ void _showAddVendorUserSheet(BuildContext context, ) {
                           }
 
                           if (isValid) {
+                            Navigator.pop(context);
                             _showConfirmationDialog(context, role, name, fullName, email, mobile, sno, usertype);
                           }
                         },
                         style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16.0),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Text('Save Changes'),
+                        child: const Text(
+                          'Add vendor',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ],
                   ),

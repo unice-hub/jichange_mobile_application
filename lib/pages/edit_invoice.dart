@@ -449,11 +449,12 @@ Future<void> _findInvoice(String compid, String invno) async {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invoice submitted successfully!')),
+          const SnackBar(content: Text('Invoice edited successfully!')),
         );
+        
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to submit invoice.')),
+          const SnackBar(content: Text('Failed to edited invoice.')),
         );
       }
     } catch (e) {

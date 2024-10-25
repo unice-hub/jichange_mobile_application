@@ -37,13 +37,10 @@ class _CreatedInvoiceTabState extends State<CreatedInvoiceTab> {
   void initState() {
     super.initState();
     _loadSessionInfo();
+    _fetchInvoicesData();
   }
 
   Future<void> _loadSessionInfo() async {
-    // final prefs = await SharedPreferences.getInstance();
-    // setState(() {
-    //   _token = prefs.getString('token') ?? 'Not logged in';
-    // });
     _fetchInvoicesData();
   }
 
@@ -224,18 +221,7 @@ class InvoiceData {
   final int compid;
   final String companyName;
   final String controlNumber;
-  // final String remarks;
-  // final String goodsStatus;
-  // final String approvalStatus;
-  // final String currencyName;
-  // final double totalWithoutVAT;
-  // final double totalVAT;
-  // final int itemQty;
-  // final int itemUnitPrice;
-  // final int itemTotalAmount;
   final int invMasNo;
-  // final String deliveryStatus;
-  // final int invDetSno;
 
   InvoiceData(
     this.customerName,
@@ -252,18 +238,7 @@ class InvoiceData {
     this.compid,
     this.companyName,
     this.controlNumber,
-    // this.remarks,
-    // this.goodsStatus,
-    // this.approvalStatus,
-    // this.currencyName,
-    // this.totalWithoutVAT,
-    // this.totalVAT,
-    // this.itemQty,
-    // this.itemUnitPrice,
-    // this.itemTotalAmount,
     this.invMasNo,
-    // this.deliveryStatus,
-    // this.invDetSno,
   );
 
   factory InvoiceData.fromJson(Map<String, dynamic> json, int userID) {
@@ -282,20 +257,8 @@ class InvoiceData {
       json['Com_Mas_Sno'],
       json['Company_Name'],
       json['Control_No'] ?? '',
-      
-      
-      // json['Remarks'] ?? '',
-      // json['goods_status'] ?? '',
-      // json['approval_status'] ?? '',
-      // json['Currency_Name'] ?? '',
-      // json['Total_Without_Vt'] ?? '',
-      // json['Total_Vt'] ?? '',
-      // json['Item_Qty'] ?? '',
-      // json['Item_Unit_Price'] ?? '',
-      // json['Item_Total_Amount'] ?? '',
       json['Chus_Mas_No'] ?? '',
-      // json['delivery_status'] ?? '',
-      // json['Inv_Det_Sno'] ?? '',
+
     );
   }
 }
@@ -482,6 +445,8 @@ class _InvoiceCardState extends State<_InvoiceCard> {
       ),
     ],
   );
+
+  
 }
 
 void _showCancelPopup() {
@@ -569,7 +534,7 @@ void _showCancelPopup() {
     );
   }
 
-void _confirmCancellation() {
+  void _confirmCancellation() {
   Navigator.pop(context); // Close the confirmation popup
   cancelInvoice();
 }
@@ -671,7 +636,7 @@ Future<void> approvelInvoice() async {
     if (response.statusCode == 200) {
       setState(() {
         isLoading = false;
-        
+        return ;
       });
 
       _showSnackBar('Invoice approved successfully');
@@ -774,7 +739,6 @@ Future<void> cancelInvoice() async {
     if (response.statusCode == 200) {
       setState(() {
         isLoading = false;
-        
       });
 
       _showSnackBar('Invoice cancelled successfully');
@@ -940,8 +904,6 @@ void downloadFile(String url) async {
   }));
   await file.writeAsBytes(bytes);
 
-  // Optionally notify the user or handle the file as needed
-  print('File downloaded to $filePath');
 }
 
 Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPressed, Color iconColor) {
