@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:learingdart/core/utils/api_config.dart';
+// import 'package:learingdart/core/utils/api_config.dart';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -263,7 +263,7 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
             _showQuickAlert(context, 'Success', 'Vendor added successfully!', true);
             _loadSessionInfo(); // Refresh customer list
           }
-          
+
         } else {
           // Handle error response
           _showQuickAlert(context, 'Error', 'Failed to add Vendor: ${response.body}', false);
@@ -368,7 +368,7 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
                         ? const Center(child: Text("No vendor users found"))
                           : ListView.builder(
                             shrinkWrap: true,
-                            // physics: const NeverScrollableScrollPhysics(), // Disable scrolling inside the list
+                            physics: const NeverScrollableScrollPhysics(), // Disable scrolling inside the list
                             itemCount: filteredUsers.length,
                               itemBuilder: (context, index) {
                                 return _buildUserCard(filteredUsers[index]);

@@ -31,10 +31,6 @@ class _CustomerSectionState extends State<CustomerSection> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _token = prefs.getString('token') ?? 'Not logged in';
-      // _userID = prefs.getInt('userID') ?? 0;
-      // _instID = prefs.getInt('instID') ?? 0;
-      // _userName = prefs.getString('userName') ?? 'Unknown';
-      // _braid = prefs.getString('ubraid') ?? 'Unknown';
     });
   }
 
@@ -122,8 +118,21 @@ class _CustomerSectionState extends State<CustomerSection> {
 
       if (response.statusCode == 200) {
         // Show success dialog
-        _showQuickAlert(context, 'Success', 'Customer modified successfully!', true);
-        _fetchCustomerData(); // Refresh customer list
+        // _showQuickAlert(context, 'Success', 'Customer modified successfully!', true);
+        // _fetchCustomerData(); // Refresh customer list
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
+        if (responseBody['response'] == 0) {
+           // Extract the message from the "message" array
+            String errorMessage = responseBody['message'].isNotEmpty
+                ? responseBody['message'][0]
+                : 'An error occurred'; // Default message if empty
+
+            _showQuickAlert(context, 'Error', errorMessage, true);
+          } else {
+            // Handle success
+            _showQuickAlert(context, 'Success', 'Customer modified successfully!', true);
+            _fetchCustomerData(); // Refresh customer list
+          }
       } else {
         // Show error dialog
         _showQuickAlert(context, 'Error', 'Failed to modify customer: ${response.body}', false);
@@ -183,15 +192,28 @@ class _CustomerSectionState extends State<CustomerSection> {
 
         if (response.statusCode == 200) {
           // Handle success response
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Customer added successfully')),
-          );
-          _fetchCustomerData(); // Refresh customer list
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   const SnackBar(content: Text('Customer added successfully')),
+          // );
+          // _fetchCustomerData(); // Refresh customer list
+
+          final Map<String, dynamic> responseBody = jsonDecode(response.body);
+          if (responseBody['response'] == 0) {
+           // Extract the message from the "message" array
+            String errorMessage = responseBody['message'].isNotEmpty
+                ? responseBody['message'][0]
+                : 'An error occurred'; // Default message if empty
+
+            _showQuickAlert(context, 'Error', errorMessage, true);
+          } else {
+            // Handle success
+            _showQuickAlert(context, 'Success', 'Customer added successfully', true);
+            _fetchCustomerData(); // Refresh customer list
+          }
+
         } else {
           // Handle error response
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to add customer: ${response.body}')),
-          );
+          _showQuickAlert(context, 'Error', 'Failed to add customer: ${response.body}', false);
         }
       } catch (e) {
 
@@ -455,7 +477,8 @@ void _viewCustomer(Customer customer) async {
         return Customer.fromJson(data); 
       } else {
         // Log the failure with the response status code
-        log('Failed to fetch customer details: ${response.statusCode}');
+        // log('Failed to fetch customer details: ${response.statusCode}');
+        _showQuickAlert(context, 'Error', 'Failed to fetch customer details: ${response.statusCode}', true);
         return null;
       }
     } catch (e) {
@@ -477,12 +500,7 @@ void _viewCustomer(Customer customer) async {
 
   // Fetch customer details using the customer ID
   final customerDetails = await fetchCustomerDetails(customer.id);
-  // log(customer.id.toString());
-  // log(customer.email);
-  // log(customer.mobileNumber);
-  // log(customer.name);
-  // Check if customer details were successfully retrieved
-  
+ 
   if (customerDetails != true) {
     // Navigate to the CustomerDetailsPage with the retrieved details
     Navigator.push(
@@ -888,22 +906,19 @@ void _showQuickAlert(BuildContext context, String title, String message, bool is
 
       if (response.statusCode == 200) {
         // Success: Show a success alert
-        Map<String,dynamic> jsonObject = json.decode(response.body);
-        log(jsonObject['response'].toString());
-        if (jsonObject['response'] == 0 && jsonObject['message'].length > 0) {
-          log(jsonObject["message"].toString());
-          String kitu = jsonObject["message"].toString();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(kitu)),
-          );
-        }
-        else{
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Customer deleted successfully')),
-          );
-        }
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
+          if (responseBody['response'] == 0) {
+           // Extract the message from the "message" array
+            String errorMessage = responseBody['message'].isNotEmpty
+                ? responseBody['message'][0]
+                : 'An error occurred'; // Default message if empty
 
-        _fetchCustomerData(); // Refresh the customer list
+            _showQuickAlert(context, 'Error', errorMessage, true);
+          } else {
+            // Handle success
+            _showQuickAlert(context, 'Success', 'Customer deleted successfully', true);
+            _fetchCustomerData(); // Refresh the customer list
+          }
       } 
       else {
         // Failure: Show an error alert

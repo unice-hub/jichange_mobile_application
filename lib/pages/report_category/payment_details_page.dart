@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:learingdart/pages/all_transactions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PaymentDetailsPage extends StatefulWidget {
@@ -180,8 +181,8 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
       ),
     );
   }
-
-   Widget _buildFilters() {
+  
+  Widget _buildFilters() {
     return Column(
       children: [
         Row(
@@ -346,7 +347,16 @@ class _InvoiceCard extends StatelessWidget {
             const SizedBox(height: 5),
             _buildInvoiceRow('Action(s):', _buildIconActionButton(Icons.visibility, '', () {
             // Define the action to view details
-          }, const Color.fromARGB(255, 128, 116, 12)),),
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AllTransactionsPage(
+                    invoiceSno: invoice.invoiceSno,
+                                
+                    ),
+                  ),
+                );
+            }, const Color.fromARGB(255, 128, 116, 12)),),
           ],
         ),
       ),
@@ -354,28 +364,28 @@ class _InvoiceCard extends StatelessWidget {
   }
 
   Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPressed, Color iconColor) {
-  return Column(
-    children: [
-      Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.rectangle,
-          border: Border.all(color: iconColor, width: 2),
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),        // Flat edge
-            topRight: Radius.circular(16),       // Curved edge
-            bottomLeft: Radius.circular(16),     // Curved edge
-            bottomRight: Radius.circular(16),     // Flat edge
-          ), // Apply caved corner effect
+    return Column(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.rectangle,
+            border: Border.all(color: iconColor, width: 2),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(16),        // Flat edge
+              topRight: Radius.circular(16),       // Curved edge
+              bottomLeft: Radius.circular(16),     // Curved edge
+              bottomRight: Radius.circular(16),     // Flat edge
+            ), // Apply caved corner effect
+          ),
+          child: IconButton(
+            icon: Icon(icon, color: iconColor),
+            onPressed: onPressed,
+          ),
         ),
-        child: IconButton(
-          icon: Icon(icon, color: iconColor),
-          onPressed: onPressed,
-        ),
-      ),
-      Text(label, style: const TextStyle(fontSize: 12)),
-    ],
-  );
-}
+        Text(label, style: const TextStyle(fontSize: 12)),
+      ],
+    );
+  }
 
   String formatDate(String dateStr) {
   DateTime dateTime = DateTime.parse(dateStr);

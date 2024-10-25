@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:learingdart/pages/all_transactions.dart';
 import 'package:learingdart/pages/create_invoice_for_specific_customer.dart';
 import 'dart:convert';
 import 'dart:developer';
@@ -343,6 +344,15 @@ class _TransactionCardState extends State<TransactionCard> {
                         
                         onPressed: () {
                           // Action for viewing control number details
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AllTransactionsPage(
+                                invoiceSno: widget.invoiceNo,
+                               
+                              ),
+                            ),
+                          );
                         },
                       ),
                     ],
