@@ -75,6 +75,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false, // Disables the back button
         title: Text(
           _titles[_selectedIndex],
           style: const TextStyle(color: Colors.white),

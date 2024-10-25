@@ -51,8 +51,6 @@ class _VendorRegistrationPageState extends State<VendorRegistrationPage> {
       setState(() {
         _isLoading = false;
       });
-      // Handle error (show a message to the user, etc.)
-      print('Error fetching branches: $e');
     }
   }
 
