@@ -199,7 +199,7 @@ void _showErrorDialog(String message) {
         Navigator.pushNamed(context, '/create_invoice');
       },
       backgroundColor: Theme.of(context).colorScheme.primary,
-      child: const Icon(Icons.add),
+      child: const Icon(Icons.add, color: Colors.white),
     );
   }
 }
@@ -346,7 +346,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
                 _showAccessConfirmationPopup();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -354,7 +354,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
               ),
               child: const Text(
                 'Access',
-                style: TextStyle(color: Colors.black),
+                style: TextStyle(color: Colors.white),
               ),
             )
           : const Text(
@@ -373,12 +373,12 @@ class _InvoiceCardState extends State<_InvoiceCard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: widget.invoice.paymentType == 'Fixed' ? const Color.fromARGB(255, 240, 154, 255) : Colors.greenAccent,
+        color: widget.invoice.paymentType == 'Fixed' ? const Color.fromARGB(255, 240, 154, 255) : const Color.fromARGB(61, 105, 240, 175),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         widget.invoice.paymentType,
-        style: TextStyle(color: widget.invoice.paymentType == 'Fixed' ? const Color.fromARGB(255, 131, 75, 204) : const Color.fromARGB(34, 51, 134, 88)),
+        style: TextStyle(color: widget.invoice.paymentType == 'Fixed' ? const Color.fromARGB(255, 131, 75, 204) : const Color.fromARGB(255, 16, 116, 61)),
       ),
     );
   }
@@ -392,7 +392,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
       ),
       child: Text(
         widget.invoice.status,
-        style: const TextStyle(color: Colors.blueAccent),
+        style: const TextStyle(color: Color.fromARGB(255, 24, 106, 248)),
       ),
     );
   }
@@ -559,7 +559,17 @@ void _showAccessConfirmationPopup() {
               onPressed: () {
                 _confirmApprovellation();
               },
-              child: const Text('Confirm'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Confirm',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );

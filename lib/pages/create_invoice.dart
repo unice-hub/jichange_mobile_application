@@ -258,11 +258,20 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
         );
 
         if (response.statusCode == 200) {
-          // Handle success response
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Customer added successfully')),
-          );
-          _fetchCustomerName(); // Refresh customer list
+           final Map<String, dynamic> responseBody = jsonDecode(response.body);
+          if (responseBody['response'] == 0) {
+           // Extract the message from the "message" array
+            String errorMessage = responseBody['message'].isNotEmpty
+                ? responseBody['message'][0]
+                : 'An error occurred'; // Default message if empty
+
+            _showQuickAlert(context, 'Error', errorMessage, true);
+          } else {
+            // Handle success
+            _showQuickAlert(context, 'Success', 'Customer added successfully', true);
+            
+          }
+
         } else {
           // Handle error response
           ScaffoldMessenger.of(context).showSnackBar(
@@ -286,13 +295,33 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
       }
   }
 
+  void _showQuickAlert(BuildContext context, String title, String message, bool isSuccess) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
   void _showConfirmationDialog1(BuildContext context, String name, String email, String mobile) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
         title: const Text('Add Customer'),
-        content: const Text('Are you sure you want to add this customer? Would you also like to attach an invoice to this customer?'),
+        content: const Text('Are you sure you want to add this customer?'),
         actions: <Widget>[
           TextButton(
             onPressed: () {
@@ -306,7 +335,17 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
               Navigator.of(context).pop(); // Close the dialog
               _addCustomerAPI(name, email, mobile); // Call API to add customer
             },
-            child: const Text('CONFIRM'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'CONFIRM',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       );
@@ -348,7 +387,7 @@ void _showAddCustomerSheet(BuildContext context) {
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     Text(
-                      'Add New Customer',
+                      'Add new customer',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 16.0),
@@ -437,11 +476,16 @@ void _showAddCustomerSheet(BuildContext context) {
                         }
                       },
                       style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.0),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text('Add Customer'),
+                      child: const Text(
+                        'Add Customer',
+                        style: TextStyle(color: Colors.white),
+                        ),
                     ),
                   ],
                 ),
@@ -513,7 +557,17 @@ void _showAddCustomerSheet(BuildContext context) {
               Navigator.pop(context); // Close the dialog
               _submitInvoice();
             },
-            child: const Text('CONFIRM'),
+            style: ElevatedButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'CONFIRM',
+            style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -893,14 +947,20 @@ void _showAddCustomerSheet(BuildContext context) {
             const SizedBox(height: 16),
 
             Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 ElevatedButton.icon(
                   onPressed: addItem,
-                  icon: const Icon(Icons.add),
-                  label: const Text('ADD'),
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  label: const Text(
+                    'ADD', 
+                    style: TextStyle(color: Colors.white),
+                    ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.greenAccent,
+                    backgroundColor: const Color.fromRGBO(0, 158, 96, 1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
               ],

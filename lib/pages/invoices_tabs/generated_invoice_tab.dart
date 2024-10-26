@@ -353,12 +353,12 @@ class _InvoiceCardState extends State<_InvoiceCard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: widget.invoice.paymentType == 'Fixed' ? const Color.fromARGB(255, 240, 154, 255) : Colors.greenAccent,
+        color: widget.invoice.paymentType == 'Fixed' ? const Color.fromARGB(85, 218, 7, 255) : const Color.fromARGB(50, 105, 240, 175),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         widget.invoice.paymentType,
-        style: TextStyle(color: widget.invoice.paymentType == 'Fixed' ? const Color.fromARGB(255, 131, 75, 204) : const Color.fromARGB(255, 51, 134, 88)),
+        style: TextStyle(color: widget.invoice.paymentType == 'Fixed' ? const Color.fromARGB(255, 109, 3, 247) : const Color.fromARGB(255, 51, 134, 88)),
       ),
     );
   }
@@ -372,7 +372,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
       ),
       child: Text(
         widget.invoice.status,
-        style: const TextStyle(color: Colors.white),
+        style: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
       ),
     );
   }
@@ -552,7 +552,17 @@ void _showCancelPopup() {
               onPressed: () {
                 _validateAndProceed();
               },
-              child: const Text('Submit'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor:const Color.fromARGB(80, 244, 67, 54),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Submit',
+                style: TextStyle(color: Colors.red),
+              ),
             ),
           ],
         );
@@ -591,7 +601,18 @@ void _showConfirmationPopup() {
               onPressed: () {
                 _confirmCancellation();
               },
-              child: const Text('Confirm'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor:const Color.fromARGB(80, 244, 67, 54),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Confirm',
+                style: TextStyle(color: Colors.red),
+              ),
+             
             ),
           ],
         );
@@ -667,7 +688,7 @@ Future<void> cancelInvoice() async {
     if (response.statusCode == 200) {
       setState(() {
         isLoading = false;
-        
+      
       });
 
       _showSnackBar('Invoice cancelled successfully');

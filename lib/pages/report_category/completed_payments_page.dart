@@ -351,16 +351,26 @@ Widget _buildExportButtons() {
       children: [
         ElevatedButton.icon(
           onPressed: () {},
-          icon: const Icon(Icons.download),
+          icon: const Icon(Icons.download, color: Colors.white),
           label: const Text(''),
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-        ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
         const SizedBox(width: 16),
         ElevatedButton.icon(
           onPressed: () {},
-          icon: const Icon(Icons.picture_as_pdf),
+          icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
           label: const Text(''),
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
         ),
       ],
     );

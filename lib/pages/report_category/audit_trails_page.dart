@@ -228,7 +228,7 @@ String? selectedVendor;
             ),
             const SizedBox(height: 16),
 
-            _buildExportButtons(),
+            // _buildExportButtons(),
             const SizedBox(height: 16),
             isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -346,25 +346,35 @@ String? selectedVendor;
       ],
     );
   }
-  Widget _buildExportButtons() {
-    return Row(
-      children: [
-        ElevatedButton.icon(
-          onPressed: () {},
-          icon: const Icon(Icons.download),
-          label: const Text(''),
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-        ),
-        const SizedBox(width: 16),
-        ElevatedButton.icon(
-          onPressed: () {},
-          icon: const Icon(Icons.picture_as_pdf),
-          label: const Text(''),
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-        ),
-      ],
-    );
-  }
+  // Widget _buildExportButtons() {
+  //   return Row(
+  //     children: [
+  //       ElevatedButton.icon(
+  //         onPressed: () {},
+  //         icon: const Icon(Icons.download, color: Colors.white),
+  //         label: const Text(''),
+  //         style: ElevatedButton.styleFrom(
+  //           backgroundColor: Colors.green,
+  //           shape: RoundedRectangleBorder(
+  //               borderRadius: BorderRadius.circular(8),
+  //             ),
+  //           ),
+  //         ),
+  //       const SizedBox(width: 16),
+  //       ElevatedButton.icon(
+  //         onPressed: () {},
+  //         icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
+  //         label: const Text(''),
+  //         style: ElevatedButton.styleFrom(
+  //           backgroundColor: Colors.red,
+  //           shape: RoundedRectangleBorder(
+  //               borderRadius: BorderRadius.circular(8),
+  //             ),
+  //           ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   Widget _buildInvoiceList() {
     return ListView.builder(
@@ -406,22 +416,20 @@ class _InvoiceCardState extends State<_InvoiceCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildInvoiceRow('Title:', "'${widget.invoice.columnsName}' into '${widget.invoice.tableName}'"),
+              _buildInvoiceRow('Title', "${widget.invoice.auditType} from '${widget.invoice.tableName}' table"),
               const SizedBox(height: 5),
-              _buildInvoiceRow('Type:', widget.invoice.auditType),
+              _buildInvoiceRow('Type', widget.invoice.auditType),
               const SizedBox(height: 5),
-              _buildInvoiceRow('User:', widget.invoice.auditorNam),
+              _buildInvoiceRow('User', widget.invoice.auditorNam),
               const SizedBox(height: 5),
               if (_isExpanded) ...[
                 Container(
-                  color: Colors.grey, // Set background color to gray
+                  color: const Color.fromARGB(255, 231, 228, 228), // Set background color to gray
                   padding: const EdgeInsets.all(8.0), // Optional: add some padding
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(widget.invoice.columnsName),
-                      const SizedBox(height: 5),
-                      Text('Field was left blank: ${widget.invoice.auditDate}'),
                       const SizedBox(height: 5),
                       Text(widget.invoice.ipAddress),
                       const SizedBox(height: 5),

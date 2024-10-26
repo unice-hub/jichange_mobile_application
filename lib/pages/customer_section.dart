@@ -191,11 +191,6 @@ class _CustomerSectionState extends State<CustomerSection> {
         );
 
         if (response.statusCode == 200) {
-          // Handle success response
-          // ScaffoldMessenger.of(context).showSnackBar(
-          //   const SnackBar(content: Text('Customer added successfully')),
-          // );
-          // _fetchCustomerData(); // Refresh customer list
 
           final Map<String, dynamic> responseBody = jsonDecode(response.body);
           if (responseBody['response'] == 0) {
@@ -314,7 +309,7 @@ class _CustomerSectionState extends State<CustomerSection> {
           _showAddCustomerSheet(context);
         },
         backgroundColor: Theme.of(context).colorScheme.primary,
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

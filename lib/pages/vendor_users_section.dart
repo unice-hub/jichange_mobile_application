@@ -16,7 +16,7 @@ class VendorUsersSection extends StatefulWidget {
 class _VendorUsersSectionState extends State<VendorUsersSection> {
   List<VendorUser> vendorUsers = [];
   List<VendorUserRole> vendorUsersRole = [];
-  List<int> vendorUsersRoleIds = [];
+  String? vendorUsersRoleIds;
   String? selectedVendorUsersRole;
   List<VendorUser> filteredUsers = [];
   String searchQuery = "";
@@ -174,7 +174,7 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
     int userID = prefs.getInt('userID') ?? 0;
 
     final body = jsonEncode({
-      "pos": vendorUsersRoleIds.toString().isNotEmpty ? vendorUsersRoleIds.toString() : "0",
+      "pos": vendorUsersRoleIds,
       "auname": fullName,
       "mob": mobile,
       "uname": name,
@@ -385,7 +385,7 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
           _showAddVendorUserSheet(context);
         },
         backgroundColor: Theme.of(context).colorScheme.primary,
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -642,7 +642,7 @@ void _showEditVendorUserSheet(BuildContext context, VendorUser user) {
                       onChanged: (value) {
                         setState(() {
                           selectedVendorUsersRole = value;
-                          vendorUsersRoleIds = [int.parse(value!)];
+                          vendorUsersRoleIds = value;
                         });
                       },
                       decoration: InputDecoration(
@@ -880,7 +880,7 @@ void _showAddVendorUserSheet(BuildContext context, ) {
                         onChanged: (value) {
                           setState(() {
                             selectedVendorUsersRole = value;
-                            vendorUsersRoleIds = [int.parse(value!)];
+                            vendorUsersRoleIds = value;
                           });
                         },
                         decoration: InputDecoration(

@@ -409,7 +409,17 @@ Future<void> _findInvoice(String compid, String invno) async {
               Navigator.pop(context); // Close the dialog
               _submitInvoice();
             },
-            child: const Text('CONFIRM'),
+            style: ElevatedButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'CONFIRM',
+            style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -805,14 +815,20 @@ Future<void> _findInvoice(String compid, String invno) async {
             const SizedBox(height: 16),
 
             Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 ElevatedButton.icon(
                   onPressed: addItem,
-                  icon: const Icon(Icons.add),
-                  label: const Text('ADD'),
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  label: const Text(
+                    'ADD',
+                     style: TextStyle(color: Colors.white),
+                  ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.greenAccent,
+                    backgroundColor: const Color.fromRGBO(0, 158, 96, 1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
               ],
