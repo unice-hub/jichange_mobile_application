@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:learingdart/pages/login/login_page.dart';
 import 'dart:convert';
-
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+  final ValueChanged<ThemeMode> onThemeChanged;
+
+  const SettingsPage({super.key, required this.onThemeChanged});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -30,7 +31,6 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
-  // Method to handle logout logic
   Future<void> _logout() async {
     setState(() {
       isLoading = true;
@@ -51,7 +51,6 @@ class _SettingsPageState extends State<SettingsPage> {
       );
 
       if (response.statusCode == 200) {
-        // Clear session data and navigate to LoginPage
         await prefs.clear();
         if (mounted) {
           Navigator.pushReplacement(
@@ -63,11 +62,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _showErrorDialog('Error: Failed to logout');
       }
     } catch (e) {
-      if (e is http.ClientException) {
-        _showErrorDialog('Network error. Please check your connection and try again.');
-      } else {
-        _showErrorDialog('An unexpected error occurred. Please try again.');
-      }
+      _showErrorDialog('An unexpected error occurred. Please try again.');
     } finally {
       setState(() {
         isLoading = false;
@@ -75,7 +70,6 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  // Show error dialog in case of failure
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
@@ -92,7 +86,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  // Show bottom sheet for theme selection
   void _showThemeBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -117,6 +110,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     setState(() {
                       _selectedTheme = value!;
                     });
+                    widget.onThemeChanged(value!); // Notify parent widget
                   },
                 ),
               ),
@@ -130,6 +124,21 @@ class _SettingsPageState extends State<SettingsPage> {
                     setState(() {
                       _selectedTheme = value!;
                     });
+                    widget.onThemeChanged(value!); // Notify parent widget
+                  },
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.brightness_auto),
+                title: const Text('System Default'),
+                trailing: Radio<ThemeMode>(
+                  value: ThemeMode.system,
+                  groupValue: _selectedTheme,
+                  onChanged: (ThemeMode? value) {
+                    setState(() {
+                      _selectedTheme = value!;
+                    });
+                    widget.onThemeChanged(value!); // Notify parent widget
                   },
                 ),
               ),
@@ -153,38 +162,28 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Personalization Section
             const Text(
               'Personalization',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 8),
             ListTile(
-              leading: const Icon(Icons.palette),
-              title: const Text('Theme'),
-              trailing: const Icon(Icons.chevron_right),
+              leading: const Icon(Icons.color_lens),
+              title: const Text('Change Theme'),
               onTap: () => _showThemeBottomSheet(context),
             ),
             const Divider(),
-
-            // Devices Section
-            const Text(
-              'Devices',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
             ListTile(
-              trailing: const Icon(Icons.logout),
+              leading: const Icon(Icons.logout),
               title: const Text('Logout'),
-              onTap: () => _logout(),
+              onTap: _logout,
+              trailing: isLoading
+                  ? const CircularProgressIndicator()
+                  : null,
             ),
           ],
         ),
       ),
-      // Show loading indicator if logout is in progress
-      floatingActionButton: isLoading
-          ? CircularProgressIndicator(
-              backgroundColor: Theme.of(context).colorScheme.secondary,
-            )
-          : null,
     );
   }
 }

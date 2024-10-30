@@ -9,13 +9,25 @@ import 'pages/login/forgot_password_page.dart';
 import 'pages/login/vendor_registration_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/create_invoice.dart';
-
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  ThemeMode _themeMode = ThemeMode.system; // Initial theme
+
+  void _updateTheme(ThemeMode themeMode) {
+    setState(() {
+      _themeMode = themeMode;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,22 +35,22 @@ class MyApp extends StatelessWidget {
       title: 'Vendor Management App (jichange)',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
-        useMaterial3: true,  // Material Design 3
+        useMaterial3: true,
       ),
-      debugShowCheckedModeBanner: false, // Disable debug banner
+      darkTheme: ThemeData.dark(),
+      themeMode: _themeMode,
+      debugShowCheckedModeBanner: false,
       home: const LoginPage(),
       routes: {
         '/home': (context) => const HomePage(),
         '/forgot-password': (context) => const ForgotPasswordPage(),
         '/register': (context) => const VendorRegistrationPage(),
-        '/settings': (context) => const SettingsPage(),
+        '/settings': (context) => SettingsPage(onThemeChanged: _updateTheme),
         '/create_invoice': (context) => const CreateInvoicePage(),
-        // '/edit_invoice': (context) => const EditInvoicePage(),
       },
     );
   }
 }
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 

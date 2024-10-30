@@ -22,7 +22,14 @@ class _LoginPageState extends State<LoginPage> {
 
   // Method to handle login API call and save session
   Future<void> loginUser() async {
+
+      showDialog(context: context,
+      builder: (context){
+        return const Center(child: CircularProgressIndicator());
+      });
+
     if (!_formKey.currentState!.validate()) {
+      Navigator.of(context).pop(); // Close the dialog if validation fails
       return;
     }
 
@@ -79,29 +86,51 @@ class _LoginPageState extends State<LoginPage> {
         await prefs.setString('role', role);
         await prefs.setString('designation', designation);
         
-
         // Navigate to Home Page
         if (!mounted) return;
+        //pop the loading  circle
+        Navigator.of(context).pop();
+
+        //navigat to home page
         Navigator.pushNamed(context, '/home');
+        
       } else if (response.statusCode == 401) {
+
+        //pop the loading  circle
+        Navigator.of(context).pop();
+
         // Handle unauthorized (wrong username/password)
         _showErrorDialog('Incorrect username or password. Please try again.');
 
       }else if (response.statusCode >= 500){
+        
+        //pop the loading  circle
+        Navigator.of(context).pop();
+
         // Handle server errors
         _showErrorDialog('Server error. Please try again later.');
 
       } else {
+        //pop the loading  circle
+        Navigator.of(context).pop();
+
        // Handle other errors
         _showErrorDialog('Login failed. Please check your credentials and try again.');
       }
 
     } catch (e) {
       if (e is http.ClientException) {
+        //pop the loading  circle
+        Navigator.of(context).pop();
+
         // Network error
         _showErrorDialog('Network error. Please check your connection and try again.');
+        // Navigator.pushNamed(context, '/home');
 
       } else {
+        //pop the loading  circle
+        Navigator.of(context).pop();
+
         // Other exceptions
         _showErrorDialog('An unexpected error occurred. Please try again.');
         
@@ -248,12 +277,11 @@ class _LoginPageState extends State<LoginPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Control Number: ${details['Control_No']}'),
-            Text('Customer Name: ${details['Cust_Name']}'),
-            Text('Payment Type: ${details['Payment_Type']}'),
-            Text('Item Total Amount: ${details['Item_Total_Amount']}'),
-            Text('Balance: ${details['Balance']}'),
-            Text('Currency Code: ${details['Currency_Code']}'),
+            Text('Control Number:  ${details['Control_No']}'),
+            Text('Customer Name:  ${details['Cust_Name']}'),
+            Text('Payment Type:  ${details['Payment_Type']}'),
+            Text('Item Total Amount:  ${details['Item_Total_Amount']}'),
+            Text('Balance:  ${details['Balance']}  ${details['Currency_Code']}'),
           ],
         ),
         actions: <Widget>[
@@ -392,14 +420,16 @@ class _LoginPageState extends State<LoginPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(
-                          color: Colors.white,
-                        )
-                      : const Text(
+                  // child: _isLoading
+                      // ? const CircularProgressIndicator(
+                      //     color: Colors.white,
+                      //   )
+                       
+                      child: const Text(
                           'SIGN IN',
                           style: TextStyle(color: Colors.white),
                         ),
+                        
                 ),
                 const SizedBox(height: 16.0),
 

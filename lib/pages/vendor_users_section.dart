@@ -46,8 +46,6 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
       final prefs = await SharedPreferences.getInstance();
       int instituteID = prefs.getInt('instID') ?? 0;
 
-      log('Making API request with token: $_token and instituteID: $instituteID');
-
       final response = await http.post(
         Uri.parse(url),
         headers: {
@@ -57,9 +55,6 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
         },
         body: jsonEncode({"compid": instituteID}),
       );
-
-      log('API Status Code: ${response.statusCode}');
-      log('API Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = jsonDecode(response.body);
@@ -127,12 +122,8 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
           'Accept': 'application/json',
           'Authorization': 'Bearer $_token',
         },
-        // body: jsonEncode({"compid": instituteID}),
+
       );
-
-      // log('API Status Code: ${response.statusCode}');
-      // log('API Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = jsonDecode(response.body);
         if (responseBody['response'] is List) {
@@ -304,7 +295,6 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
     },
   );
 }
-
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
@@ -520,9 +510,6 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
         }),
       );
 
-      log('API Status Code: ${response.statusCode}');
-      log('API Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         _showSnackBar('Credentials sent to email successfully.');
       } else {
@@ -561,9 +548,6 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
         }),
       );
 
-      log('API Status Code: ${response.statusCode}');
-      log('API Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         _showSnackBar('Credentials sent to mobile successfully.');
       } else {
@@ -584,24 +568,25 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
         isLoading = false;
       });
     }
+
   }
 
 
-void _showEditVendorUserSheet(BuildContext context, VendorUser user) {
-  final nameController = TextEditingController(text: user.username);
-  final fullNameController = TextEditingController(text: user.fullName);
-  final emailController = TextEditingController(text: user.email);
-  final mobileController = TextEditingController(text: user.mobileNumber);
-  final snoController = TextEditingController(text: user.id.toString());
-  final usertypeController = TextEditingController(text: user.usertype.toString());
+  void _showEditVendorUserSheet(BuildContext context, VendorUser user) {
+    final nameController = TextEditingController(text: user.username);
+    final fullNameController = TextEditingController(text: user.fullName);
+    final emailController = TextEditingController(text: user.email);
+    final mobileController = TextEditingController(text: user.mobileNumber);
+    final snoController = TextEditingController(text: user.id.toString());
+    final usertypeController = TextEditingController(text: user.usertype.toString());
 
-  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-  final mobileRegex = RegExp(r'^\d+$');
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    final mobileRegex = RegExp(r'^\d+$');
 
-  String? nameError;
-  String? fullNameError;
-  String? emailError;
-  String? mobileError;
+    String? nameError;
+    String? fullNameError;
+    String? emailError;
+    String? mobileError;
 
   showModalBottomSheet(
     context: context,
@@ -1031,87 +1016,33 @@ void _showAddVendorUserSheet(BuildContext context, ) {
     );
   }
 
-
-void _showConfirmationDialog(BuildContext context,String role, String name, String fullName, String email, String mobile, String sno, String usertype) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Confirm'),
-        content: const Text('Save changes?'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Close the dialog
-            },
-            child: const Text('CLOSE'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Close the dialog
-              _addCompanyUser(role, name,fullName, email, mobile, sno, usertype); // Call API to add customer
-            },
-            child: const Text('CONFIRM'),
-          ),
-        ],
-      );
-    },
-  );
+  void _showConfirmationDialog(BuildContext context,String role, String name, String fullName, String email, String mobile, String sno, String usertype) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm'),
+          content: const Text('Save changes?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('CLOSE'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                _addCompanyUser(role, name,fullName, email, mobile, sno, usertype); // Call API to add customer
+              },
+              child: const Text('CONFIRM'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
-
-
-// void _showAddVendorUserSheet(BuildContext context) {
-//     showModalBottomSheet(
-//       context: context,
-//       isScrollControlled: true,
-//       builder: (BuildContext context) {
-//         return Padding(
-//           padding: MediaQuery.of(context).viewInsets,
-//           child: SingleChildScrollView(
-//             child: Padding(
-//               padding: const EdgeInsets.all(16.0),
-//               child: Column(
-//                 mainAxisSize: MainAxisSize.min,
-//                 children: <Widget>[
-//                   Text(
-//                     'Add Vendor User',
-//                     style: Theme.of(context).textTheme.titleLarge,
-//                   ),
-//                   const SizedBox(height: 16.0),
-//                   _buildEditableTextField('Username', ''),
-//                   const SizedBox(height: 16.0),
-//                   _buildEditableTextField('Full Name', ''),
-//                   const SizedBox(height: 16.0),
-//                   _buildEditableTextField('Email', ''),
-//                   const SizedBox(height: 16.0),
-//                   _buildEditableTextField('Mobile Number', ''),
-//                   const SizedBox(height: 16.0),
-//                   _buildEditableTextField('Role', ''),
-//                   const SizedBox(height: 16.0),
-//                   ElevatedButton(
-//                     onPressed: () {
-//                       Navigator.pop(context);
-//                     },
-//                     style: ElevatedButton.styleFrom(
-//                       shape: RoundedRectangleBorder(
-//                         borderRadius: BorderRadius.circular(16.0),
-//                       ),
-//                     ),
-//                     child: const Text('Add Vendor User'),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ),
-//         );
-//       },
-//     );
-//   }
- }
-
-
-
-
 
 
 class VendorUser {
@@ -1160,7 +1091,7 @@ class VendorUserRole {
    factory VendorUserRole.fromJson(Map<String, dynamic> json) {
     return VendorUserRole(
       role: json['Description'] ?? 'Unknown',
-      sno: json['Sno'] ?? -1
+      sno: json['Sno'] ?? 0
     );
   }
 }
