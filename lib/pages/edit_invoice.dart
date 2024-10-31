@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:learingdart/core/api/invoice_apis.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'dart:convert';
@@ -461,7 +462,7 @@ Future<void> _findInvoice(String compid, String invno) async {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invoice edited successfully!')),
         );
-        
+ 
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to edited invoice.')),
@@ -584,6 +585,7 @@ Future<void> _findInvoice(String compid, String invno) async {
 
   @override
   Widget build(BuildContext context) {
+    final formatter = NumberFormat('#,###');
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit invoice', style: TextStyle(color: Colors.white)),
@@ -845,7 +847,11 @@ Future<void> _findInvoice(String compid, String invno) async {
                 return Card(
                   child: ListTile(
                     title: Text(item['description']),
-                    subtitle: Text('Quantity: ${item['quantity']} | Unit Price: ${item['unitPrice']} | Total: ${item['total']}'),
+                    subtitle: Text(
+                      'Quantity: ${formatter.format(item['quantity'])} | '
+                      'Unit Price: ${formatter.format(item['unitPrice'])} | '
+                      'Total: ${formatter.format(item['total'])}',
+                    ),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.redAccent),
                       onPressed: () {

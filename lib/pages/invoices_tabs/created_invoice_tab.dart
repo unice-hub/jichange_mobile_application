@@ -280,6 +280,7 @@ class _InvoiceCard extends StatefulWidget {
 }
 
 class _InvoiceCardState extends State<_InvoiceCard> {
+  final formatter = NumberFormat('#,###');
   bool _isExpanded = false;
 
   final TextEditingController _reasonController = TextEditingController();
@@ -311,12 +312,13 @@ class _InvoiceCardState extends State<_InvoiceCard> {
               const SizedBox(height: 5),
               _buildInvoiceRow('Status:', _buildStatusContainer()),
               const SizedBox(height: 5),
-              _buildInvoiceRow('Total:', "${widget.invoice.total.toString()}  ${widget.invoice.currencyCode}"),
+              _buildInvoiceRow('Total:', "${formatter.format(widget.invoice.total)}  ${widget.invoice.currencyCode}"),
               const SizedBox(height: 5),
               _buildInvoiceRow('Due Date:', formatDate(widget.invoice.dueDate)),
               const SizedBox(height: 5),
               _buildInvoiceRow('Expiry Date:', formatDate(widget.invoice.expiryDate)),
               if (_isExpanded) _buildActionButtons(),
+              
             ],
           ),
         ),

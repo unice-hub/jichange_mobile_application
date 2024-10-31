@@ -326,10 +326,11 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
 }
 
 class _InvoiceCard extends StatelessWidget {
+  final formatter = NumberFormat('#,###');
   final InvoiceData invoice;
   final CustDetData custDet;
 
-  const _InvoiceCard({super.key, required this.invoice, required this.custDet});
+  _InvoiceCard({super.key, required this.invoice, required this.custDet});
 
  @override
   Widget build(BuildContext context) {
@@ -355,7 +356,7 @@ class _InvoiceCard extends StatelessWidget {
             const SizedBox(height: 5),
             _buildInvoiceRow('Status:', invoice.status),
             const SizedBox(height: 5),
-            _buildInvoiceRow('Total Amount:',"${ invoice.total} ${invoice.currencyCode}"),
+            _buildInvoiceRow('Total Amount:',"${ formatter.format(invoice.total)} ${invoice.currencyCode}"),
             const SizedBox(height: 5),
             _buildInvoiceRow('Posted by:', invoice.auditBy),
             const SizedBox(height: 5),

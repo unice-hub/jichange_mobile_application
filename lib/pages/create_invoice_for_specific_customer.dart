@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:learingdart/core/api/invoice_apis.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'dart:convert';
@@ -485,9 +486,10 @@ class _CreateInvoiceForSpecificCustomerState extends State<CreateInvoiceForSpeci
 
   @override
   Widget build(BuildContext context) {
+    final formatter = NumberFormat('#,###');
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Invoice', style: TextStyle(color: Colors.white)),
+        title: const Text('Create Invoice', style: TextStyle(color: Colors.black)),
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.primary,
         elevation: 0,
@@ -747,7 +749,11 @@ class _CreateInvoiceForSpecificCustomerState extends State<CreateInvoiceForSpeci
                 return Card(
                   child: ListTile(
                     title: Text(item['description']),
-                    subtitle: Text('Quantity: ${item['quantity']} | Unit Price: ${item['unitPrice']} | Total: ${item['total']}'),
+                    subtitle: Text(
+                      'Quantity: ${formatter.format(item['quantity'])} | '
+                      'Unit Price: ${formatter.format(item['unitPrice'])} | '
+                      'Total: ${formatter.format(item['total'])}',
+                    ),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.redAccent),
                       onPressed: () {
@@ -766,7 +772,7 @@ class _CreateInvoiceForSpecificCustomerState extends State<CreateInvoiceForSpeci
             Align(
               alignment: Alignment.centerRight,
               child: Text(
-                'Total of all items: ${calculateTotalOfAllItems().toStringAsFixed(2)}',
+                'Total of all items: ${formatter.format(calculateTotalOfAllItems())}',
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),

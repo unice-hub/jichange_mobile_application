@@ -1,17 +1,13 @@
-// import 'dart:ffi';
-
-import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AllTransactionsPage extends StatefulWidget {
   final String invoiceSno;
-  const AllTransactionsPage({
-    super.key,
-    required this.invoiceSno,
-  });
+
+  const AllTransactionsPage({Key? key, required this.invoiceSno}) : super(key: key);
 
   @override
   State<AllTransactionsPage> createState() => _AllTransactionsPageState();
@@ -36,52 +32,49 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
     });
   }
 
- Future<void> fetchInvoices() async {
-  setState(() => isLoading = true);
-  const url = 'http://192.168.100.50:98/api/Invoice/GetchTransact_Inv';
+  Future<void> fetchInvoices() async {
+    setState(() => isLoading = true);
+    const url = 'http://192.168.100.50:98/api/Invoice/GetchTransact_Inv';
 
-  try {
-    final prefs = await SharedPreferences.getInstance();
-    int instituteID = prefs.getInt('instID') ?? 0;
-    int userID = prefs.getInt('userID') ?? 0;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      int instituteID = prefs.getInt('instID') ?? 0;
+      int userID = prefs.getInt('userID') ?? 0;
 
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $_token',
-      },
-      body: jsonEncode({
-        "invoice_sno": widget.invoiceSno
-      }),
-    );
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode({"invoice_sno": widget.invoiceSno}),
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
 
-      if (data['response'].isEmpty) {
-        // If the response is empty, display "No data found"
-        setState(() {
-          invoices = [];
-          isLoading = false;
-        });
+        if (data['response'].isEmpty) {
+          setState(() {
+            invoices = [];
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            invoices = (data['response'] as List)
+                .map((e) => InvoiceData.fromJson(e))
+                .toList();
+            isLoading = false;
+          });
+        }
       } else {
-        setState(() {
-          invoices = (data['response'] as List)
-              .map((e) => InvoiceData.fromJson(e))
-              .toList();
-          isLoading = false;
-        });
+        _showQuickAlert(context, 'Error', 'Failed to fetch transactions: ${response.body}', false);
       }
-    } else {
-      _showQuickAlert(context, 'Error', 'Failed to fetch transactions: ${response.body}', false);
+    } catch (e) {
+      _showErrorDialog('An unexpected error occurred. Please try again.');
+    } finally {
+      setState(() => isLoading = false);
     }
-  } catch (e) {
-    _showErrorDialog('An unexpected error occurred. Please try again.');
-    setState(() => isLoading = false);
   }
-}
-
 
   void _showQuickAlert(BuildContext context, String title, String message, bool isSuccess) {
     showDialog(
@@ -92,9 +85,7 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
           content: Text(message),
           actions: <Widget>[
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
+              onPressed: () => Navigator.of(context).pop(),
               child: const Text('OK'),
             ),
           ],
@@ -119,83 +110,51 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
     );
   }
 
- @override
- Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: const Text('All Transactions', style: TextStyle(color: Colors.white)),
-      centerTitle: true,
-      backgroundColor: Theme.of(context).colorScheme.primary,
-      elevation: 0,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.settings, color: Colors.white),
-          onPressed: () {
-            Navigator.pushNamed(context, '/settings');
-          },
-        ),
-      ],
-    ),
-    body: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Card(
-          //   elevation: 4,
-          //   child: Padding(
-          //     padding: const EdgeInsets.all(16.0),
-          //     child: Column(
-          //       crossAxisAlignment: CrossAxisAlignment.start,
-          //       children: [
-          //         const Text(
-          //           'All Transactions',
-          //           style: TextStyle(
-          //             fontWeight: FontWeight.bold,
-          //             fontSize: 18,
-          //           ),
-          //         ),
-          //         const SizedBox(height: 10),
-          //         Text('Invoice Number: ${widget.invoiceSno}'),
-          //       ],
-          //     ),
-          //   ),
-          // ),
-          const SizedBox(height: 20),
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : invoices.isEmpty
-                  ? const Center(child: Text('No data found'))
-                  : Expanded(
-                      child: ListView.builder(
-                        itemCount: invoices.length,
-                        itemBuilder: (context, index) {
-                          return _InvoiceCard(invoice: invoices[index]);
-                        },
-                      ),
-                    ),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('All Transactions', style: TextStyle(color: Colors.white)),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
+          ),
         ],
       ),
-    ),
-  );
-}
-
-  Widget _buildInvoiceList() {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: invoices.length,
-      itemBuilder: (context, index) {
-        return _InvoiceCard(invoice: invoices[index]);
-      },
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : invoices.isEmpty
+                    ? const Center(child: Text('No data found'))
+                    : Expanded(
+                        child: ListView.builder(
+                          itemCount: invoices.length,
+                          itemBuilder: (context, index) {
+                            return _InvoiceCard(invoice: invoices[index]);
+                          },
+                        ),
+                      ),
+          ],
+        ),
+      ),
     );
   }
 }
 
 class _InvoiceCard extends StatelessWidget {
   final InvoiceData invoice;
+  final formatter = NumberFormat('#,###');
 
-  const _InvoiceCard({super.key, required this.invoice});
+   _InvoiceCard({super.key, required this.invoice});
 
   @override
   Widget build(BuildContext context) {
@@ -213,26 +172,31 @@ class _InvoiceCard extends StatelessWidget {
             const SizedBox(height: 5),
             _buildInvoiceRow('DESCRIPTION', invoice.paymentDesc),
             const SizedBox(height: 5),
-            _buildInvoiceRow('TRANSACTION TYPE', invoice.paymentType),
+            _buildInvoiceRow('TRANSACTION TYPE', invoice.paymentType ?? 'N/A'),
             const SizedBox(height: 5),
-            _buildInvoiceRow('PAYER', invoice.payerName),
+            _buildInvoiceRow('PAYER', invoice.payerName ?? 'N/A'),
             const SizedBox(height: 5),
-            _buildInvoiceRow('METHOD', invoice.transChannel),
+            _buildInvoiceRow('METHOD', invoice.transChannel ?? 'N/A'),
             const SizedBox(height: 5),
-            _buildInvoiceRow('AMOUNT', invoice.requestedAmount),
+            _buildInvoiceRow('AMOUNT', formatter.format(double.tryParse(invoice.requestedAmount ?? '0') ?? 0)),
             const SizedBox(height: 5),
-            _buildInvoiceRow('BALANCE', invoice.balance),
+            _buildInvoiceRow('BALANCE', formatter.format(double.tryParse(invoice.balance ?? '0') ?? 0)),
             const SizedBox(height: 5),
-            _buildInvoiceRow('CURRENCY', invoice.currencyCode),
+            _buildInvoiceRow('CURRENCY', invoice.currencyCode ?? 'N/A'),
             const SizedBox(height: 5),
-            _buildInvoiceRow('STATUS', invoice.status),
+            _buildInvoiceRow('STATUS', invoice.status ?? 'N/A'),
             const SizedBox(height: 5),
             _buildInvoiceRow('ATTACHMENT(S)', ''),
             const SizedBox(height: 5),
-            _buildInvoiceRow(' ${invoice.receiptNo}', ''),
+            _buildInvoiceRow('Receipt No:', invoice.receiptNo ?? 'N/A'),
             const SizedBox(height: 5),
             _buildInvoiceRow(
-              ' ${invoice.paymentDate}',
+              'Payment Date:',
+              Text(invoice.paymentDate != null ? _formatDate(invoice.paymentDate!) : 'N/A'),
+            ),
+            const SizedBox(height: 5),
+            _buildInvoiceRow(
+              '',
               _buildIconActionButton(Icons.visibility, '', () {}, const Color.fromARGB(255, 128, 116, 12)),
             ),
           ],
@@ -251,9 +215,13 @@ class _InvoiceCard extends StatelessWidget {
     );
   }
 
-  String formatDate(String dateStr) {
-    DateTime dateTime = DateTime.parse(dateStr);
-    return DateFormat('EEE MMM dd yyyy').format(dateTime);
+  String _formatDate(String dateStr) {
+    try {
+      DateTime dateTime = DateTime.parse(dateStr);
+      return DateFormat('EEE MMM dd yyyy').format(dateTime);
+    } catch (e) {
+      return 'Invalid date';
+    }
   }
 
   Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPressed, Color iconColor) {
@@ -309,7 +277,7 @@ class InvoiceData {
 
   factory InvoiceData.fromJson(Map<String, dynamic> json) {
     return InvoiceData(
-     paymentTransNo: json['Payment_Trans_No'] ?? '',
+      paymentTransNo: json['Payment_Trans_No'] ?? '',
       companyName: json['Company_Name'] ?? '',
       paymentDesc: json['Payment_Desc'] ?? '',
       paymentType: json['Payment_Type'],

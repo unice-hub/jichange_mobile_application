@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 // import 'package:intl/intl.dart';
 import 'package:learingdart/bar%20graph/bar_graph.dart';
 import 'package:learingdart/pages/invoices_tabs/generated_invoice_tab.dart';
@@ -36,6 +37,9 @@ class _HomeSectionState extends State<HomeSection> {
     "Due": "0",
     "Expired": "0",
   };
+  Map<String, String> overviewData1 = {
+    "Company_Name": "",
+  };
 
   @override
   void initState() {
@@ -54,6 +58,7 @@ class _HomeSectionState extends State<HomeSection> {
     });
     _fetchOverview();
      _fetchInvoicesData();
+     _getCompanyS();
   }
 
   Future<void> _fetchOverview() async {
@@ -92,6 +97,37 @@ class _HomeSectionState extends State<HomeSection> {
     }
   }
 
+  Future<void> _getCompanyS() async {
+    const url = 'http://192.168.100.50:98/api/Invoice/GetcompanyS';
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode({"compid": _instID}),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        final responseData = jsonResponse['response'];
+
+        setState(() {
+          overviewData1["Company_Name"] = responseData["Company_Name"] ?? "Unknown";
+        });
+      } else {
+        throw Exception('Failed to load company data');
+      }
+    } catch (e) {
+      _showErrorDialog('An error occurred while fetching company data.');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
   Future<void> _fetchInvoicesData() async {
     const url = 'http://192.168.100.50:98/api/Invoice/GetSignedDetails';
     try {
@@ -183,9 +219,23 @@ class _HomeSectionState extends State<HomeSection> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Overview',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Overview',
+                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              overviewData1['Company_Name'] ?? '',
+                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 10),
                     Row(
@@ -358,10 +408,14 @@ class _HomeSectionState extends State<HomeSection> {
   
 }
 
- class _InvoiceCard extends StatelessWidget {
-  final InvoiceData invoice;
 
-  const _InvoiceCard({super.key, required this.invoice});
+ class _InvoiceCard extends StatelessWidget {
+  final formatter = NumberFormat('#,###');
+  final InvoiceData invoice;
+  // final formatter = NumberFormat('#,###');
+
+  _InvoiceCard({super.key, required this.invoice});
+  
 
     @override
     Widget build(BuildContext context) {
@@ -372,6 +426,7 @@ class _HomeSectionState extends State<HomeSection> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              
               children: [
                 _buildInvoiceRow('Customer name:', invoice.customerName),
                  const SizedBox(height: 5),
@@ -381,7 +436,7 @@ class _HomeSectionState extends State<HomeSection> {
                 const SizedBox(height: 5),
                 _buildInvoiceRow('Payment type:', _buildPaymentTypeContainer()),
                 const SizedBox(height: 5),
-                _buildInvoiceRow('Total:', "${invoice.total}  ${invoice.currencyCode}"),
+                _buildInvoiceRow('Total:', "${formatter.format(invoice.total)}  ${invoice.currencyCode}"),
               ],
             ),
           ),
@@ -442,3 +497,4 @@ class _HomeSectionState extends State<HomeSection> {
     ],
   );
 }
+

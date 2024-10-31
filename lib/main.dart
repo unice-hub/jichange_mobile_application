@@ -21,7 +21,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  ThemeMode _themeMode = ThemeMode.system; // Initial theme
+  ThemeMode _themeMode = ThemeMode.light; // Initial theme
 
   void _updateTheme(ThemeMode themeMode) {
     setState(() {
@@ -88,16 +88,33 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false, // Disables the back button
-        title: Text(
-          _titles[_selectedIndex],
-          style: const TextStyle(color: Colors.white),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.all(5),
+              child: Image.asset(
+                'assets/jichange_logo.png',
+                height: 40.0,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                _titles[_selectedIndex],
+                style: const TextStyle(color: Colors.white),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
         ),
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.primary,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
+            icon: const Icon(Icons.settings, color:  Colors.white),
             onPressed: () {
               Navigator.pushNamed(context, '/settings');
             },

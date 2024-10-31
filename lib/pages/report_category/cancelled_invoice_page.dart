@@ -391,11 +391,12 @@ Widget _buildExportButtons() {
 }
 
 class _InvoiceCard extends StatelessWidget {
+  final formatter = NumberFormat('#,###');
   final InvoiceData invoice;
   final CustDetData custDet;
   final InvoiceNumberData invoiceNo;
 
-  const _InvoiceCard({super.key, required this.invoice, required this.custDet, required this.invoiceNo});
+  _InvoiceCard({super.key, required this.invoice, required this.custDet, required this.invoiceNo});
 
  @override
   Widget build(BuildContext context) {
@@ -415,7 +416,7 @@ class _InvoiceCard extends StatelessWidget {
             const SizedBox(height: 5),
             _buildInvoiceRow('Status:', _buildPaymentTypeContainer(invoice)),
             const SizedBox(height: 5),
-            _buildInvoiceRow('Payment type:', "${invoice.invoiceAmount} ${invoice.currencyCode}"),
+            _buildInvoiceRow('Payment type:', "${formatter.format(invoice.invoiceAmount)} ${invoice.currencyCode}"),
             const SizedBox(height: 5),
             _buildInvoiceRow('Control N°:', invoice.controlNo),
             const SizedBox(height: 5),

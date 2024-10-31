@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:learingdart/pages/all_transactions.dart';
 import 'package:learingdart/pages/create_invoice_for_specific_customer.dart';
 import 'dart:convert';
@@ -137,6 +138,7 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final formatter = NumberFormat('#,###');
     return Scaffold(
       appBar: AppBar(
         title: const Text('Customer Details', style: TextStyle(color: Colors.white)),

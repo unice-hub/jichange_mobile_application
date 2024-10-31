@@ -16,7 +16,7 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   String _token = 'Not logged in';
   bool isLoading = false;
-  ThemeMode _selectedTheme = ThemeMode.system;
+  ThemeMode _selectedTheme = ThemeMode.light;
 
   @override
   void initState() {
