@@ -375,7 +375,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: widget.invoice.paymentType == 'Fixed' ? const Color.fromARGB(255, 240, 154, 255) : const Color.fromARGB(61, 105, 240, 175),
+        color: widget.invoice.paymentType == 'Fixed' ? const Color.fromARGB(47, 240, 154, 255) : const Color.fromARGB(61, 105, 240, 175),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -389,12 +389,12 @@ class _InvoiceCardState extends State<_InvoiceCard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: widget.invoice.status == 'Active' ? const Color.fromARGB(45, 68, 137, 255) : Colors.redAccent,
+        color: widget.invoice.status == 'Active' ? const Color.fromARGB(45, 68, 137, 255) : const Color.fromARGB(59, 250, 195, 75),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         widget.invoice.status,
-        style: const TextStyle(color: Color.fromARGB(255, 24, 106, 248)),
+        style: TextStyle( color: widget.invoice.status == 'Active' ?  const Color.fromARGB(255, 24, 106, 248): const Color.fromARGB(255, 161, 116, 17)),
       ),
     );
   }
@@ -546,7 +546,7 @@ void _showAccessConfirmationPopup() {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Cancel Invoice'),
+          title: const Text('Confirm'),
           content: Text(
             'Are you sure you want to approve invoice "${widget.invoice.invoiceNumber}"?',
           ),

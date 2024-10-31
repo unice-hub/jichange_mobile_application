@@ -304,7 +304,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
               const SizedBox(height: 5),
               _buildInvoiceRow('Payment type:', _buildPaymentTypeContainer()),
               const SizedBox(height: 5),
-              _buildInvoiceRow('Delivery Status:', widget.invoice.deliveryStatus),
+              _buildInvoiceRow('Delivery Status:', _buildDeliveryContainer()),
               const SizedBox(height: 5),
               _buildInvoiceRow('Status:', _buildStatusContainer()),
               const SizedBox(height: 5),
@@ -355,12 +355,12 @@ class _InvoiceCardState extends State<_InvoiceCard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: widget.invoice.paymentType == 'Fixed' ? const Color.fromARGB(85, 218, 7, 255) : const Color.fromARGB(50, 105, 240, 175),
+        color: widget.invoice.paymentType == 'Fixed' ? const Color.fromARGB(47, 240, 154, 255) : const Color.fromARGB(61, 105, 240, 175),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         widget.invoice.paymentType,
-        style: TextStyle(color: widget.invoice.paymentType == 'Fixed' ? const Color.fromARGB(255, 109, 3, 247) : const Color.fromARGB(255, 51, 134, 88)),
+        style: TextStyle(color: widget.invoice.paymentType == 'Fixed' ? const Color.fromARGB(255, 112, 45, 199) : const Color.fromARGB(255, 16, 116, 61)),
       ),
     );
   }
@@ -369,12 +369,25 @@ class _InvoiceCardState extends State<_InvoiceCard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: widget.invoice.status == 'Active' ? Colors.blueAccent : const Color.fromARGB(255, 247, 211, 54),
+        color: widget.invoice.status == 'Active' ? const Color.fromARGB(45, 68, 137, 255) : const Color.fromARGB(59, 250, 195, 75),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         widget.invoice.status,
-        style: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+        style: TextStyle( color: widget.invoice.status == 'Active' ?  const Color.fromARGB(255, 24, 106, 248): const Color.fromARGB(255, 161, 116, 17)),
+      ),
+    );
+  }
+  Widget _buildDeliveryContainer() {
+      return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: widget.invoice.deliveryStatus == 'Unsent' ? const Color.fromARGB(45, 68, 137, 255) : const Color.fromARGB(59, 250, 195, 75),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        widget.invoice.deliveryStatus,
+        style: TextStyle( color: widget.invoice.deliveryStatus == 'Unsent' ?  const Color.fromARGB(255, 24, 106, 248): const Color.fromARGB(255, 161, 116, 17)),
       ),
     );
   }
@@ -440,7 +453,7 @@ void _showShippingPopup() {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Cancel Invoice'),
+          title: const Text('Make delivery'),
           content: Text(
             'Are you sure you want to deliver items for invoice  "${widget.invoice.invoiceNumber}"?',
           ),
@@ -491,7 +504,9 @@ void _confirmApprovellation() {
 
       // Check if the response is valid
       if (addDCode['response'] != null) {
-        _showErrorDialog("successful.");
+        // _showErrorDialog("successful.");
+        _showQuickAlert(context, 'Success', 'successful', true);
+        
       } else {
         // Handle empty or invalid response
         _showErrorDialog("Invalid response from the server.");
@@ -515,6 +530,37 @@ void _confirmApprovellation() {
       });
     }
   }
+
+  void _showQuickAlert(BuildContext context, String title, String message, bool isSuccess) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Confirm',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
 
 void _showCancelPopup() {
     showDialog(
@@ -733,38 +779,43 @@ void _showSnackBar(String message) {
           ),
         ],
       ),
-    );
-}
-
-
-Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPressed, Color iconColor) {
-  return Column(
-    children: [
-      Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.rectangle,
-          border: Border.all(color: iconColor, width: 2),
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),        // Flat edge
-            topRight: Radius.circular(16),       // Curved edge
-            bottomLeft: Radius.circular(16),     // Curved edge
-            bottomRight: Radius.circular(16),     // Flat edge
-          ), // Apply caved corner effect
-        ),
-        child: IconButton(
-          icon: Icon(icon, color: iconColor),
-          onPressed: onPressed,
-        ),
-      ),
-      Text(label, style: const TextStyle(fontSize: 12)),
-    ],
   );
+
+  
 }
 
-Widget _buildActionButton(String label, VoidCallback onPressed) {
+
+  Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPressed, Color iconColor) {
+    return Column(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.rectangle,
+            border: Border.all(color: iconColor, width: 2),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(16),        // Flat edge
+              topRight: Radius.circular(16),       // Curved edge
+              bottomLeft: Radius.circular(16),     // Curved edge
+              bottomRight: Radius.circular(16),     // Flat edge
+            ), // Apply caved corner effect
+          ),
+          child: IconButton(
+            icon: Icon(icon, color: iconColor),
+            onPressed: onPressed,
+          ),
+        ),
+        Text(label, style: const TextStyle(fontSize: 12)),
+      ],
+    );
+  }
+
+  Widget _buildActionButton(String label, VoidCallback onPressed) {
     return ElevatedButton(
       onPressed: onPressed,
       child: Text(label),
     );
   }
+
+  
 }
+

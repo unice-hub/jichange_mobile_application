@@ -430,18 +430,15 @@ class _InvoiceCard extends StatelessWidget {
   }
 
    Widget _buildPaymentTypeContainer(InvoiceData invoice) {
-    final isFixed = invoice.paymentType == 'Fixed';
-    return Container(
+       return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: isFixed ? const Color(0xFFF09AFF) : Colors.greenAccent,
+        color: invoice.paymentType == 'Fixed' ? const Color.fromARGB(47, 240, 154, 255) : const Color.fromARGB(61, 105, 240, 175),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         invoice.paymentType,
-        style: TextStyle(
-          color: isFixed ? const Color(0xFF834BCC) : const Color(0xFF338658),
-        ),
+        style: TextStyle(color: invoice.paymentType == 'Fixed' ? const Color.fromARGB(255, 112, 45, 199) : const Color.fromARGB(255, 16, 116, 61)),
       ),
     );
   }
