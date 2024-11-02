@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AllTransactionsPage extends StatefulWidget {
   final String invoiceSno;
 
-  const AllTransactionsPage({Key? key, required this.invoiceSno}) : super(key: key);
+  const AllTransactionsPage({super.key, required this.invoiceSno});
 
   @override
   State<AllTransactionsPage> createState() => _AllTransactionsPageState();
