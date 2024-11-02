@@ -440,7 +440,7 @@ void _showConfirmDialog(BuildContext context, String title, String message) {
                         errorText: _confirmPasswordError,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    // const SizedBox(height: 16),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       

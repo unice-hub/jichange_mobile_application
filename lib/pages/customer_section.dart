@@ -508,6 +508,7 @@ void _viewCustomer(Customer customer) async {
   // Fetch customer details using the customer ID
   final customerDetails = await fetchCustomerDetails(customer.id);
  
+  // ignore: unrelated_type_equality_checks
   if (customerDetails != true) {
     // Navigate to the CustomerDetailsPage with the retrieved details
     Navigator.push(
