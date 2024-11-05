@@ -211,6 +211,7 @@ class _HomeSectionState extends State<HomeSection> {
     }).toList();
 
     return Scaffold(
+backgroundColor: Theme.of(context).colorScheme.surface,
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -219,125 +220,22 @@ class _HomeSectionState extends State<HomeSection> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Text(
-                            'Overview',
-                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Expanded(
-                          child: Center(
-                            child: Text(
-                              overviewData1['Company_Name'] ?? '',
-                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    _buildHeader(),
                     const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildOverviewCard(overviewData['Transaction'] ?? '0', 'Transactions'),
-                        _buildOverviewCard(overviewData['Customer'] ?? '0', 'Customers'),
-                        _buildOverviewCard(overviewData['Users'] ?? '0', 'Users'),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildOverviewCard(overviewData['Pendings'] ?? '0', 'Pending'),
-                        _buildOverviewCard(overviewData['Due'] ?? '0', 'Due'),
-                        _buildOverviewCard(overviewData['Expired'] ?? '0', 'Expired'),
-                      ],
-                    ),
+                    _buildOverviewRows(),
                     const SizedBox(height: 20),
-                    const Text(
-                      'Invoice summary',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-                    
-                    // Bar Graph goes here
-                    Container(
-                      height: 350,
-                      padding: const EdgeInsets.all(10.0),
-                      color: Colors.grey[300],
-                      child: MyBarGraph(
-                        weeklySummary: [
-                          double.parse(overviewData['Pendings'] ?? '0'),
-                          double.parse(overviewData['Due'] ?? '0'),
-                          double.parse(overviewData['Expired'] ?? '0'),
-                        ],
-                      ),
-                    ),
+                    _buildSectionTitle('Invoice summary'),
                     const SizedBox(height: 20),
-
-                    const Text(
-                      'Generated invoice summary',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Information section about the pie chart
-                    Container(
-                      padding: const EdgeInsets.all(12.0),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.5),
-                            spreadRadius: 2,
-                            blurRadius: 5,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Chart Summary',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 10),
-                          _buildChartInfoRow(
-                            label: 'Fixed Invoices:',
-                            value: '${invoiceSummary[0].toInt()}',
-                            color: const Color.fromARGB(255, 131, 75, 204),
-                          ),
-                          const SizedBox(height: 5),
-                          _buildChartInfoRow(
-                            label: 'Flexible Invoices:',
-                            value: '${invoiceSummary[1].toInt()}',
-                            color: const Color.fromARGB(255, 51, 134, 88),
-                          ),
-                          
-                        ],
-                      ),
-                    ),
-
-                    Container(
-                      height: 200,
-                      color: Colors.grey[200],
-                      child: MyPieChart(
-                        invoiceSummary: invoiceSummary, // Fixed and Flexible invoices
-                      ),
-                    ),
+                    _buildBarGraph(),
                     const SizedBox(height: 20),
-
-                    const Text(
-                      'Generated invoice(s)',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
+                    _buildSectionTitle('Generated invoice summary'),
+                    const SizedBox(height: 20),
+                    _buildPieChartSection(),
+                    const SizedBox(height: 20),
+                    _buildSectionTitle('Generated invoice(s)'),
+                    const SizedBox(height: 20),
                     _buildSearchField(),
-                    // _buildGeneratedInvoiceTable(),
+                    const SizedBox(height: 20),
                     _buildInvoiceList(filteredInvoices),
                   ],
                 ),
@@ -347,8 +245,6 @@ class _HomeSectionState extends State<HomeSection> {
   }
 
   Widget _buildSearchField() {
-
-    
     return TextField(
       onChanged: (value) => setState(() => searchQuery = value),
       decoration: InputDecoration(
@@ -359,12 +255,143 @@ class _HomeSectionState extends State<HomeSection> {
     );
   }
 
+  Widget _buildHeader() {
+    return Row(
+      children: [
+        const Expanded(
+          child: Text(
+            'Overview',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+        ),
+        Expanded(
+          child: Center(
+            child: Text(
+              overviewData1['Company_Name'] ?? '',
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOverviewRows() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildOverviewCard(overviewData['Transaction'] ?? '0', 'Transactions'),
+            _buildOverviewCard(overviewData['Customer'] ?? '0', 'Customers'),
+            _buildOverviewCard(overviewData['Users'] ?? '0', 'Users'),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildOverviewCard(overviewData['Pendings'] ?? '0', 'Pending'),
+            _buildOverviewCard(overviewData['Due'] ?? '0', 'Due'),
+            _buildOverviewCard(overviewData['Expired'] ?? '0', 'Expired'),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    );
+  }
+
+  Widget _buildBarGraph() {
+    return Container(
+      padding: const EdgeInsets.all(12.0),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: SizedBox(
+        height: 350,
+        // padding: const EdgeInsets.all(10.0),
+        // color: Theme.of(context).colorScheme.surface,
+        child: MyBarGraph(
+          weeklySummary: [
+            double.parse(overviewData['Pendings'] ?? '0'),
+            double.parse(overviewData['Due'] ?? '0'),
+            double.parse(overviewData['Expired'] ?? '0'),
+          ],
+        ),
+      ),
+    );
+  }
+
+ Widget _buildPieChartSection() {
+  return Container(
+    padding: const EdgeInsets.all(12.0),
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(8),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.5),
+          spreadRadius: 2,
+          blurRadius: 5,
+          offset: const Offset(0, 3),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Chart Summary',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        _buildChartInfoRow(
+          label: 'Fixed Invoices:',
+          value: '${invoiceSummary[0].toInt()}',
+          color: const Color.fromARGB(255, 131, 75, 204),
+        ),
+        const SizedBox(height: 5),
+        _buildChartInfoRow(
+          label: 'Flexible Invoices:',
+          value: '${invoiceSummary[1].toInt()}',
+          color: const Color.fromARGB(255, 51, 134, 88),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          height: 200,
+          padding: const EdgeInsets.all(10.0),
+          color: Theme.of(context).colorScheme.surface,
+          child: MyPieChart(
+            invoiceSummary: invoiceSummary, // Fixed and Flexible invoices
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+
   Widget _buildOverviewCard(String value, String title) {
     return Container(
       width: MediaQuery.of(context).size.width / 3.5,
       height: 100,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
@@ -380,22 +407,23 @@ class _HomeSectionState extends State<HomeSection> {
         children: [
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 5),
           Text(
             title,
-            style: const TextStyle(fontSize: 16),
+            style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurface),
           ),
         ],
       ),
     );
   }
 
-   Widget _buildInvoiceList(List<InvoiceData> invoices) {
+  Widget _buildInvoiceList(List<InvoiceData> invoices) {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),

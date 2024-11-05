@@ -380,7 +380,8 @@ void _showConfirmDialog(BuildContext context, String title, String message) {
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
-      body: Padding(
+      body: SingleChildScrollView( 
+       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -480,6 +481,7 @@ void _showConfirmDialog(BuildContext context, String title, String message) {
           ],
         ),
       ),
+      )
     );
   }
 }

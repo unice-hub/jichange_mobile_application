@@ -34,10 +34,50 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'Vendor Management App (jichange)',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.lightBlue, // Primary color base
+          brightness: Brightness.light, // Set light mode
+        ),
         useMaterial3: true,
+        textTheme: TextTheme(
+          bodyMedium: TextStyle(color: Colors.grey[800], fontSize: 16),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.lightBlue.shade600,
+            foregroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          ),
+        ),
       ),
-      darkTheme: ThemeData.dark(),
+      darkTheme: ThemeData.dark().copyWith(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.lightBlue,
+          brightness: Brightness.dark, // Set dark mode
+        ),
+        scaffoldBackgroundColor: Colors.black, // Set background to a deeper dark color
+        textTheme: TextTheme(
+          bodyMedium: TextStyle(color: Colors.white, fontSize: 16),
+        ),
+         inputDecorationTheme: const InputDecorationTheme(
+          hintStyle: TextStyle(color: Colors.grey),
+          labelStyle: TextStyle(color: Colors.white), // White label text
+          filled: true,
+          fillColor: Colors.transparent, // Transparent background for TextFields
+        ),
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: Colors.white, // White cursor
+          selectionColor: Colors.lightBlueAccent, // Selected text background
+          selectionHandleColor: Colors.white,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.lightBlue.shade300,
+            foregroundColor: Colors.black,
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          ),
+        ),
+      ),
       themeMode: _themeMode,
       debugShowCheckedModeBanner: false,
       home: const LoginPage(),
