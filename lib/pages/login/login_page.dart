@@ -55,7 +55,14 @@ class _LoginPageState extends State<LoginPage> {
         
         // Check if login was unsuccessful due to incorrect username or password
         if (responseData['response']?['check'] == "Username or password is incorrect") {
+          Navigator.of(context).pop();
           _showErrorDialog('Username or password is incorrect.');
+          return;
+        }
+        else if(responseData['response']?['userType'] != "Comp")
+        {
+          Navigator.of(context).pop();
+          _showErrorDialog('Please log in as a vender.');
           return;
         }
          // Extract session data
@@ -132,7 +139,7 @@ class _LoginPageState extends State<LoginPage> {
         Navigator.of(context).pop();
 
         // Other exceptions
-        _showErrorDialog('An unexpected error occurred. Please try again.');
+        _showErrorDialog('An unexpected error occurred. Please try again.'+ e.toString());
         
       }
     } finally {
