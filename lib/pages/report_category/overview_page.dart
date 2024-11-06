@@ -222,9 +222,12 @@ class _OverviewPageState extends State<OverviewPage> {
 
     return Scaffold(
         appBar: AppBar(
+          backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).colorScheme.surface // Dark mode
+          : Theme.of(context).colorScheme.primary, // Light mode
         title: const Text('Overview', style: TextStyle(color: Colors.white)),
         centerTitle: true,
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        // backgroundColor: Theme.of(context).colorScheme.primary,
         elevation: 0,
         actions: [
           IconButton(

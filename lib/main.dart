@@ -127,6 +127,9 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).colorScheme.surface // Dark mode
+          : Theme.of(context).colorScheme.primary, // Light mode
         automaticallyImplyLeading: false, // Disables the back button
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -150,8 +153,8 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         centerTitle: true,
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        elevation: 0,
+        // backgroundColor: Theme.of(context).colorScheme.primary,
+        elevation: 10,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color:  Colors.white),

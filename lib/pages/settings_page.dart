@@ -376,9 +376,12 @@ void _showConfirmDialog(BuildContext context, String title, String message) {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).colorScheme.surface // Dark mode
+          : Theme.of(context).colorScheme.primary, // Light mode
         title: const Text('Settings'),
         centerTitle: true,
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        // backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: SingleChildScrollView( 
        child: Padding(
