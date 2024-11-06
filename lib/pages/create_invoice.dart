@@ -764,7 +764,7 @@ void _showAddCustomerSheet(BuildContext context) {
 
   @override
   Widget build(BuildContext context) {
-    final formatter = NumberFormat('#,###');
+    final formatter = NumberFormat('#,###.##');
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create Invoice', style: TextStyle(color: Colors.white)),
@@ -775,7 +775,7 @@ void _showAddCustomerSheet(BuildContext context) {
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () {
-              Navigator.pushNamed(context, '/profile');
+              Navigator.pushNamed(context, '/settings');
             },
           ),
         ],
@@ -984,6 +984,9 @@ void _showAddCustomerSheet(BuildContext context) {
                   child: TextField(
                     controller: quantityController,
                     keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
                     decoration: const InputDecoration(
                       labelText: 'Quantity',
                       border: OutlineInputBorder(),
@@ -996,7 +999,10 @@ void _showAddCustomerSheet(BuildContext context) {
                 Expanded(
                   child: TextField(
                     controller: unitPriceController,
-                    keyboardType: TextInputType.number,
+                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                    ],
                     decoration: const InputDecoration(
                       labelText: 'Unit Price',
                       border: OutlineInputBorder(),
@@ -1012,6 +1018,7 @@ void _showAddCustomerSheet(BuildContext context) {
               alignment: Alignment.centerLeft,
               child: Text(
                 'Total price: $totalPrice',
+                // 'Total price: ${formatter.format(totalPrice)}',
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),

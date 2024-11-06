@@ -4,6 +4,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -585,7 +586,7 @@ Future<void> _findInvoice(String compid, String invno) async {
 
   @override
   Widget build(BuildContext context) {
-    final formatter = NumberFormat('#,###');
+    final formatter = NumberFormat('#,###.##');
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit invoice', style: TextStyle(color: Colors.white)),
@@ -801,6 +802,9 @@ Future<void> _findInvoice(String compid, String invno) async {
                   child: TextField(
                     controller: quantityController,
                     keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
                     decoration: const InputDecoration(
                       labelText: 'Quantity',
                       border: OutlineInputBorder(),
@@ -812,7 +816,10 @@ Future<void> _findInvoice(String compid, String invno) async {
                 Expanded(
                   child: TextField(
                     controller: unitPriceController,
-                    keyboardType: TextInputType.number,
+                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                    ],
                     decoration: const InputDecoration(
                       labelText: 'Unit Price',
                       border: OutlineInputBorder(),
@@ -870,8 +877,7 @@ Future<void> _findInvoice(String compid, String invno) async {
             Align(
               alignment: Alignment.centerRight,
               child: Text(
-                
-                'Total of all items: ${calculateTotalOfAllItems().toStringAsFixed(2)}',
+                'Total of all items: ${formatter.format(calculateTotalOfAllItems())}',
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
