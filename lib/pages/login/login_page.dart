@@ -139,7 +139,7 @@ class _LoginPageState extends State<LoginPage> {
         Navigator.of(context).pop();
 
         // Other exceptions
-        _showErrorDialog('An unexpected error occurred. Please try again.'+ e.toString());
+        _showErrorDialog('An unexpected error occurred. Please try again.');
         
       }
     } finally {
