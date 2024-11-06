@@ -236,6 +236,7 @@ class _OverviewPageState extends State<OverviewPage> {
           ),
         ],
       ),
+      
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -244,139 +245,310 @@ class _OverviewPageState extends State<OverviewPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    
-                    const Text(
-                      'Sale(s) summary',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
+
+                    _buildHeader(),
+                    const SizedBox(height: 10),
+                    // _buildOverviewRows(),
+                    // const SizedBox(height: 20),
+                    // _buildSectionTitle('Invoice summary'),
                     const SizedBox(height: 20),
+                    _buildBarGraph(),
+                    const SizedBox(height: 20),
+                    _buildSectionTitle('Invoice(s) summary'),
+                    const SizedBox(height: 20),
+                    _buildPieChartSection(),
+                    const SizedBox(height: 20),
+                    _buildSectionTitle('Statistics'),
+                    const SizedBox(height: 20),
+                    _buildStatisticRows(),
+                    const SizedBox(height: 20),
+                    _buildSectionTitle('Latest transactions'),
+                    const SizedBox(height: 20),
+                    _buildtransactionsRows(),
+                    const SizedBox(height: 40),
                     
-                    // Bar Graph goes here
-                    Container(
-                      height: 350,
-                      padding: const EdgeInsets.all(10.0),
-                      color: Colors.grey[300],
-                      child: MyBarGraph(
-                        weeklySummary: [
-                          double.parse(overviewData['Pendings'] ?? '0'),
-                          double.parse(overviewData['Due'] ?? '0'),
-                          double.parse(overviewData['Expired'] ?? '0'),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 10),
+                    
+                    // const Text(
+                    //   'Sale(s) summary',
+                    //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    // ),
+                    // const SizedBox(height: 20),
+                    
+                    // // Bar Graph goes here
+                    // Container(
+                    //   height: 350,
+                    //   padding: const EdgeInsets.all(10.0),
+                    //   color: Colors.grey[300],
+                    //   child: MyBarGraph(
+                    //     weeklySummary: [
+                    //       double.parse(overviewData['Pendings'] ?? '0'),
+                    //       double.parse(overviewData['Due'] ?? '0'),
+                    //       double.parse(overviewData['Expired'] ?? '0'),
+                    //     ],
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 10),
 
-                    const Text(
-                      'Invoice(s) summary',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
+                    // const Text(
+                    //   'Invoice(s) summary',
+                    //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    // ),
+                    // const SizedBox(height: 10),
 
-                    // Information section about the pie chart
-                    Container(
-                      padding: const EdgeInsets.all(12.0),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.5),
-                            spreadRadius: 2,
-                            blurRadius: 5,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Chart Summary',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 10),
-                          _buildChartInfoRow(
-                            label: 'Pendings:',
-                            value: '${int.parse(overviewData['Pendings'] ?? '0')}',
-                            color: const Color.fromARGB(255, 138, 72, 224),
-                          ),
-                          const SizedBox(height: 5),
-                          _buildChartInfoRow(
-                            label: 'Due:',
-                            value: '${int.parse(overviewData['Due'] ?? '0')}',
-                            color: const Color.fromARGB(255, 66, 211, 131),
-                          ),
-                          const SizedBox(height: 5),
-                          _buildChartInfoRow(
-                            label: 'Expired:',
-                            value: '${int.parse(overviewData['Expired'] ?? '0')}',
-                            color: const Color.fromARGB(255, 151, 64, 190),
-                          ),
+                    // // Information section about the pie chart
+                    // Container(
+                    //   padding: const EdgeInsets.all(12.0),
+                    //   decoration: BoxDecoration(
+                    //     color: Colors.white,
+                    //     borderRadius: BorderRadius.circular(8),
+                    //     boxShadow: [
+                    //       BoxShadow(
+                    //         color: Colors.grey.withOpacity(0.5),
+                    //         spreadRadius: 2,
+                    //         blurRadius: 5,
+                    //         offset: const Offset(0, 3),
+                    //       ),
+                    //     ],
+                    //   ),
+                    //   child: Column(
+                    //     crossAxisAlignment: CrossAxisAlignment.start,
+                    //     children: [
+                    //       const Text(
+                    //         'Chart Summary',
+                    //         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    //       ),
+                    //       const SizedBox(height: 10),
+                    //       _buildChartInfoRow(
+                    //         label: 'Pendings:',
+                    //         value: '${int.parse(overviewData['Pendings'] ?? '0')}',
+                    //         color: const Color.fromARGB(255, 138, 72, 224),
+                    //       ),
+                    //       const SizedBox(height: 5),
+                    //       _buildChartInfoRow(
+                    //         label: 'Due:',
+                    //         value: '${int.parse(overviewData['Due'] ?? '0')}',
+                    //         color: const Color.fromARGB(255, 66, 211, 131),
+                    //       ),
+                    //       const SizedBox(height: 5),
+                    //       _buildChartInfoRow(
+                    //         label: 'Expired:',
+                    //         value: '${int.parse(overviewData['Expired'] ?? '0')}',
+                    //         color: const Color.fromARGB(255, 151, 64, 190),
+                    //       ),
                           
-                        ],
-                      ),
-                    ),
+                    //     ],
+                    //   ),
+                    // ),
 
-                    Container(
-                      height: 200,
-                      color: Colors.grey[200],
-                      child: MyPieChart(
-                        invoiceSummary: [int.parse(overviewData['Pendings'] ?? '0'),
-                          int.parse(overviewData['Due'] ?? '0'),
-                          int.parse(overviewData['Expired'] ?? '0'),], // Fixed and Flexible invoices
-                      ),
-                    ),
-                    const SizedBox(height: 20),
+                    // Container(
+                    //   height: 200,
+                    //   color: Colors.grey[200],
+                    //   child: MyPieChart(
+                    //     invoiceSummary: [int.parse(overviewData['Pendings'] ?? '0'),
+                    //       int.parse(overviewData['Due'] ?? '0'),
+                    //       int.parse(overviewData['Expired'] ?? '0'),], // Fixed and Flexible invoices
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 20),
 
-                    const Text(
-                      'Statistics',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
+                    // const Text(
+                    //   'Statistics',
+                    //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    // ),
+                    // const SizedBox(height: 10),
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildOverviewCard(overviewData['Transaction'] ?? '0', 'Transactions'),
-                        _buildOverviewCard(overviewData['Customer'] ?? '0', 'Customers'),
-                        _buildOverviewCard(overviewData['Users'] ?? '0', 'Users'),
-                      ],
-                    ),
+                    // Row(
+                    //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    //   children: [
+                    //     _buildOverviewCard(overviewData['Transaction'] ?? '0', 'Transactions'),
+                    //     _buildOverviewCard(overviewData['Customer'] ?? '0', 'Customers'),
+                    //     _buildOverviewCard(overviewData['Users'] ?? '0', 'Users'),
+                    //   ],
+                    // ),
 
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildOverviewCard(overviewData['Pendings'] ?? '0', 'Pending'),
-                        _buildOverviewCard(overviewData['Due'] ?? '0', 'Due'),
-                        _buildOverviewCard(overviewData['Expired'] ?? '0', 'Expired'),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
+                    // const SizedBox(height: 10),
+                    // Row(
+                    //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    //   children: [
+                    //     _buildOverviewCard(overviewData['Pendings'] ?? '0', 'Pending'),
+                    //     _buildOverviewCard(overviewData['Due'] ?? '0', 'Due'),
+                    //     _buildOverviewCard(overviewData['Expired'] ?? '0', 'Expired'),
+                    //   ],
+                    // ),
+                    // const SizedBox(height: 20),
 
-                    const Text(
-                      'Latest transactions',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                       _buildOverviewCard(overviewData['Customer'] ?? '0', 'Customer(s)'),
-                       _buildOverviewCard(detailsData['Due'] ?? '0','Total Created\n Invoices',),
-                       _buildOverviewCard(detailsData['Expired'] ?? '0','Total Invoice\n Amount',),
-                      //  _buildOverviewCard(overviewData['Customer'] ?? '0', 'Customer(s)'),
-                      //  _buildOverviewCard(detailsData['Due'] ?? '0','Total Created\n Invoices',),
-                      //  _buildOverviewCard('1000000000000','Total Invoice\n Amount',),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    const SizedBox(height: 10),
-                    const SizedBox(height: 10),
+                    // const Text(
+                    //   'Latest transactions',
+                    //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    // ),
+                    // const SizedBox(height: 10),
+                    // Row(
+                    //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    //   children: [
+                    //    _buildOverviewCard(overviewData['Customer'] ?? '0', 'Customer(s)'),
+                    //    _buildOverviewCard(detailsData['Due'] ?? '0','Total Created\n Invoices',),
+                    //    _buildOverviewCard(detailsData['Expired'] ?? '0','Total Invoice\n Amount',),
+                    //   //  _buildOverviewCard(overviewData['Customer'] ?? '0', 'Customer(s)'),
+                    //   //  _buildOverviewCard(detailsData['Due'] ?? '0','Total Created\n Invoices',),
+                    //   //  _buildOverviewCard('1000000000000','Total Invoice\n Amount',),
+                    //   ],
+                    // ),
+                    // const SizedBox(height: 10),
+                    // const SizedBox(height: 10),
+                    // const SizedBox(height: 10),
                   ],
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Row(
+      children: [
+        const Expanded(
+          child: Text(
+            'Sale(s) summary',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    );
+  }
+
+  Widget _buildBarGraph() {
+    return Container(
+      padding: const EdgeInsets.all(12.0),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: SizedBox(
+        height: 350,
+        // padding: const EdgeInsets.all(10.0),
+        // color: Theme.of(context).colorScheme.surface,
+        child: MyBarGraph(
+          weeklySummary: [
+            double.parse(overviewData['Pendings'] ?? '0'),
+            double.parse(overviewData['Due'] ?? '0'),
+            double.parse(overviewData['Expired'] ?? '0'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPieChartSection() {
+  return Container(
+    padding: const EdgeInsets.all(12.0),
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(8),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.5),
+          spreadRadius: 2,
+          blurRadius: 5,
+          offset: const Offset(0, 3),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Chart Summary',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        _buildChartInfoRow(
+          label: 'Pendings:',
+          value: '${int.parse(overviewData['Pendings'] ?? '0')}',
+          color: const Color.fromARGB(255, 138, 72, 224),
+        ),
+        const SizedBox(height: 5),
+        _buildChartInfoRow(
+          label: 'Due:',
+          value: '${int.parse(overviewData['Due'] ?? '0')}',
+          color: const Color.fromARGB(255, 66, 211, 131),
+        ),
+        const SizedBox(height: 5),
+        _buildChartInfoRow(
+          label: 'Expired:',
+          value: '${int.parse(overviewData['Expired'] ?? '0')}',
+          color: const Color.fromARGB(255, 151, 64, 190),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          height: 200,
+          padding: const EdgeInsets.all(10.0),
+          color: Theme.of(context).colorScheme.surface,
+          child: MyPieChart(
+          invoiceSummary: [int.parse(overviewData['Pendings'] ?? '0'),
+            int.parse(overviewData['Due'] ?? '0'),
+            int.parse(overviewData['Expired'] ?? '0'),], // Fixed and Flexible invoices
+          ),
+        ),                   
+      ],
+    ),
+  );
+}
+
+  Widget _buildStatisticRows() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildOverviewCard(overviewData['Transaction'] ?? '0', 'Transactions'),
+            _buildOverviewCard(overviewData['Customer'] ?? '0', 'Customers'),
+            _buildOverviewCard(overviewData['Users'] ?? '0', 'Users'),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+          Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildOverviewCard(overviewData['Pendings'] ?? '0', 'Pending'),
+            _buildOverviewCard(overviewData['Due'] ?? '0', 'Due'),
+            _buildOverviewCard(overviewData['Expired'] ?? '0', 'Expired'),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildtransactionsRows() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildOverviewCard(overviewData['Customer'] ?? '0', 'Customer(s)'),
+            _buildOverviewCard(detailsData['Due'] ?? '0','Total Created\n Invoices',),
+            _buildOverviewCard(detailsData['Expired'] ?? '0','Total Invoice\n Amount',),
+            //  _buildOverviewCard(overviewData['Customer'] ?? '0', 'Customer(s)'),
+            //  _buildOverviewCard(detailsData['Due'] ?? '0','Total Created\n Invoices',),
+            //  _buildOverviewCard('1000000000000','Total Invoice\n Amount',),
+          ],
+        ),
+      ],
     );
   }
 
@@ -415,7 +587,7 @@ class _OverviewPageState extends State<OverviewPage> {
       width: MediaQuery.of(context).size.width / 3.5,
       height: 100,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(

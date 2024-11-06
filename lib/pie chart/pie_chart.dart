@@ -19,39 +19,50 @@ class MyPieChart extends StatelessWidget {
 
     myPieData.initializePieData();
 
-    return PieChart(
+     return PieChart(
       PieChartData(
         sections: myPieData.pieData.map((data) {
           return PieChartSectionData(
             value: data.y.toDouble(),
             title: '${data.y}',
-            color: _getColor(data.x),
+            color: _getColor(context, data.x),
             radius: 50,
-            titleStyle: const TextStyle(
+            titleStyle: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.black
+                  : Colors.white, // Ensure text is visible in both themes
             ),
           );
         }).toList(),
-        
         centerSpaceRadius: 40,
         sectionsSpace: 1,
-        startDegreeOffset: 90+90+90,
+        startDegreeOffset: 270,
+        pieTouchData: PieTouchData(
+          enabled: true,
+        ),
       ),
+      swapAnimationDuration: const Duration(milliseconds: 1500), // Animation duration
+      swapAnimationCurve: Curves.easeInOut, // Animation curve
     );
   }
 
-  
-
-  Color _getColor(int index) {
+  Color _getColor(BuildContext context, int index) {
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     switch (index) {
       case 0:
-        return const Color.fromARGB(255, 131, 75, 204);// Fixed Invoices
+        return isDarkTheme
+            ? const Color.fromARGB(255, 131, 75, 204) // Dark theme color for Fixed Invoices
+            : const Color.fromARGB(255, 95, 0, 130); // Light theme color for Fixed Invoices
       case 1:
-        return const Color.fromARGB(255, 51, 134, 88);// Flexible Invoices
+        return isDarkTheme
+            ? const Color.fromARGB(255, 51, 134, 88) // Dark theme color for Flexible Invoices
+            : const Color.fromARGB(255, 0, 128, 0); // Light theme color for Flexible Invoices
       case 2:
-        return const Color.fromARGB(255, 194, 6, 252);// Flexible Invoices
+        return isDarkTheme
+            ? const Color.fromARGB(255, 194, 6, 252) // Dark theme color for Expired Invoices
+            : const Color.fromARGB(255, 230, 0, 150); // Light theme color for Expired Invoices
       default:
         return Colors.grey;
     }

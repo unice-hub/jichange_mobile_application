@@ -14,7 +14,7 @@ class MyBarGraph extends StatelessWidget {
   Widget build(BuildContext context) {
     // Find the maximum value in weeklySummary and round it up to the nearest 10
     double maxSummaryValue = weeklySummary.reduce((a, b) => a > b ? a : b);
-    double maxY = (maxSummaryValue / 10).ceil() * 10 +10;  // Round up to nearest 10
+    double maxY = (maxSummaryValue / 10).ceil() * 10 + 10;  // Round up to nearest 10
 
     // Initialize bar data
     BarData myBarData = BarData(
@@ -34,43 +34,60 @@ class MyBarGraph extends StatelessWidget {
         borderData: FlBorderData(show: true),
         // Adding titles
         titlesData: FlTitlesData(
-        show: true,
-        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        leftTitles: AxisTitles(
-          axisNameWidget: const Padding(
-            padding: EdgeInsets.only(left: 10.0),  // Add padding for left axis title
-            child: Text('Total', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          show: true,
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: AxisTitles(
+            axisNameWidget: Padding(
+              padding: const EdgeInsets.only(left: 10.0),  // Add padding for left axis title
+              child: Text(
+                'Total',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black,  // Adjust text color based on the theme
+                ),
+              ),
+            ),
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 40,  // Increase reserved size to accommodate 5 digits
+              getTitlesWidget: (value, meta) {
+                const style = TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                );
+                return SideTitleWidget(
+                  axisSide: meta.axisSide,
+                  space: 10,  // Add space to give padding between titles and chart
+                  child: Text(value.toInt().toString(), style: style),
+                );
+              },
+            ),
           ),
-          sideTitles: SideTitles(
-            showTitles: true,
-            reservedSize: 40,  // Increase reserved size to accommodate 5 digits
-            getTitlesWidget: (value, meta) {
-              const style = TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              );
-              return SideTitleWidget(
-                axisSide: meta.axisSide,
-                space: 10,  // Add space to give padding between titles and chart
-                child: Text(value.toInt().toString(), style: style),
-              );
-            },
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            axisNameWidget: Padding(
+              padding: const EdgeInsets.only(top: 1),  // Add padding for bottom axis title
+              child: Text(
+                'Status',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black,  // Adjust text color based on the theme
+                ),
+              ),
+            ),
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 40,
+              getTitlesWidget: getBottomTitles,
+            ),
           ),
         ),
-        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        bottomTitles: const AxisTitles(
-          axisNameWidget: Padding(
-            padding: EdgeInsets.only(top: 1),  // Add padding for bottom axis title
-            child: Text('Status', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-          ),
-          sideTitles: SideTitles(
-            showTitles: true,
-             reservedSize: 40,
-            getTitlesWidget: getBottomTitles,
-          ),
-        ),
-      ),
         barGroups: myBarData.barData
             .map(
               (data) => BarChartGroupData(
@@ -78,9 +95,7 @@ class MyBarGraph extends StatelessWidget {
                 barRods: [
                   BarChartRodData(
                     toY: data.y,
-                    // color: Colors.grey[800],
-                    // color: Colors.purple,  // You can customize the color
-                    color: _getColor(data.x),
+                    color: _getColor(data.x, context),  // Use theme-based color
                     width: 95,
                     borderRadius: BorderRadius.circular(4),
                     backDrawRodData: BackgroundBarChartRodData(
@@ -102,42 +117,47 @@ class MyBarGraph extends StatelessWidget {
       swapAnimationCurve: Curves.easeInOut, // Animation curve
     );
   }
-}
 
- Color _getColor(int index) {
+  Color _getColor(int index, BuildContext context) {
     switch (index) {
       case 0:
-        return Colors.purple;// Fixed Invoices
+        return Theme.of(context).brightness == Brightness.dark
+            ? Colors.purple.shade300 // Dark theme color for Fixed Invoices
+            : Colors.purple.shade700; // Light theme color for Fixed Invoices
       case 1:
-        return Colors.purple;// Flexible Invoices
+        return Theme.of(context).brightness == Brightness.dark
+            ? Colors.blue.shade300 // Dark theme color for Flexible Invoices
+            : Colors.blue.shade700; // Light theme color for Flexible Invoices
       case 2:
-        return Colors.purple;// Flexible Invoices
+        return Theme.of(context).brightness == Brightness.dark
+            ? Colors.green.shade300 // Dark theme color for Expired Invoices
+            : Colors.green.shade700; // Light theme color for Expired Invoices
       default:
         return Colors.grey;
     }
   }
 
-Widget getBottomTitles(double value, TitleMeta meta) {
-  const style = TextStyle(
-    color: Colors.grey,
-    fontWeight: FontWeight.bold,
-    fontSize: 14,
-  );
-  Widget text;
-  switch (value.toInt()) {
-    case 0:
-      text = const Text('Pending', style: style);
-      break;
-    case 1:
-      text = const Text('Due', style: style);
-      break;
-    case 2:
-      text = const Text('Expired', style: style);
-      break;
-    default:
-      text = const Text('', style: style);
-      break;
-  }
+  Widget getBottomTitles(double value, TitleMeta meta) {
+    const style = TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 14,
+    );
+    Widget text;
+    switch (value.toInt()) {
+      case 0:
+        text = const Text('Pending', style: style);
+        break;
+      case 1:
+        text = const Text('Due', style: style);
+        break;
+      case 2:
+        text = const Text('Expired', style: style);
+        break;
+      default:
+        text = const Text('', style: style);
+        break;
+    }
 
-  return SideTitleWidget(axisSide: meta.axisSide, space: 10, child: text,);
+    return SideTitleWidget(axisSide: meta.axisSide, space: 10, child: text);
+  }
 }

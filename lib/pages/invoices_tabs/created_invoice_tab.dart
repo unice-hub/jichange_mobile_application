@@ -280,7 +280,7 @@ class _InvoiceCard extends StatefulWidget {
 }
 
 class _InvoiceCardState extends State<_InvoiceCard> {
-  final formatter = NumberFormat('#,###');
+  final formatter = NumberFormat('#,###.##');
   bool _isExpanded = false;
 
   final TextEditingController _reasonController = TextEditingController();

@@ -17,7 +17,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String _token = 'Not logged in';
   bool isLoading = false;
   bool isPersonalInfoLoading = true;
-  ThemeMode _selectedTheme = ThemeMode.light;
+  ThemeMode _selectedTheme = ThemeMode.system;
   Map<String, dynamic>? personalInfo;
 
   final TextEditingController _newPasswordController = TextEditingController();
@@ -31,6 +31,7 @@ class _SettingsPageState extends State<SettingsPage> {
     super.initState();
     _loadSessionInfo();
     _fetchPersonalInfo();
+    _loadThemePreference();  // Load the saved theme preference on init
   }
 
   Future<void> _loadSessionInfo() async {
@@ -128,6 +129,43 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  Future<void> _loadThemePreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    final theme = prefs.getString('theme') ?? 'system';
+    setState(() {
+      _selectedTheme = _stringToThemeMode(theme);
+    });
+    widget.onThemeChanged(_selectedTheme);
+  }
+
+  Future<void> _saveThemePreference(ThemeMode theme) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('theme', _themeModeToString(theme));
+  }
+
+  ThemeMode _stringToThemeMode(String theme) {
+    switch (theme) {
+      case 'light':
+        return ThemeMode.light;
+      case 'dark':
+        return ThemeMode.dark;
+      default:
+        return ThemeMode.system;
+    }
+  }
+
+  String _themeModeToString(ThemeMode theme) {
+    switch (theme) {
+      case ThemeMode.light:
+        return 'light';
+      case ThemeMode.dark:
+        return 'dark';
+      default:
+        return 'system';
+    }
+  }
+
+
   Future<void> _changePassword() async {
     final newPassword = _newPasswordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
@@ -171,12 +209,6 @@ class _SettingsPageState extends State<SettingsPage> {
       );
 
       if (response.statusCode == 200) {
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   const SnackBar(content: Text("Password changed successfully")),
-        // );
-        // _newPasswordController.clear();
-        // _confirmPasswordController.clear();
-        // _fetchPersonalInfo(); // Refresh the page
 
         final Map<String, dynamic> responseBody = jsonDecode(response.body);
        if (response.statusCode == 200 && responseBody['response'] != 0) {
@@ -330,10 +362,13 @@ void _showConfirmDialog(BuildContext context, String title, String message) {
                   value: ThemeMode.light,
                   groupValue: _selectedTheme,
                   onChanged: (ThemeMode? value) {
-                    setState(() {
-                      _selectedTheme = value!;
-                    });
-                    widget.onThemeChanged(value!); // Notify parent widget
+                    if (value != null) {
+                      setState(() {
+                        _selectedTheme = value;
+                      });
+                      widget.onThemeChanged(value);
+                      _saveThemePreference(value);  // Save theme preference
+                    }
                   },
                 ),
               ),
@@ -344,10 +379,13 @@ void _showConfirmDialog(BuildContext context, String title, String message) {
                   value: ThemeMode.dark,
                   groupValue: _selectedTheme,
                   onChanged: (ThemeMode? value) {
-                    setState(() {
-                      _selectedTheme = value!;
-                    });
-                    widget.onThemeChanged(value!); // Notify parent widget
+                    if (value != null) {
+                      setState(() {
+                        _selectedTheme = value;
+                      });
+                      widget.onThemeChanged(value);
+                      _saveThemePreference(value);  // Save theme preference
+                    }
                   },
                 ),
               ),
@@ -358,10 +396,13 @@ void _showConfirmDialog(BuildContext context, String title, String message) {
                   value: ThemeMode.system,
                   groupValue: _selectedTheme,
                   onChanged: (ThemeMode? value) {
-                    setState(() {
-                      _selectedTheme = value!;
-                    });
-                    widget.onThemeChanged(value!); // Notify parent widget
+                    if (value != null) {
+                      setState(() {
+                        _selectedTheme = value;
+                      });
+                      widget.onThemeChanged(value);
+                      _saveThemePreference(value);  // Save theme preference
+                    }
                   },
                 ),
               ),
@@ -372,6 +413,7 @@ void _showConfirmDialog(BuildContext context, String title, String message) {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -379,7 +421,11 @@ void _showConfirmDialog(BuildContext context, String title, String message) {
         backgroundColor: Theme.of(context).brightness == Brightness.dark
           ? Theme.of(context).colorScheme.surface // Dark mode
           : Theme.of(context).colorScheme.primary, // Light mode
-        title: const Text('Settings'),
+        title: const Text(
+          'Settings',
+          style: TextStyle(color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
         centerTitle: true,
         // backgroundColor: Theme.of(context).colorScheme.primary,
       ),
