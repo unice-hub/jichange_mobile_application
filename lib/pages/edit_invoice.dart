@@ -9,6 +9,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:learingdart/core/api/invoice_apis.dart';
+import 'package:learingdart/main.dart';
+// import 'package:learingdart/pages/invoices_section.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'dart:convert';
 import 'dart:developer';
@@ -207,7 +209,7 @@ Future<void> _findInvoice(String compid, String invno) async {
         });
       } else {
         setState(() {
-          _showErrorDialog('No items found with the description "Eggs"');
+          _showErrorDialog('No items found with the description');
         });
       }
     } else {
@@ -462,6 +464,17 @@ Future<void> _findInvoice(String compid, String invno) async {
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invoice edited successfully!')),
+        );
+
+        // Navigate to MainPage with home page as the initial tab
+        // HomePage.navigateToHome(context);
+
+        // Navigate to MainPage with ceated invoice tab as the initial tab
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const HomePage(initialIndex: 3),
+          ),
+          (route) => false,
         );
  
       } else {

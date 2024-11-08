@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:learingdart/core/api/invoice_apis.dart';
+import 'package:learingdart/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'dart:convert';
 import 'dart:developer';
@@ -366,6 +367,15 @@ class _CreateInvoiceForSpecificCustomerState extends State<CreateInvoiceForSpeci
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invoice submitted successfully!')),
         );
+
+        // Navigate to MainPage with ceated invoice tab as the initial tab
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const HomePage(initialIndex: 3),
+          ),
+          (route) => false,
+        );
+        
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to submit invoice.')),

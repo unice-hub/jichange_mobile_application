@@ -2,9 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:learingdart/core/api/invoice_apis.dart';
+import 'package:learingdart/main.dart';
 import 'package:learingdart/pages/amend_invoice.dart';
 // import 'package:learingdart/pages/invoices_tabs/created_invoice_tab.dart';
-import '../invoices_section.dart'; // Import Invoice class
+// import '../invoices_section.dart'; // Import Invoice class
 import 'dart:convert';
 import 'dart:developer';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,12 +14,12 @@ import 'package:http/http.dart' as http;
 
 
 class GeneratedInvoiceTab extends StatefulWidget {
-  final List<Invoice> generatedInvoices;
-  final List<Invoice> filterGeneratedInvoices;
+  // final List<Invoice> generatedInvoices;
+  // final List<Invoice> filterGeneratedInvoices;
 
   const GeneratedInvoiceTab({
-    required this.generatedInvoices,
-    required this.filterGeneratedInvoices,
+    // required this.generatedInvoices,
+    // required this.filterGeneratedInvoices,
     super.key,
   });
 
@@ -505,7 +506,19 @@ void _confirmApprovellation() {
       // Check if the response is valid
       if (addDCode['response'] != null) {
         // _showErrorDialog("successful.");
-        _showQuickAlert(context, 'Success', 'successful', true);
+        // _showQuickAlert(context, 'Success', 'successful', true);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invoice submitted successfully!')),
+        );
+
+        // Navigate to MainPage with ceated invoice tab as the initial tab
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const HomePage(initialIndex: 3),
+          ),
+          (route) => false,
+        );
         
       } else {
         // Handle empty or invalid response
@@ -740,6 +753,14 @@ Future<void> cancelInvoice() async {
       });
 
       _showSnackBar('Invoice cancelled successfully');
+      // Navigate to MainPage with ceated invoice tab as the initial tab
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => const HomePage(initialIndex: 3),
+        ),
+        (route) => false,
+      );
+
     } else {
       _showSnackBar('Failed to cancel the invoice');
     }

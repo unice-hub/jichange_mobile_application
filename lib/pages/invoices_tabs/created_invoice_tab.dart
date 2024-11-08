@@ -1,10 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:learingdart/core/api/invoice_apis.dart';
+import 'package:learingdart/main.dart';
 import 'package:learingdart/pages/edit_invoice.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../invoices_section.dart';
+// import '../invoices_section.dart';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,12 +13,12 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
 class CreatedInvoiceTab extends StatefulWidget {
-  final List<Invoice> createdInvoices;
-  final List<Invoice> filteredCreatedInvoices;
+  // final List<Invoice> createdInvoices;
+  // final List<Invoice> filteredCreatedInvoices;
 
   const CreatedInvoiceTab({
-    required this.createdInvoices,
-    required this.filteredCreatedInvoices,
+    // required this.createdInvoices,
+    // required this.filteredCreatedInvoices,
     super.key,
   });
 
@@ -652,6 +653,14 @@ Future<void> approvelInvoice() async {
       });
 
       _showSnackBar('Invoice approved successfully');
+      // Navigate to MainPage with ceated invoice tab as the initial tab
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => const HomePage(initialIndex: 3),
+        ),
+        (route) => false,
+      );
+
     } else {
       _showSnackBar('Failed to approve the invoice');
     }
@@ -754,6 +763,13 @@ Future<void> cancelInvoice() async {
       });
 
       _showSnackBar('Invoice cancelled successfully');
+      // Navigate to MainPage with ceated invoice tab as the initial tab
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => const HomePage(initialIndex: 3),
+        ),
+        (route) => false,
+      );
     } else {
       _showSnackBar('Failed to cancel the invoice');
     }

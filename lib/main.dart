@@ -16,6 +16,8 @@ void main() {
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
+  
+
   @override
   State<MyApp> createState() => _MyAppState();
 }
@@ -92,7 +94,17 @@ class _MyAppState extends State<MyApp> {
   }
 }
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, this.initialIndex = 0});
+
+  final int initialIndex;
+
+  // // Static method to navigate to MainPage and show the HomePage tab
+  // static void navigateToHome(BuildContext context) {
+  //   Navigator.of(context).pushAndRemoveUntil(
+  //     MaterialPageRoute(builder: (_) => const HomePage()),
+  //     (route) => false,
+  //   );
+  // }
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -100,6 +112,12 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex; // Set the initial index from widget properties
+  }
 
   final List<Widget> _pages = [
     const HomeSection(),

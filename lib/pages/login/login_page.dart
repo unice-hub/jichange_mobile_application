@@ -23,10 +23,13 @@ class _LoginPageState extends State<LoginPage> {
   // Method to handle login API call and save session
   Future<void> loginUser() async {
 
-      showDialog(context: context,
-      builder: (context){
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent closing the dialog by tapping outside
+      builder: (context) {
         return const Center(child: CircularProgressIndicator());
-      });
+      },
+    );
 
     if (!_formKey.currentState!.validate()) {
       Navigator.of(context).pop(); // Close the dialog if validation fails

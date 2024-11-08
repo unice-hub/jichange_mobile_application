@@ -7,18 +7,20 @@ class InvoicesSection extends StatefulWidget {
 
   @override
   _InvoicesSectionState createState() => _InvoicesSectionState();
+
+  static void navigateToHome(BuildContext context) {}
 }
 
 class _InvoicesSectionState extends State<InvoicesSection> {
-  final List<Invoice> createdInvoices = [
-    // Sample Invoice Data
+  // final List<Invoice> createdInvoices = [
+  //   // Sample Invoice Data
    
-  ];
+  // ];
 
-  final List<Invoice> generatedInvoices = [
-    // Sample Invoice Data
+  // final List<Invoice> generatedInvoices = [
+  //   // Sample Invoice Data
     
-  ];
+  // ];
 
   @override
   Widget build(BuildContext context) {
@@ -37,10 +39,10 @@ class _InvoicesSectionState extends State<InvoicesSection> {
         body: TabBarView(
           children: [
             CreatedInvoiceTab(
-              createdInvoices: createdInvoices, filteredCreatedInvoices: const [],
+              // createdInvoices: createdInvoices, filteredCreatedInvoices: const [],
             ),
             GeneratedInvoiceTab(
-              generatedInvoices: generatedInvoices, filterGeneratedInvoices: const [],
+              // generatedInvoices: generatedInvoices, filterGeneratedInvoices: const [],
             ),
           ],
         ),
@@ -49,22 +51,22 @@ class _InvoicesSectionState extends State<InvoicesSection> {
   }
 }
 
-class Invoice {
-  final String customerName;
-  final String invoiceNumber;
-  final String invoiceDate;
-  final String total;
-  final String paymentType;
-  final String dueDate;
-  final String expiryDate;
+// class Invoice {
+//   final String customerName;
+//   final String invoiceNumber;
+//   final String invoiceDate;
+//   final String total;
+//   final String paymentType;
+//   final String dueDate;
+//   final String expiryDate;
 
-  Invoice(
-    this.customerName,
-    this.invoiceNumber,
-    this.invoiceDate,
-    this.total,
-    this.paymentType,
-    this.dueDate,
-    this.expiryDate,
-  );
-}
+//   Invoice(
+//     this.customerName,
+//     this.invoiceNumber,
+//     this.invoiceDate,
+//     this.total,
+//     this.paymentType,
+//     this.dueDate,
+//     this.expiryDate,
+//   );
+// }

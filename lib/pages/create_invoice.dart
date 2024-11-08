@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:learingdart/core/api/invoice_apis.dart';
+import 'package:learingdart/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'dart:convert';
 import 'dart:developer';
@@ -172,54 +173,61 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
     }
   }
 
-   Future<Map<String,dynamic>> isExistInvoice(String compid, String invno) async {
+  Future<Map<String,dynamic>> isExistInvoice(String compid, String invno) async {
     return await InvoiceApis.isExistInvoice.sendRequest(urlParam: '?compid=$compid&invno=$invno');
   }
 
 
   Future<void> _isExistInvoice(String compid, String invno) async {
-  //  final prefs = await SharedPreferences.getInstance();
-  //final getchDetails = await InvoiceApis.getchDetails.sendRequest(body: body);
-  // Base URL of the API
-  // const String baseUrl = 'http://192.168.100.50:98/api/Invoice/IsExistInvoice';
+    //  final prefs = await SharedPreferences.getInstance();
+    //final getchDetails = await InvoiceApis.getchDetails.sendRequest(body: body);
+    // Base URL of the API
+    // const String baseUrl = 'http://192.168.100.50:98/api/Invoice/IsExistInvoice';
 
-  // Constructing the full URL with query parameters
-  //String url = '$baseUrl?compid=$compid&invno=$invno';
+    // Constructing the full URL with query parameters
+    //String url = '$baseUrl?compid=$compid&invno=$invno';
 
-  try {
-      // Sending the GET request
-      // final response = await http.get(
-      //   Uri.parse(url),
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Accept': 'application/pdf',
-      //     'Authorization': 'Bearer $_token',
-      //   },
-      // );
+    try {
+        // Sending the GET request
+        // final response = await http.get(
+        //   Uri.parse(url),
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //     'Accept': 'application/pdf',
+        //     'Authorization': 'Bearer $_token',
+        //   },
+        // );
 
-      // Handling the response
-        //final responseBody = jsonDecode(response.body);
-        final exists = await isExistInvoice(compid,invno);
+        // Handling the response
+          //final responseBody = jsonDecode(response.body);
+          final exists = await isExistInvoice(compid,invno);
 
-        // Checking if the "response" field is true or false
-        if (exists['response'] == true) {
-          setState(() {
-            invoiceErrorMessage = 'Invoice number already exists'; // Display the error
-          });
+          // Checking if the "response" field is true or false
+          if (exists['response'] == true) {
+            setState(() {
+              invoiceErrorMessage = 'Invoice number already exists'; // Display the error
+            });
+          } else {
+            setState(() {
+              invoiceErrorMessage = null; // No error message as invoice does not exist
+            });
+
+        }
+    } catch (e) {
+       if (e is http.ClientException) {
+          // Network error
+          _showErrorDialog('Network error. Please check your connection and try again.');
+
         } else {
-          setState(() {
-            invoiceErrorMessage = null; // No error message as invoice does not exist
-          });
-
-      }
-  } catch (e) {
-    // Handle any exception
-    // log('Error: $e');
-    setState(() {
-      invoiceErrorMessage = 'Error checking invoice number'; // Error in the request
-    });
+          // Other exceptions
+          _showErrorDialog('An unexpected error occurred. Please try again.');
+          
+        }
+        setState(() {
+        isLoading = false;
+      });
+    }
   }
-}
 
 //API to add new customer
  Future<void> _addCustomerAPI(String name, String email, String mobile) async {
@@ -641,6 +649,14 @@ void _showAddCustomerSheet(BuildContext context) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invoice submitted successfully!')),
         );
+        // Navigate to MainPage with ceated invoice tab as the initial tab
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const HomePage(initialIndex: 3),
+          ),
+          (route) => false,
+        );
+        
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to submit invoice.')),
