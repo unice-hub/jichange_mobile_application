@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'verify_account.dart'; // Import the verify_account page
 
 class ForgotPasswordPage extends StatefulWidget {
@@ -31,7 +32,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       });
     }
 
-    final url = Uri.parse('http://192.168.100.50:98/api/Forgot/GetMobile');
+    final url = Uri.parse(ApiEndpoints.forgotPwd);//endpoint for the forgot password
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',

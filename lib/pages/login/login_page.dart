@@ -2,6 +2,7 @@
 import 'dart:convert'; // For encoding and decoding JSON
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http; // For making HTTP requests
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // For session management
 import 'forgot_password_page.dart';
 import 'vendor_registration_page.dart';
@@ -40,7 +41,9 @@ class _LoginPageState extends State<LoginPage> {
       _isLoading = true;
     });
 
-    final url = Uri.parse('http://192.168.100.50:98/api/LoginUser/AddLogins');
+    final url = Uri.parse(ApiEndpoints.logins);//endpoint for the login
+    print('URL: $url');
+
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json'
@@ -155,7 +158,7 @@ class _LoginPageState extends State<LoginPage> {
 
   // Method to handle Control Number Details API call
   Future<void> _fetchControlNumberDetails(String controlNumber) async {
-  final url = Uri.parse('http://192.168.100.50:98/api/Invoice/GetControl');
+  final url = Uri.parse(ApiEndpoints.controlNumber);//endpoint for control number
   final headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json'

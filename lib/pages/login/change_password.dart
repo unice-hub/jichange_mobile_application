@@ -1,6 +1,7 @@
 import 'dart:convert'; // For encoding and decoding JSON
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http; // For making HTTP requests
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'login_page.dart'; // Import login page
 
 class ChangePasswordPage extends StatefulWidget {
@@ -35,7 +36,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       _isLoading = true;
     });
 
-    final url = Uri.parse('http://192.168.100.50:98/api/Forgot/ChangePwd');
+    final url = Uri.parse(ApiEndpoints.changePwd);//endpoint for the change password
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',

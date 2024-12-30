@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'change_password.dart'; // Import change_password.dart page
 
 class VerifyAccountPage extends StatefulWidget {
@@ -27,7 +28,7 @@ class _VerifyAccountPageState extends State<VerifyAccountPage> {
       isLoading = true;
     });
 
-    const url = 'http://192.168.100.50:98/api/Forgot/OtpValidate';
+    const url = ApiEndpoints.verifyAccount;//endpoint for the verify account
     final headers = {'Content-Type': 'application/json'};
     final body = json.encode({
       "otp_code": otpCode,

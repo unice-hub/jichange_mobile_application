@@ -1,6 +1,9 @@
+// ignore_for_file: unused_field
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:learingdart/pages/login/login_page.dart';
 
 class VendorRegistrationPage extends StatefulWidget {
@@ -49,7 +52,7 @@ class _VendorRegistrationPageState extends State<VendorRegistrationPage> {
   }
 
   Future<void> _fetchBranches() async {
-    final url = Uri.parse('http://192.168.100.50:98/api/Branch/GetBranchLists');
+    final url = Uri.parse(ApiEndpoints.vendorReg);
 
     try {
       final response = await http.post(url, headers: {'Accept': 'application/json'});
@@ -79,7 +82,7 @@ class _VendorRegistrationPageState extends State<VendorRegistrationPage> {
   }
 
   Future<void> _isExistInvoice(String accountNumber) async {
-    final url = Uri.parse('http://192.168.100.50:98/api/Company/CheckAccount');
+    final url = Uri.parse(ApiEndpoints.accountNumber);//endpoint for checking account number
 
     try {
       final response = await http.post(
@@ -171,7 +174,7 @@ class _VendorRegistrationPageState extends State<VendorRegistrationPage> {
   }
 
   Future<void> _submitData() async {
-    final url = Uri.parse('http://192.168.100.50:98/api/Company/AddCompanyBankL');
+    final url = Uri.parse(ApiEndpoints.submitData);//endpoint for submitting data
     final requestBody = {
       "compsno": "0",
       "compname": vendorNameController.text,

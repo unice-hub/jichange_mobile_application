@@ -75,6 +75,10 @@ class _HomeSectionState extends State<HomeSection> {
         body: jsonEncode({"compid": _instID}),
       );
 
+      print('Overview Response status: ${response.statusCode}');
+      print('Overview Response body: ${response.body}');
+
+
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
         final responseData = jsonResponse['response'];
@@ -111,6 +115,10 @@ class _HomeSectionState extends State<HomeSection> {
         body: jsonEncode({"compid": _instID}),
       );
 
+      // print('Response status: ${response.statusCode}');
+      // print('Response body: ${response.body}');
+
+
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
         final responseData = jsonResponse['response'];
@@ -143,6 +151,10 @@ class _HomeSectionState extends State<HomeSection> {
         },
         body: jsonEncode({"compid": instituteID}),
       );
+
+      // print('Response status: ${response.statusCode}');
+      // print('Response body: ${response.body}');
+
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = jsonDecode(response.body);
@@ -525,4 +537,3 @@ backgroundColor: Theme.of(context).colorScheme.surface,
     ],
   );
 }
-
