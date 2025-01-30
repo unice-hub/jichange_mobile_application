@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:learingdart/core/api/invoice_apis.dart';
 import 'package:learingdart/main.dart';
 import 'package:learingdart/pages/amend_invoice.dart';
@@ -48,7 +49,7 @@ class _GeneratedInvoiceTabState extends State<GeneratedInvoiceTab> {
   }
 
   Future<void> _fetchInvoicesData() async {
-    const url = 'http://192.168.100.50:98/api/Invoice/GetSignedDetails';
+     const url = ApiEndpoints.invoiceData; // API endpoint to fetch invoices
     
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -65,6 +66,9 @@ class _GeneratedInvoiceTabState extends State<GeneratedInvoiceTab> {
         },
         body: jsonEncode({"compid": instituteID}),
       );
+
+      print(response.body);
+    
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = jsonDecode(response.body);
@@ -697,7 +701,7 @@ Future<void> cancelInvoice() async {
     String token = prefs.getString('token') ?? ''; // Token from SharedPreferences
 
     // Define your API URL
-    const String url = 'http://192.168.100.50:98/api/Invoice/AddCancel';
+    const String url = ApiEndpoints.addCancel; //endpoint to cancel invoice
 
     // Prepare the body with necessary details
     Map<String, dynamic> requestBody = {

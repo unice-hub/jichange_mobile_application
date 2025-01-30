@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'pages/home_section.dart';
 import 'pages/customer_section.dart';
 import 'pages/vendor_users_section.dart';
@@ -9,8 +10,21 @@ import 'pages/login/forgot_password_page.dart';
 import 'pages/login/vendor_registration_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/create_invoice.dart';
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await requestStoragePermissions();
   runApp(const MyApp());
+}
+
+Future<void> requestStoragePermissions() async {
+  if (await Permission.storage.request().isGranted) {
+    print("Storage permission granted.");
+  } else if (await Permission.storage.isPermanentlyDenied) {
+    print("Storage permission permanently denied. Redirecting to settings...");
+    openAppSettings();
+  } else {
+    print("Storage permission denied.");
+  }
 }
 
 class MyApp extends StatefulWidget {

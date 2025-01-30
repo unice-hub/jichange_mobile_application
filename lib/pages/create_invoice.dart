@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:learingdart/core/api/invoice_apis.dart';
 import 'package:learingdart/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,7 +53,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
   @override
   void initState() {
     super.initState();
-    _loadSessionInfo() ;
+    _loadSessionInfo();
 
      // Add a listener to the invoice number field to check if it exists
     invoiceNumberController.addListener(() {
@@ -75,7 +76,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
   }
   
   Future<void> _fetchCustomerName() async {
-    const url = 'http://192.168.100.50:98/api/Invoice/GetCustomersS';
+    const url = ApiEndpoints.customerName;
 
     try {
        final prefs = await SharedPreferences.getInstance();
@@ -96,12 +97,13 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
 
         if (response.statusCode == 200) {
           final jsonResponse = json.decode(response.body);
-          customers = jsonResponse['response'];
           
-          // setState(() {
-          //    customers = customerName.map((branch) => branch['Customer_Name'] ['Cus_Mas_Sno'] as String).toList();
-          //   isLoading = false;
-          // });
+          //customers = customerName.map((branch) => branch['Customer_Name'] ['Cus_Mas_Sno'] as String).toList();
+          
+          setState(() {
+             customers = jsonResponse['response'];
+            isLoading = false;
+          });
           
         } else {
           throw Exception('Failed to load branches');
@@ -125,7 +127,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
   }
 
   Future<void> _fetchCurrency() async {
-    const url = 'http://192.168.100.50:98/api/Invoice/GetCurrency';
+    const url = ApiEndpoints.getCurrency;
 
     try {
        final prefs = await SharedPreferences.getInstance();
@@ -231,7 +233,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
 
 //API to add new customer
  Future<void> _addCustomerAPI(String name, String email, String mobile) async {
-    const url = 'http://192.168.100.50:98/api/Customer/AddCustomer';
+    const url = ApiEndpoints.addCustomer;
     final prefs = await SharedPreferences.getInstance();
         int instituteID = prefs.getInt('instID') ?? 0;
         int userID= prefs.getInt('userID') ?? 0;
@@ -278,7 +280,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
           } else {
             // Handle success
             _showQuickAlert(context, 'Success', 'Customer added successfully', true);
-            
+            _loadSessionInfo();
           }
 
         } else {
@@ -335,6 +337,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop(); // Close the dialog
+              _loadSessionInfo();
             },
             child: const Text('CLOSE'),
           ),
@@ -343,6 +346,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
             onPressed: () {
               Navigator.of(context).pop(); // Close the dialog
               _addCustomerAPI(name, email, mobile); // Call API to add customer
+              _loadSessionInfo();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
@@ -418,7 +422,7 @@ void _showAddCustomerSheet(BuildContext context) {
                     TextField(
                       controller: emailController,
                       decoration: InputDecoration(
-                        labelText: 'Email',
+                        labelText: 'Email(Optional)',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16.0),
                         ),
@@ -444,61 +448,66 @@ void _showAddCustomerSheet(BuildContext context) {
                     
                     ElevatedButton(
                       onPressed: () {
-                        String name = nameController.text.trim();
-                        String email = emailController.text.trim();
-                        String mobile = mobileController.text.trim();
+                      String name = nameController.text.trim();
+                      String email = emailController.text.trim();
+                      String mobile = mobileController.text.trim();
 
-                        // Reset error messages before validation
+                      // Reset error messages before validation
+                      setState(() {
+                        nameError = null;
+                        emailError = null;
+                        mobileError = null;
+                      });
+
+                      // Validation
+                      bool isValid = true;
+
+                      if (name.isEmpty) {
                         setState(() {
-                          nameError = null;
-                          emailError = null;
-                          mobileError = null;
+                        nameError = 'Please enter your name';
                         });
+                        isValid = false;
+                      }
 
-                        // Validation
-                        bool isValid = true;
+                      // if (email.isEmpty || !emailRegex.hasMatch(email)) {
+                      //   setState(() {
+                      //   emailError = 'Please enter a valid email address';
+                      //   });
+                      //   isValid = false;
+                      // }
 
-                        if (name.isEmpty) {
-                          setState(() {
-                            nameError = 'Please enter your name';
-                          });
-                          isValid = false;
-                        }
+                      if (mobile.isEmpty || !mobileRegex.hasMatch(mobile)) {
+                        setState(() {
+                        mobileError = 'Please enter a valid mobile number';
+                        });
+                        isValid = false;
+                      }
 
-                        if (email.isEmpty || !emailRegex.hasMatch(email)) {
-                          setState(() {
-                            emailError = 'Please enter a valid email address';
-                          });
-                          isValid = false;
-                        }
-
-                        if (mobile.isEmpty || !mobileRegex.hasMatch(mobile)) {
-                          setState(() {
-                            mobileError = 'Please enter a valid mobile number';
-                          });
-                          isValid = false;
-                        }
-
-                        // If all fields are valid, proceed with the action
-                        if (isValid) {
-                          _showConfirmationDialog1(context, name, email, mobile);
-                        }
+                      // If all fields are valid, proceed with the action
+                      if (isValid) {
+                        _addCustomerAPI(name, email, mobile).then((_) {
+                        
+                        _showQuickAlert(context, 'Success', 'Customer added successfully', true);
+                        _loadSessionInfo();
+                        });
+                      }
+                      Navigator.pop(context); // Close the bottom sheet
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       ),
                       child: const Text(
-                        'Add Customer',
-                        style: TextStyle(color: Colors.white),
-                        ),
+                      'Add Customer',
+                      style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ],
                 ),
-              ),
+              )
             ),
           );
         },
@@ -633,7 +642,7 @@ void _showAddCustomerSheet(BuildContext context) {
       'Inv_remark': '', // Example, adjust as needed
     };
 
-    const url = 'http://192.168.100.50:98/api/Invoice/AddInvoice';
+    const url = ApiEndpoints.addInvoice;
     try {
       final response = await http.post(
         Uri.parse(url),
@@ -649,7 +658,7 @@ void _showAddCustomerSheet(BuildContext context) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invoice submitted successfully!')),
         );
-        // Navigate to MainPage with ceated invoice tab as the initial tab
+        // Navigate to MainPage with created invoice tab as the initial tab
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (context) => const HomePage(initialIndex: 3),
@@ -691,16 +700,31 @@ void _showAddCustomerSheet(BuildContext context) {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
+      firstDate: DateTime.now(),//Minimum date
+      lastDate: DateTime(2101),//Maximum date
+      
     );
 
     if (picked != null) {
       setState(() {
         if (isInvoiceDate) {
           invoiceDate = picked;
+          // Ensure dueDate is not earlier than invoiceDate
+          if (dueDate != null && dueDate!.isBefore(invoiceDate!)) {
+            dueDate = invoiceDate;
+          }
+          // Ensure expiryDate is not earlier than invoiceDate
+          if (expiryDate != null && expiryDate!.isBefore(invoiceDate!)) {
+            expiryDate = invoiceDate;
+          }
         } else {
-          dueDate = picked;
+          // Ensure dueDate is not earlier than invoiceDate
+          if (invoiceDate != null && picked.isBefore(invoiceDate!)) {
+            invoiceErrorMessage = 'Due date cannot be earlier than invoice date';
+          } else {
+            dueDate = picked;
+            invoiceErrorMessage = null;
+          }
         }
       });
     }
@@ -710,14 +734,21 @@ void _showAddCustomerSheet(BuildContext context) {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
+      firstDate: DateTime.now(),
       lastDate: DateTime(2101),
     );
 
 
     if (picked != null) {
       setState(() {
-        expiryDate = picked;
+        // Ensure expiryDate is not earlier than invoiceDate or dueDate
+        if ((invoiceDate != null && picked.isBefore(invoiceDate!)) ||
+            (dueDate != null && picked.isBefore(dueDate!))) {
+          invoiceErrorMessage = 'Expiry date cannot be earlier than invoice date or due date';
+        } else {
+          expiryDate = picked;
+          invoiceErrorMessage = null;
+        }
       });
     }
   }
@@ -1002,10 +1033,10 @@ void _showAddCustomerSheet(BuildContext context) {
                 Expanded(
                   child: TextField(
                     controller: quantityController,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+               FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                   ],
                     decoration: const InputDecoration(
                       labelText: 'Quantity',
                       border: OutlineInputBorder(),

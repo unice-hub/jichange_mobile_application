@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:learingdart/pages/all_transactions.dart';
+// import 'package:pdf/widgets.dart' as pw;
+// import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PaymentDetailsPage extends StatefulWidget {
@@ -43,7 +46,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
 
   Future<void> fetchInvoices() async {
     setState(() => isLoading = true);
-    const url = 'http://192.168.100.50:98/api/Invoice/GetchTransact_B';
+    const url = ApiEndpoints.getInvoiceTransact; //endpoint for the invoice transactions
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -84,7 +87,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
 
   Future<void> getcustDetReport() async {
     setState(() => isLoading = true);
-    const url = 'http://192.168.100.50:98/api/InvoiceRep/GetCustDetails';
+    const url = ApiEndpoints.getCustDetails; //endpoint for the customer details
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -295,7 +298,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
     return Row(
       children: [
         ElevatedButton.icon(
-          onPressed: () {},
+          onPressed: () {}, // Define the action to download
           icon: const Icon(Icons.download, color: Colors.white),
           label: const Text(''),
           style: ElevatedButton.styleFrom(
@@ -307,15 +310,22 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
           ),
         const SizedBox(width: 16),
         ElevatedButton.icon(
-          onPressed: () {},
+          onPressed: () async {
+            // try {
+            //   await fetchInvoices(); // Fetch invoices
+            //   await downloadPaymentDetailsPDF(invoices); // Pass the fetched invoices to the PDF download function
+            // } catch (e) {
+            //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+            // }
+          },
           icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
           label: const Text(''),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.red,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              borderRadius: BorderRadius.circular(8),
             ),
+          ),
         ),
       ],
     );
@@ -332,6 +342,41 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
     );
   }
 }
+
+
+// Future<void> downloadPaymentDetailsPDF(invoice) async {
+//   final pdf = pw.Document();
+
+//   pdf.addPage(
+//     pw.Page(
+//       build: (pw.Context context) {
+//         return pw.Column(
+//           crossAxisAlignment: pw.CrossAxisAlignment.start,
+//           children: [
+//             pw.Text('Payment Date: ${formatDate(invoice.paymentDate)}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+//             pw.Text('Customer: ${invoice.customerName}'),
+//             pw.Text('Invoice N°: ${invoice.invoiceSno}'),
+//             pw.Text('Payment type: ${invoice.paymentType}'),
+//             pw.Text('Status: ${invoice.status}'),
+//             pw.Text('Total Amount: ${invoice.requestedAmount}'),
+//             pw.Text('Paid Amount: ${invoice.paidAmount}'),
+//             pw.Text('Balance: \$${invoice.balance}'),
+//             pw.Text('Control N°: \$${invoice.controlNumber}'),
+          
+//           ],
+//         );
+//       },
+//     ),
+//   );
+
+//   await Printing.sharePdf(bytes: await pdf.save(), filename: 'invoice_${invoice.invoiceSno}.pdf');
+// }
+
+//  String formatDate(String dateStr) {
+//   DateTime dateTime = DateTime.parse(dateStr);
+//   return DateFormat('EEE MMM dd yyyy').format(dateTime);
+//  }
+
 
 class _InvoiceCard extends StatelessWidget {
   
@@ -493,6 +538,7 @@ class InvoiceData {
     required this.balance,
     required this.receiptNo,
   });
+  
 
   factory InvoiceData.fromJson(Map<String, dynamic> json) {
     return InvoiceData(

@@ -4,7 +4,7 @@ import 'package:learingdart/core/utils/request_handler.dart';
 ///Base URL config
 const String baseUrl = String.fromEnvironment(
   'API_BASE_URL',
-  defaultValue: 'http://192.168.100.50:98/api',
+  defaultValue: 'http://183.83.33.156:90/api',
 );
 
 ///Request Body

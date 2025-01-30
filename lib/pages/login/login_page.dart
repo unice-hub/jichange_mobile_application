@@ -44,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     final url = Uri.parse(ApiEndpoints.logins);//endpoint for the login
-    print('URL: $url');
+      print('URL: $url');
 
     final headers = {
       'Content-Type': 'application/json',
@@ -57,10 +57,11 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       final response = await http.post(url, headers: headers, body: body);
-
+       //print('Response: $response.statusCode');
       if (response.statusCode == 200) {
         var responseData = jsonDecode(response.body);
-        
+       
+
         // Check if login was unsuccessful due to incorrect username or password
         if (responseData['response']?['check'] == "Username or password is incorrect") {
           Navigator.of(context).pop();
@@ -132,6 +133,8 @@ class _LoginPageState extends State<LoginPage> {
        // Handle other errors
         _showErrorDialog('Login failed. Please check your credentials and try again.');
       }
+   
+     print('URL: ${response.request?.url}');
 
     } catch (e) {
       if (e is http.ClientException) {
@@ -141,6 +144,7 @@ class _LoginPageState extends State<LoginPage> {
         // Network error
         _showErrorDialog('Network error. Please check your connection and try again.');
         // Navigator.pushNamed(context, '/home');
+       
 
       } else {
         //pop the loading  circle

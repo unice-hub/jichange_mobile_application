@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AllTransactionsPage extends StatefulWidget {
@@ -34,7 +35,7 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
 
   Future<void> fetchInvoices() async {
     setState(() => isLoading = true);
-    const url = 'http://192.168.100.50:98/api/Invoice/GetchTransact_Inv';
+    const url = ApiEndpoints.allTransactions;
 
     try {
       final prefs = await SharedPreferences.getInstance();

@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:learingdart/core/api/invoice_apis.dart';
 import 'package:learingdart/main.dart';
 // import 'package:learingdart/pages/invoices_section.dart';
@@ -102,7 +103,7 @@ class _EditInvoicePageState extends State<EditInvoicePage> {
   
 
   Future<void> _fetchCustomerName() async {
-    const url = 'http://192.168.100.50:98/api/Invoice/GetCustomersS';
+    const url = ApiEndpoints.customerName; //end point for the customer name
 
     try {
        final prefs = await SharedPreferences.getInstance();
@@ -236,7 +237,7 @@ Future<void> _findInvoice(String compid, String invno) async {
 
 
   Future<void> _fetchCurrency() async {
-    const url = 'http://192.168.100.50:98/api/Invoice/GetCurrency';
+    const url = ApiEndpoints.getCurrency; //end point for the currency
 
     try {
        final prefs = await SharedPreferences.getInstance();
@@ -449,7 +450,7 @@ Future<void> _findInvoice(String compid, String invno) async {
       'Inv_remark': '', // Example, adjust as needed
     };
 
-    const url = 'http://192.168.100.50:98/api/Invoice/AddInvoice';
+    const url = ApiEndpoints.addInvoice; // API endpoint for adding invoice
     try {
       final response = await http.post(
         Uri.parse(url),

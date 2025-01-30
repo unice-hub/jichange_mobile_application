@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:learingdart/core/api/invoice_apis.dart';
 import 'package:learingdart/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -82,7 +83,7 @@ class _CreateInvoiceForSpecificCustomerState extends State<CreateInvoiceForSpeci
   }
   
   Future<void> _fetchCustomerName() async {
-    const url = 'http://192.168.100.50:98/api/Invoice/GetCustomersS';
+    const url = ApiEndpoints.customerName;
 
     try {
        final prefs = await SharedPreferences.getInstance();
@@ -139,7 +140,7 @@ class _CreateInvoiceForSpecificCustomerState extends State<CreateInvoiceForSpeci
   }
 
   Future<void> _fetchCurrency() async {
-    const url = 'http://192.168.100.50:98/api/Invoice/GetCurrency';
+    const url = ApiEndpoints.getCurrency; // API endpoint for getting currency
 
     try {
        final prefs = await SharedPreferences.getInstance();
@@ -351,7 +352,7 @@ class _CreateInvoiceForSpecificCustomerState extends State<CreateInvoiceForSpeci
       'Inv_remark': '', // Example, adjust as needed
     };
 
-    const url = 'http://192.168.100.50:98/api/Invoice/AddInvoice';
+    const url = ApiEndpoints.addInvoice; // API endpoint for adding an invoice
     try {
       final response = await http.post(
         Uri.parse(url),

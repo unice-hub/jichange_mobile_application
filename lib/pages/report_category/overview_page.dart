@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 // import 'package:intl/intl.dart';
 import 'package:learingdart/bar%20graph/bar_graph.dart';
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:learingdart/pages/invoices_tabs/generated_invoice_tab.dart';
 import 'package:learingdart/pie%20chart/pie_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -64,7 +65,7 @@ class _OverviewPageState extends State<OverviewPage> {
   }
 
   Future<void> _fetchOverview() async {
-    const url = 'http://192.168.100.50:98/api/Setup/Overview';
+    const url = ApiEndpoints.getOverview; //endpoint for fetching overview data
 
     try {
       final response = await http.post(
@@ -100,7 +101,7 @@ class _OverviewPageState extends State<OverviewPage> {
   }
   
   Future<void> _getchDetails() async {
-  const url = 'http://192.168.100.50:98/api/Invoice/GetchDetails';
+  const url = ApiEndpoints.getDetails; //endpoint for fetching details data
 
   try {
     final response = await http.post(
@@ -142,7 +143,7 @@ class _OverviewPageState extends State<OverviewPage> {
 
 
   Future<void> _fetchInvoicesData() async {
-    const url = 'http://192.168.100.50:98/api/Invoice/GetSignedDetails';
+    const url = ApiEndpoints.invoiceData; //endpoint for fetching invoice data
     try {
       final prefs = await SharedPreferences.getInstance();
       int instituteID = prefs.getInt('instID') ?? 0;

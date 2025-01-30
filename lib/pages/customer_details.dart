@@ -1,11 +1,16 @@
+// ignore_for_file: library_private_types_in_public_api
+
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:learingdart/pages/all_transactions.dart';
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:learingdart/pages/create_invoice_for_specific_customer.dart';
 import 'dart:convert';
-import 'dart:developer';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'all_transactions.dart';
+
+
 
 
 class CustomerDetailsPage extends StatefulWidget {
@@ -31,7 +36,7 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
   final TextEditingController _searchController = TextEditingController();
 
   String searchQuery = "";
-  String _token = 'Not logged in';
+  late String _token = '';
   bool isLoading = true;
   List<TransactionCardData> _transactions = [];
   List<TransactionCardData> _filteredTransactions = [];
@@ -42,25 +47,27 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
   void initState() {
     super.initState();
     _filteredTransactions = _transactions;
+     _fetchInvoicesData();
     _loadSessionInfo();
   }
 
   Future<void> _loadSessionInfo() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _token = prefs.getString('token') ?? 'Not logged in';
+      _token = prefs.getString('token') ?? '';
     });
     _fetchInvoicesData();
   }
 
   Future<void> _fetchInvoicesData() async {
-    const url = 'http://192.168.100.50:98/api/RepCompInvoice/GetInvReport';
+    
+    const url = ApiEndpoints.getInvReport; //endpoints for get invoicereport
     
     try {
       final prefs = await SharedPreferences.getInstance();
       int instituteID = prefs.getInt('instID') ?? 0;
       int userID = prefs.getInt('userID') ?? 0;
-      // log(userID.toString());
+     log(instituteID.toString());
 
       final response = await http.post(
         Uri.parse(url),
@@ -76,23 +83,36 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
           "allowCancelInvoice": false //true//false
         }),
       );
-      log(widget.custSno.toString());
+      print(response.body);
+       log(widget.custSno.toString());
+
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = jsonDecode(response.body);
+       final responseData = jsonDecode(response.body)['response'];
+
         if (responseBody['response'] is List) {
           setState(() {
             _transactions = (responseBody['response'] as List)
                 .map((item) => TransactionCardData.fromJson(item, userID))
                 .toList();
+                
             _filteredTransactions = _transactions; // Set filtered list to transactions
             isLoading = false;
           });
-        } else {
+        } else if(responseBody['response'] is Map) {
+          setState(() {
+            _transactions = [TransactionCardData.fromJson(responseBody['response'], userID)];
+            _filteredTransactions = _transactions; // Set filtered list to transactions
+            isLoading = false;
+          });
+
+        }else{
           _showSnackBar('Unexpected data format: response is not a list');
         }
-      } else {
-        _showSnackBar('Error: Failed to fetch invoices');
-      }
+      } 
+      // else {
+      //   _showSnackBar('Error: Failed to fetch invoices');
+      // }
     } catch (e) {
       if (e is http.ClientException) {
         // Network error
@@ -107,6 +127,11 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
   }
 
   // Show error dialog in case of failure
+
+ void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
@@ -123,15 +148,14 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
     );
   }
 
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-  }
+ 
 
   void _filterTransactions(String query) {
     setState(() {
       _filteredTransactions = _transactions
           .where((transaction) => transaction.invoiceNo.toLowerCase().contains(query.toLowerCase()))
           .toList();
+          isLoading = false;
     });
     
   }
@@ -181,7 +205,7 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
                     Text('Name: ${widget.name}'),
                     Text('Email: ${widget.email}'),
                     Text('Mobile: ${widget.mobile}'),
-                    // Text('custSno: ${widget.custSno}'),
+                    //  Text('custSno: ${widget.custSno}'),
                   ],
                 ),
               ),
@@ -218,6 +242,16 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
               child: isLoading
                   ? const Center(
                     child: CircularProgressIndicator())
+                    :_filteredTransactions.isEmpty
+                    ? const Center(
+                      child: Text('No Data found',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color:Colors.grey,
+                      ),
+                    ),
+                    )
                   : ListView.builder(
                     padding: const EdgeInsets.all(8.0),
                     itemCount: _filteredTransactions.length,
@@ -354,7 +388,6 @@ class _TransactionCardState extends State<TransactionCard> {
                             MaterialPageRoute(
                               builder: (context) => AllTransactionsPage(
                                 invoiceSno: widget.invoiceNo,
-                               
                               ),
                             ),
                           );

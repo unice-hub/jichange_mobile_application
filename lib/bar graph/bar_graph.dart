@@ -61,8 +61,9 @@ class MyBarGraph extends StatelessWidget {
                   fontSize: 12,
                 );
                 return SideTitleWidget(
-                  axisSide: meta.axisSide,
                   space: 10,  // Add space to give padding between titles and chart
+                    // Add space to give padding between titles and chart
+                  meta: meta,
                   child: Text(value.toInt().toString(), style: style),
                 );
               },
@@ -160,6 +161,6 @@ class MyBarGraph extends StatelessWidget {
         break;
     }
 
-    return SideTitleWidget(axisSide: meta.axisSide, space: 10, child: text);
+    return SideTitleWidget(fitInside: SideTitleFitInsideData.fromTitleMeta(meta), space: 10, meta: meta, child: text);
   }
 }

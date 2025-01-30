@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuditTrailsPage extends StatefulWidget {
@@ -46,7 +47,7 @@ String? selectedVendor;
 
   Future<void> fetchInvoices() async {
     setState(() => isLoading = true);
-    const url = 'http://192.168.100.50:98/api/AuditTrail/report';
+    const url = ApiEndpoints.getInvoiceAuditTrails; //endpoint for the get invoice audit trails
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -95,7 +96,7 @@ String? selectedVendor;
    int userID = prefs.getInt('userID') ?? 0;
 
     // Base URL of the API
-  const String baseUrl = 'http://192.168.100.50:98/api/AuditTrail/GetAvailableAuditTypes';
+  const String baseUrl = ApiEndpoints.getAuditTypes; //endpoint for the get audit types
 
   // Constructing the full URL with query parameters
   String url = '$baseUrl?userid=$userID';
@@ -133,7 +134,7 @@ String? selectedVendor;
    int userID = prefs.getInt('userID') ?? 0;
 
     // Base URL of the API
-  const String baseUrl = 'http://192.168.100.50:98/api/AuditTrail/GetAvailablePages';
+  const String baseUrl = ApiEndpoints.getPages; //endpoint for the get  pages
 
   // Constructing the full URL with query parameters
   String url = '$baseUrl?userid=$userID';
@@ -427,7 +428,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
               const SizedBox(height: 5),
               if (_isExpanded) ...[
                 Container(
-                  color: const Color.fromARGB(255, 231, 228, 228), // Set background color to gray
+                  color: const Color.fromARGB(255, 219, 86, 86), // Set background color to gray
                   padding: const EdgeInsets.all(8.0), // Optional: add some padding
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -474,7 +475,7 @@ Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPresse
           ), // Apply caved corner effect
         ),
         child: IconButton(
-          icon: Icon(icon, color: iconColor),
+          icon: Icon(icon, color:iconColor),
           onPressed: onPressed,
         ),
       ),

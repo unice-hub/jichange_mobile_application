@@ -1,7 +1,10 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class InvoiceDetailsPage extends StatefulWidget {
@@ -43,7 +46,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
 
   Future<void> fetchInvoices() async {
     setState(() => isLoading = true);
-    const url = 'http://192.168.100.50:98/api/RepCompInvoice/GetInvReport';
+    const url = ApiEndpoints.getInvReport; //endpoint for the invoice report
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -84,7 +87,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
 
   Future<void> getcustDetReport() async {
     setState(() => isLoading = true);
-    const url = 'http://192.168.100.50:98/api/InvoiceRep/GetCustDetails';
+    const url = ApiEndpoints.getCustDetails; //endpoint for the customer details
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -320,9 +323,16 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: invoices.length,
+      itemCount: invoices.length + 2,
       itemBuilder: (context, index) {
-        return _InvoiceCard(invoice: invoices[index], custDet: customers[index],);
+        // final customer = index < customers.length ? customers[index] : null;
+        print('Index:$index,Invoices length:${invoices.length}');
+        
+        if (index >= 0 && index < invoices.length && index < customers.length){
+          return _InvoiceCard(invoice: invoices[index], custDet: customers[index],);
+        }else{
+        return const SizedBox.shrink();
+      }
       },
     );
   }

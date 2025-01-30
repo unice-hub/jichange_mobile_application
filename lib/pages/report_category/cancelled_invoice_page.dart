@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CancelledInvoicePage extends StatefulWidget {
@@ -50,7 +51,7 @@ class _CancelledInvoicePageState extends State<CancelledInvoicePage> {
 
   Future<void> fetchInvoices() async {
     setState(() => isLoading = true);
-    const url = 'http://192.168.100.50:98/api/Invoice/GetCancelReport';
+    const url = ApiEndpoints.getCancelledInvoice; //endpoint for the cancelled invoice
     final prefs = await SharedPreferences.getInstance();
     int instituteID = prefs.getInt('instID') ?? 0;
     int userID = prefs.getInt('userID') ?? 0;
@@ -94,7 +95,7 @@ class _CancelledInvoicePageState extends State<CancelledInvoicePage> {
 
   Future<void> getcustDetReport() async {
     setState(() => isLoading = true);
-    const url = 'http://192.168.100.50:98/api/InvoiceRep/GetCustDetails';
+    const url = ApiEndpoints.getCustDetails; //endpoint for the customer details
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -132,7 +133,7 @@ class _CancelledInvoicePageState extends State<CancelledInvoicePage> {
 
   Future<void> getPaymentReport() async {
     setState(() => isLoading = true);
-    const url = 'http://192.168.100.50:98/api/RepCompInvoice/GetInvReport';
+    const url = ApiEndpoints.getInvReport; //endpoint for the getinvoice report
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -385,9 +386,20 @@ Widget _buildExportButtons() {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: invoices.length,
+      itemCount: invoices.length + 2,
       itemBuilder: (context, index) {
-        return _InvoiceCard(invoice: invoices[index], custDet: customers[index], invoiceNo: invoiceNumbers[index],);
+
+        print('Index:$index,Invoices length:${invoices.length}, Customers length: ${customers.length}'); 
+
+        if (index >= 0 && index < invoices.length && index < customers.length && index < invoiceNumbers.length) {
+        return _InvoiceCard(
+          invoice: invoices[index],
+           custDet: customers[index], 
+           invoiceNo: invoiceNumbers[index],
+           );
+      }else{
+        return const SizedBox.shrink();
+      }
       },
     );
   }
@@ -452,13 +464,13 @@ class _InvoiceCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: isFixed ? const Color.fromARGB(82, 240, 154, 255) : const Color.fromARGB(75, 240, 105, 105),
+        color: isFixed ? const Color.fromARGB(82, 241, 202, 248) : const Color.fromARGB(72, 241, 229, 229),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         invoice.status,
         style: TextStyle(
-          color: isFixed ? const Color(0xFF834BCC) : const Color.fromARGB(255, 134, 51, 51),
+          color: isFixed ? const Color(0xFF834BCC) : const Color.fromARGB(255, 100, 228, 88),
         ),
       ),
     );

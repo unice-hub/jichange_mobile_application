@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:learingdart/pages/login/login_page.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -42,7 +43,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _fetchPersonalInfo() async {
-    const url = 'http://192.168.100.50:98/api/CompanyUsers/EditCompanyUserss';
+    const url = ApiEndpoints.editCompanyUsers;
     try {
       final prefs = await SharedPreferences.getInstance();
       int userID = prefs.getInt('userID') ?? 0;
@@ -86,7 +87,7 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       isLoading = true;
     });
-    const url = 'http://192.168.100.50:98/api/LoginUser/Logout';
+    const url = ApiEndpoints.getLogout;
     try {
       final prefs = await SharedPreferences.getInstance();
       int userID = prefs.getInt('userID') ?? 0;
@@ -188,7 +189,7 @@ class _SettingsPageState extends State<SettingsPage> {
       isLoading = true;
     });
 
-    const url = 'http://192.168.100.50:98/api/Updatepwd/UpdatePwd';
+    const url =ApiEndpoints.getUpdatePwd;
     try {
       final prefs = await SharedPreferences.getInstance();
       int userID = prefs.getInt('userID') ?? 0;

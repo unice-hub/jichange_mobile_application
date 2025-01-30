@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'customer_details.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -36,7 +37,7 @@ class _CustomerSectionState extends State<CustomerSection> {
 
   // Method to fetch customer data from the API
   Future<void> _fetchCustomerData() async {
-    const url = 'http://192.168.100.50:98/api/RepCustomer/GetcustDetReport';
+    const url = ApiEndpoints.customerData; // API endpoint for fetching customer data
     try {
       final prefs = await SharedPreferences.getInstance();
       int instituteID = prefs.getInt('instID') ?? 0;
@@ -91,7 +92,7 @@ class _CustomerSectionState extends State<CustomerSection> {
   }
 
   Future<void> _modifyCustomerAPI(Customer customer, String name, String email, String mobile) async {
-    const url = 'http://192.168.100.50:98/api/Customer/AddCustomer'; 
+    const url = ApiEndpoints.addCustomer; // endpoint for add customer
     final prefs = await SharedPreferences.getInstance();
     int instituteID = prefs.getInt('instID') ?? 0;
     int userID = prefs.getInt('userID') ?? 0;
@@ -131,7 +132,8 @@ class _CustomerSectionState extends State<CustomerSection> {
           } else {
             // Handle success
             _showQuickAlert(context, 'Success', 'Customer modified successfully!', true);
-            _fetchCustomerData(); // Refresh customer list
+             _fetchCustomerData(); // Refresh customer list
+            _loadSessionInfo();
           }
       } else {
         // Show error dialog
@@ -155,7 +157,7 @@ class _CustomerSectionState extends State<CustomerSection> {
 
 
   Future<void> _addCustomerAPI(String name, String email, String mobile) async {
-    const url = 'http://192.168.100.50:98/api/Customer/AddCustomer';
+    const url = ApiEndpoints.addCustomer; // API endpoint for adding a customer
     final prefs = await SharedPreferences.getInstance();
         int instituteID = prefs.getInt('instID') ?? 0;
         int userID= prefs.getInt('userID') ?? 0;
@@ -204,6 +206,7 @@ class _CustomerSectionState extends State<CustomerSection> {
             // Handle success
             _showQuickAlert(context, 'Success', 'Customer added successfully', true);
             _fetchCustomerData(); // Refresh customer list
+            _loadSessionInfo();
           }
 
         } else {
@@ -449,7 +452,7 @@ void _showConfirmationDialog(BuildContext context, String name, String email, St
 void _viewCustomer(Customer customer) async {
   // Fetch customer details from the API
   Future<Customer?> fetchCustomerDetails(int customerId) async {
-    const url = 'http://192.168.100.50:98/api/Customer/GetCustbyId';
+    const url = ApiEndpoints.getCustbyId; // API endpoint for fetching customer details
     
     // Retrieve instituteID from shared preferences
     final prefs = await SharedPreferences.getInstance();
@@ -651,6 +654,7 @@ void _showAddCustomerSheet(BuildContext context) {
                         if (isValid) {
                           Navigator.of(context).pop();
                           _showConfirmationDialog(context, name, email, mobile);
+                        
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -844,6 +848,7 @@ void _showModifyConfirmationDialog(BuildContext context, Customer customer, Stri
             onPressed: () {
               Navigator.of(context).pop(); // Close the dialog
               _modifyCustomerAPI(customer, name, email, mobile); // Call API to modify customer
+              _loadSessionInfo();
             },
             child: const Text('CONFIRM'),
           ),
@@ -905,7 +910,7 @@ void _showQuickAlert(BuildContext context, String title, String message, bool is
   }
 
   Future<void> _deleteCustomerAPI(int custSno) async {
-    const url = 'http://192.168.100.50:98/api/Customer/DeleteCust';
+    const url = ApiEndpoints.deleteCust; // API endpoint for deleting a customer
     final prefs = await SharedPreferences.getInstance();
     int userID = prefs.getInt('userID') ?? 0;
 

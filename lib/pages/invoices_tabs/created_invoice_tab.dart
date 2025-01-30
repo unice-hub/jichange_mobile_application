@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:learingdart/core/api/invoice_apis.dart';
 import 'package:learingdart/main.dart';
 import 'package:learingdart/pages/edit_invoice.dart';
@@ -431,8 +432,8 @@ class _InvoiceCardState extends State<_InvoiceCard> {
 
           _buildIconActionButton(Icons.cancel, 'Cancel', () {
             // Define the action to cancel
-            _findInvoice(widget.invoice.compid.toString(), widget.invoice.invMasSno.toString());
-            _showCancelPopup();
+            // _findInvoice(widget.invoice.compid.toString(), widget.invoice.invMasSno.toString());
+            // _showCancelPopup();
           }, Colors.red),
 
           _buildIconActionButton(Icons.visibility, 'View Details', () {
@@ -441,7 +442,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
 
           _buildIconActionButton(Icons.download, 'Download', () {
             // Define the action to download PDF
-            _downloadInvoicePDF(widget.invoice.compid.toString(), widget.invoice.invMasSno.toString());
+            // _downloadInvoicePDF(widget.invoice.compid.toString(), widget.invoice.invMasSno.toString());
           }, Colors.black),
           
         ],
@@ -596,7 +597,7 @@ Future<void> approvelInvoice() async {
     String token = prefs.getString('token') ?? ''; // Token from SharedPreferences
 
     // Define your API URL
-    const String url = 'http://192.168.100.50:98/api/Invoice/AddInvoice';
+    const String url = ApiEndpoints.addInvoice;
 
     // Prepare the body with necessary details
     Map<String, dynamic> requestBody = {
@@ -708,7 +709,7 @@ Future<void> cancelInvoice() async {
     String token = prefs.getString('token') ?? ''; // Token from SharedPreferences
 
     // Define your API URL
-    const String url = 'http://192.168.100.50:98/api/Invoice/AddCancel';
+    const String url =ApiEndpoints.addCancel;
 
     // Prepare the body with necessary details
     Map<String, dynamic> requestBody = {
@@ -847,7 +848,7 @@ Future<void> cancelInvoice() async {
 
 Future<void> _downloadInvoicePDF(String compid, String inv) async {
   // Base URL of the API
-  const String baseUrl = 'http://192.168.100.50:98/api/Invoice/FindInvoice';
+  const String baseUrl = ApiEndpoints.getFindInvoice;
 
   // Constructing the full URL with query parameters
   String url = '$baseUrl?compid=$compid&inv=$inv';

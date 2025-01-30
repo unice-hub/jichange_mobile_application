@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CompletedPaymentsPage extends StatefulWidget {
@@ -48,7 +49,7 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
 
   Future<void> fetchInvoices() async {
     setState(() => isLoading = true);
-    const url = 'http://192.168.100.50:98/api/Invoice/GetPaymentReport';
+    const url = ApiEndpoints.getPaymentReport; //endpoint for the get payment report
     final prefs = await SharedPreferences.getInstance();
     int instituteID = prefs.getInt('instID') ?? 0;
     int userID = prefs.getInt('userID') ?? 0;
@@ -92,7 +93,7 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
 
   Future<void> getcustDetReport() async {
     setState(() => isLoading = true);
-    const url = 'http://192.168.100.50:98/api/InvoiceRep/GetCustDetails';
+    const url = ApiEndpoints.getCustDetails; //endpoint for the customer details
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -130,7 +131,7 @@ class _CompletedPaymentsPageState extends State<CompletedPaymentsPage> {
 
   Future<void> getPaymentReport() async {
     setState(() => isLoading = true);
-    const url = 'http://192.168.100.50:98/api/RepCompInvoice/GetInvReport';
+    const url = ApiEndpoints.getInvReport; //endpoint for the get payment report
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -383,9 +384,18 @@ Widget _buildExportButtons() {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: invoices.length,
+      itemCount: invoices.length +2 ,
       itemBuilder: (context, index) {
-        return _InvoiceCard(invoice: invoices[index], custDet: customers[index], invoiceNo: invoiceNumbers[index],);
+        print('Index:$index,Invoices length:${invoices.length}, Customers length: ${customers.length}'); 
+
+        if (index >= 0 && index < invoices.length && index < customers.length && index < invoiceNumbers.length) {
+        return _InvoiceCard(
+          invoice: invoices[index], 
+          custDet: customers[index],
+           invoiceNo: invoiceNumbers[index],);
+        }else{
+          return const SizedBox.shrink();
+        }
       },
     );
   }

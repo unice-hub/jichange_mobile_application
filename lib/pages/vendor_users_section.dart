@@ -1,5 +1,8 @@
+// ignore_for_file: dead_code
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:learingdart/core/api/endpoint_api.dart';
 // import 'package:learingdart/core/utils/api_config.dart';
 import 'dart:convert';
 import 'dart:developer';
@@ -41,7 +44,7 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
 
   // Method to fetch Vendor Users data from the API
   Future<void> _fetchVendorUsersData() async {
-    const url = 'http://192.168.100.50:98/api/CompanyUsers/GetCompanyUserss';
+    const url = ApiEndpoints.vendorUsers;
     try {
       final prefs = await SharedPreferences.getInstance();
       int instituteID = prefs.getInt('instID') ?? 0;
@@ -108,7 +111,7 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
 
   // Method to fetch Vendor Users data from the API
   Future<void> _fetchVendorUsersRoleData() async {
-    const url = 'http://192.168.100.50:98/api/Role/GetRolesAct';
+    const url = ApiEndpoints.getRoleData; // API endpoint to fetch vendor users role data
     try {
       final prefs = await SharedPreferences.getInstance();
       int instituteID = prefs.getInt('instID') ?? 0;
@@ -159,7 +162,7 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
 
   // Method to edit vendor data from the API
   Future<void> _modifyVendorAPI(VendorUser user, String fullName, String name, String email, String mobile, String sno, String usertype) async {
-    const url = 'http://192.168.100.50:98/api/CompanyUsers/AddCompanyUser'; 
+    const url = ApiEndpoints.getVendorApi; // API endpoint to modify vendor user
     final prefs = await SharedPreferences.getInstance();
     int instituteID = prefs.getInt('instID') ?? 0;
     int userID = prefs.getInt('userID') ?? 0;
@@ -212,7 +215,7 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
   }
 
   Future<void> _addCompanyUser(String role, String name, String fullName, String email, String mobile, String sno, String usertype) async {
-    const url = 'http://192.168.100.50:98/api/CompanyUsers/AddCompanyUser';
+    const url = ApiEndpoints.getVendorApi; // API endpoint to add vendor user
     final prefs = await SharedPreferences.getInstance();
         int instituteID = prefs.getInt('instID') ?? 0;
         int userID= prefs.getInt('userID') ?? 0;
@@ -228,6 +231,7 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
         "chname": usertype,
         "userid": userID
       });
+      
 
       try {
         final response = await http.post(
@@ -248,7 +252,7 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
                 ? responseBody['message'][0]
                 : 'An error occurred'; // Default message if empty
 
-            _showQuickAlert(context, 'Error', errorMessage, true);
+            _showQuickAlert(context, 'Error 1234', errorMessage, true);
           } else {
             // Handle success
             _showQuickAlert(context, 'Success', 'Vendor added successfully!', true);
@@ -495,7 +499,7 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
   }
 
   Future<void> _sendCredentialsByEmail(VendorUser user) async {
-    const url = 'http://192.168.100.50:98/api/CompanyUsers/ResendCredentials';
+    const url = ApiEndpoints.resendCredentials; // API endpoint to resend credentials
     try {
       final response = await http.post(
         Uri.parse(url),
@@ -533,7 +537,7 @@ class _VendorUsersSectionState extends State<VendorUsersSection> {
   }
 
   Future<void> _sendCredentialsBySMS(VendorUser user) async {
-    const url = 'http://192.168.100.50:98/api/CompanyUsers/ResendCredentials';
+    const url = ApiEndpoints.resendCredentials; // API endpoint for resending credentials
     try {
       final response = await http.post(
         Uri.parse(url),
@@ -1048,10 +1052,13 @@ void _showAddVendorUserSheet(BuildContext context, ) {
 class VendorUser {
   final int id;
   final String username;
-  final String fullName;
-  final String email;
-  final String mobileNumber;
+  late String name;
+  late final String fullName;
+  late final String email;
+  late final String mobileNumber;
   final String userpos;
+  late String role;
+  late int sno;
   final String usertype;
 
   VendorUser({
