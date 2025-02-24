@@ -1,4 +1,5 @@
 class ApiEndpoints {
+    // static const String baseUrl = 'http://192.168.100.17:96/api';//define the static constant url
      static const String baseUrl = 'http://183.83.33.156:90/api';//define the static constant url
   //  static const String baseUrl = 'http://192.168.100.50:98/api';//define the static constant url
 
@@ -79,5 +80,7 @@ class ApiEndpoints {
   static const String getCustbyId = '$baseUrl/Customer/GetCustbyId'; //customer_section.dart
 
   static const String deleteCust = '$baseUrl/Customer/DeleteCust'; //customer_section.dart
+
+  static const String downloadInvoice = '$baseUrl/Invoice/downloadInvoice'; //customer_section.dart;
 
 }

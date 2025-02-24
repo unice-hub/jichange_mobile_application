@@ -4,9 +4,14 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:learingdart/pages/all_transactions.dart';
-// import 'package:pdf/widgets.dart' as pw;
-// import 'package:printing/printing.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+String formatDate(String dateStr) {
+  DateTime dateTime = DateTime.parse(dateStr);
+  return DateFormat('yyyy-MM-dd').format(dateTime);
+}
 
 class PaymentDetailsPage extends StatefulWidget {
   const PaymentDetailsPage({super.key});
@@ -298,7 +303,14 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
     return Row(
       children: [
         ElevatedButton.icon(
-          onPressed: () {}, // Define the action to download
+          onPressed: () async {
+             try {
+      await fetchInvoices(); // Fetch data from API
+      await downloadPaymentDetailsPDF(invoices); // Generate and share PDF
+    } catch (e) {
+      print("Error downloading invoice: $e");
+    }
+  },// Define the action to download
           icon: const Icon(Icons.download, color: Colors.white),
           label: const Text(''),
           style: ElevatedButton.styleFrom(
@@ -344,39 +356,41 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
 }
 
 
-// Future<void> downloadPaymentDetailsPDF(invoice) async {
-//   final pdf = pw.Document();
+Future<void> downloadPaymentDetailsPDF(List<dynamic> invoices) async {
+  final pdf = pw.Document();
 
-//   pdf.addPage(
-//     pw.Page(
-//       build: (pw.Context context) {
-//         return pw.Column(
-//           crossAxisAlignment: pw.CrossAxisAlignment.start,
-//           children: [
-//             pw.Text('Payment Date: ${formatDate(invoice.paymentDate)}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-//             pw.Text('Customer: ${invoice.customerName}'),
-//             pw.Text('Invoice N°: ${invoice.invoiceSno}'),
-//             pw.Text('Payment type: ${invoice.paymentType}'),
-//             pw.Text('Status: ${invoice.status}'),
-//             pw.Text('Total Amount: ${invoice.requestedAmount}'),
-//             pw.Text('Paid Amount: ${invoice.paidAmount}'),
-//             pw.Text('Balance: \$${invoice.balance}'),
-//             pw.Text('Control N°: \$${invoice.controlNumber}'),
-          
-//           ],
-//         );
-//       },
-//     ),
-//   );
+  const url = ApiEndpoints.downloadInvoice; // Endpoint for downloading invoice
 
-//   await Printing.sharePdf(bytes: await pdf.save(), filename: 'invoice_${invoice.invoiceSno}.pdf');
-// }
+  for (var invoice in invoices) {
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text('Payment Date: ${formatDate(invoice.paymentDate)}', 
+                style: pw.TextStyle(fontWeight: pw.FontWeight.bold)
+              ),
+              pw.Text('Customer: ${invoice.customerName}'),
+              pw.Text('Invoice N°: ${invoice.invoiceSno}'),
+              pw.Text('Payment type: ${invoice.paymentType}'),
+              pw.Text('Status: ${invoice['status']}'),
+              pw.Text('Total Amount: ${invoice['requestedAmount']}'),
+              pw.Text('Paid Amount: ${invoice['paidAmount']}'),
+              pw.Text('Balance: \$${invoice['balance']}'),
+              pw.Text('Control N°: ${invoice['controlNumber']}'),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
-//  String formatDate(String dateStr) {
-//   DateTime dateTime = DateTime.parse(dateStr);
-//   return DateFormat('EEE MMM dd yyyy').format(dateTime);
-//  }
-
+  await Printing.sharePdf(
+    bytes: await pdf.save(),
+    filename: 'invoices.pdf',
+  );
+}
 
 class _InvoiceCard extends StatelessWidget {
   
