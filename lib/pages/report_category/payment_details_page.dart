@@ -37,7 +37,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
   List<int> customerIds = [];
 
   List<String> vendors = ['Me&U Apparel'];
- 
+
   List<InvoiceData> invoices = [];
   List<CustDetData> customers = [];
   bool isLoading = false;
@@ -59,7 +59,8 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
 
   Future<void> fetchInvoices() async {
     setState(() => isLoading = true);
-    const url = ApiEndpoints.getInvoiceTransact; //endpoint for the invoice transactions
+    const url =
+        ApiEndpoints.getInvoiceTransact; //endpoint for the invoice transactions
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -113,7 +114,6 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         },
         body: jsonEncode({
           "companyIds": [instituteID],
-          
         }),
       );
 
@@ -123,7 +123,12 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
           customers = (data['response'] as List)
               .map((e) => CustDetData.fromJson(e))
               .toList();
-          var y = CustDetData(custSno: 0,custName: 'All',phone: '',postedDate: '',companySno: 0); 
+          var y = CustDetData(
+              custSno: 0,
+              custName: 'All',
+              phone: '',
+              postedDate: '',
+              companySno: 0);
           customers.insert(0, y);
         });
       } else {
@@ -137,7 +142,8 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
   }
 
   void showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   // Function to pick a date
@@ -164,9 +170,10 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
-          ? Theme.of(context).colorScheme.surface // Dark mode
-          : Theme.of(context).colorScheme.primary, // Light mode
-        title: const Text('Payment Details', style: TextStyle(color: Colors.white)),
+            ? Theme.of(context).colorScheme.surface // Dark mode
+            : Theme.of(context).colorScheme.primary, // Light mode
+        title: const Text('Payment Details',
+            style: TextStyle(color: Colors.white)),
         centerTitle: true,
         // backgroundColor: Theme.of(context).colorScheme.primary,
         elevation: 0,
@@ -185,12 +192,12 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
           children: [
             _buildFilters(),
             const SizedBox(height: 16),
-
             ElevatedButton(
               onPressed: fetchInvoices,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -201,10 +208,8 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
               ),
             ),
             const SizedBox(height: 16),
-
             _buildExportButtons(),
             const SizedBox(height: 16),
-
             isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _buildInvoiceList(),
@@ -213,7 +218,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
       ),
     );
   }
-  
+
   Widget _buildFilters() {
     return Column(
       children: [
@@ -234,7 +239,6 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
               ),
             ),
             const SizedBox(width: 16),
-
             Expanded(
               child: DropdownButtonFormField<String>(
                 value: selectedCustomer,
@@ -261,7 +265,6 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                 ),
               ),
             ),
-  
           ],
         ),
         const SizedBox(height: 16),
@@ -307,36 +310,38 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
       ],
     );
   }
+
   Widget _buildExportButtons() {
     return Row(
       children: [
         ElevatedButton.icon(
           onPressed: () async {
-             try {
-      await fetchInvoices(); // Fetch data from API
-    await  createAndDownloadExcel(invoices);
-    } catch (e) {
-      print("Error downloading invoice: $e");
-    }
-  },// Define the action to download
+            try {
+              await fetchInvoices(); // Fetch data from API
+              await createAndDownloadExcel(invoices);
+            } catch (e) {
+              print("Error downloading invoice: $e");
+            }
+          }, // Define the action to download
           icon: const Icon(Icons.download, color: Colors.white),
           label: const Text(''),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              borderRadius: BorderRadius.circular(8),
             ),
           ),
+        ),
         const SizedBox(width: 16),
         ElevatedButton.icon(
           onPressed: () async {
             try {
-            
               await fetchInvoices(); // Fetch invoices
-              await downloadPaymentDetailsPDF(context, invoices); // Pass the fetched invoices to the PDF download function
+              await downloadPaymentDetailsPDF(context,
+                  invoices); // Pass the fetched invoices to the PDF download function
             } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(content: Text('Error: $e')));
             }
           },
           icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
@@ -358,12 +363,14 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
       physics: const NeverScrollableScrollPhysics(),
       itemCount: invoices.length,
       itemBuilder: (context, index) {
-        return _InvoiceCard(invoice: invoices[index], custDet: customers[index],);
+        return _InvoiceCard(
+          invoice: invoices[index],
+          custDet: customers[index],
+        );
       },
     );
   }
 }
-
 
 Future<void> downloadPaymentDetailsPDF(
     BuildContext context, List<InvoiceData> invoices) async {
@@ -394,94 +401,95 @@ Future<void> downloadPaymentDetailsPDF(
   }
 
   // Add a single page for all invoices
-pdf.addPage(
-  pw.Page(
-    build: (pw.Context context) {
-      return pw.Padding(
-        padding: pw.EdgeInsets.all(5),
-        child: pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            // Title
-            pw.Text(
-              'Payment Details',
-              style: pw.TextStyle(
-                fontSize: 20,
-                fontWeight: pw.FontWeight.bold,
-              ),
-            ),
-
-            pw.SizedBox(height: 20),
-
-            // Table with header and data rows
-            pw.Table(
-              border: pw.TableBorder.all(width: 1),
-              columnWidths: {
-                // Adjust column widths to fit the page
-                0: pw.FlexColumnWidth(1.5), // Payment Date
-                1: pw.FlexColumnWidth(2.5), // Customer
-                2: pw.FlexColumnWidth(1.5), // Invoice N°
-                3: pw.FlexColumnWidth(1.5), // Payment Type
-                4: pw.FlexColumnWidth(1.5), // Status
-                5: pw.FlexColumnWidth(1.5), // Total Amount
-                // 6: pw.FlexColumnWidth(1.5), // Paid Amount
-                7: pw.FlexColumnWidth(1.5), // Balance
-                8: pw.FlexColumnWidth(1.5), // Control N°
-              },
-              children: [
-                // Header Row
-                pw.TableRow(
-                  decoration: pw.BoxDecoration(color: PdfColors.grey300),
-                  children: [
-                    _buildTableCell('Payment Date', isHeader: true),
-                    _buildTableCell('Customer', isHeader: true),
-                    _buildTableCell('Invoice N°', isHeader: true),
-                    _buildTableCell('Payment Type', isHeader: true),
-                    _buildTableCell('Status', isHeader: true),
-                    _buildTableCell('Total Amount', isHeader: true),
-                    // _buildTableCell('Paid Amount', isHeader: true),
-                    _buildTableCell('Balance', isHeader: true),
-                    _buildTableCell('Control N°', isHeader: true),
-                  ],
-                ),
-
-                // Data Rows (One row per invoice)
-                for (var invoice in invoices)
-                  pw.TableRow(
-                    children: [
-                      _buildTableCell(formatDate(invoice.paymentDate)),
-                      _buildTableCell(invoice.customerName),
-                      _buildTableCell(invoice.invoiceSno),
-                      _buildTableCell(invoice.paymentType),
-                      _buildTableCell(invoice.status),
-                      _buildTableCell('\$${invoice.requestedAmount}'),
-                      // _buildTableCell('\$${invoice.paidAmount}'),
-                      _buildTableCell('\$${invoice.balance}'),
-                      _buildTableCell(invoice.controlNumber),
-                    ],
-                  ),
-              ],
-            ),
-
-            pw.Spacer(),
-
-            // Footer Message
-            pw.Align(
-              alignment: pw.Alignment.centerRight,
-              child: pw.Text(
-                'Thank you for your payment!',
+  pdf.addPage(
+    pw.Page(
+      build: (pw.Context context) {
+        return pw.Padding(
+          padding: pw.EdgeInsets.all(5),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              // Title
+              pw.Text(
+                'Payment Details',
                 style: pw.TextStyle(
-                  fontSize: 16,
+                  fontSize: 20,
                   fontWeight: pw.FontWeight.bold,
                 ),
               ),
-            ),
-          ],
-        ),
-      );
-    },
-  ),
-);
+
+              pw.SizedBox(height: 20),
+
+              // Table with header and data rows
+              pw.Table(
+                border: pw.TableBorder.all(width: 1),
+                columnWidths: {
+                  // Adjust column widths to fit the page
+                  0: pw.FlexColumnWidth(1.5), // Payment Date
+                  1: pw.FlexColumnWidth(2.5), // Customer
+                  2: pw.FlexColumnWidth(1.5), // Invoice N°
+                  3: pw.FlexColumnWidth(1.5), // Payment Type
+                  4: pw.FlexColumnWidth(1.5), // Status
+                  5: pw.FlexColumnWidth(1.5), // Total Amount
+                  // 6: pw.FlexColumnWidth(1.5), // Paid Amount
+                  7: pw.FlexColumnWidth(1.5), // Balance
+                  8: pw.FlexColumnWidth(1.5), // Control N°
+                  // 9: pw.FlexColumnWidth(1.5), // Control N°
+                },
+                children: [
+                  // Header Row
+                  pw.TableRow(
+                    decoration: pw.BoxDecoration(color: PdfColors.grey300),
+                    children: [
+                      _buildTableCell('Payment Date', isHeader: true),
+                      _buildTableCell('Customer', isHeader: true),
+                      _buildTableCell('Invoice N°', isHeader: true),
+                      _buildTableCell('Payment Type', isHeader: true),
+                      _buildTableCell('Status', isHeader: true),
+                      _buildTableCell('Total Amount', isHeader: true),
+                       _buildTableCell('Currency', isHeader: true),
+                      // _buildTableCell('Balance', isHeader: true),
+                      _buildTableCell('Control N°', isHeader: true),
+                    ],
+                  ),
+
+                  // Data Rows (One row per invoice)
+                  for (var invoice in invoices)
+                    pw.TableRow(
+                      children: [
+                        _buildTableCell(formatDate(invoice.paymentDate)),
+                        _buildTableCell(invoice.customerName),
+                        _buildTableCell(invoice.invoiceSno),
+                        _buildTableCell(invoice.paymentType),
+                        _buildTableCell(invoice.status),
+                        _buildTableCell('\$${invoice.requestedAmount}'),
+                         _buildTableCell('\$${invoice.currencyCode}'),
+                        // _buildTableCell('\$${invoice.balance}'),
+                        _buildTableCell(invoice.controlNumber),
+                      ],
+                    ),
+                ],
+              ),
+
+              pw.Spacer(),
+
+              // Footer Message
+              pw.Align(
+                alignment: pw.Alignment.centerRight,
+                child: pw.Text(
+                  'Thank you for your payment!',
+                  style: pw.TextStyle(
+                    fontSize: 16,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    ),
+  );
   // Debug: Save and print PDF bytes
   final pdfBytes = await pdf.save();
   print('PDF generated successfully with ${pdfBytes.length} bytes');
@@ -512,45 +520,40 @@ pw.Widget _buildTableCell(String text, {bool isHeader = false}) {
 
 Future<void> createAndDownloadExcel(List<dynamic> invoices) async {
   // Create an Excel document
-  var excel =  excelLib.Excel.createExcel();
+  var excel = excelLib.Excel.createExcel();
   var sheet = excel['Payment details']; // Name of the sheet
 
   // Add headers
   sheet.appendRow([
-excelLib.TextCellValue('SNo:'),
- excelLib.TextCellValue('Payment Date:'),
-     excelLib.TextCellValue('Customer'),
-     excelLib.TextCellValue('Invoice N°'),
-     excelLib.TextCellValue('Payment type'),
-      excelLib.TextCellValue('Status'),
-      excelLib.TextCellValue('Total Amount'),
-      excelLib.TextCellValue('Paid Amount'),
-      excelLib.TextCellValue('Balance'),
-      excelLib.TextCellValue('Control N°'),
-
-     
+    excelLib.TextCellValue('SNo:'),
+    excelLib.TextCellValue('Payment Date:'),
+    excelLib.TextCellValue('Customer'),
+    excelLib.TextCellValue('Invoice N°'),
+    excelLib.TextCellValue('Payment type'),
+    excelLib.TextCellValue('Status'),
+    excelLib.TextCellValue('Total Amount'),
+    excelLib.TextCellValue('Currency'),
+    // excelLib.TextCellValue('Paid Amount'),
+    // excelLib.TextCellValue('Balance'),
+    excelLib.TextCellValue('Control N°'),
   ]);
 
- for (var invoice in invoices) {
-  var index= invoices.indexOf(invoice);
-  // Add data rows
-  sheet.appendRow([
-     excelLib.IntCellValue(index+1),
+  for (var invoice in invoices) {
+    var index = invoices.indexOf(invoice);
+    // Add data rows
+    sheet.appendRow([
+      excelLib.IntCellValue(index + 1),
       excelLib.TextCellValue('${invoice.paymentDate}'),
       excelLib.TextCellValue('${invoice.customerName}'),
       excelLib.TextCellValue('${invoice.invoiceSno}'),
       excelLib.TextCellValue('${invoice.paymentType}'),
       excelLib.TextCellValue('${invoice.status}'),
       excelLib.TextCellValue('${invoice.requestedAmount}'),
-      excelLib.TextCellValue('${invoice.paidAmount}'),
-      excelLib.TextCellValue('${invoice.balance}'),
+      excelLib.TextCellValue('${invoice.currencyCode}'),
+      // excelLib.TextCellValue('${invoice.balance}'),
       excelLib.TextCellValue('${invoice.controlNumber}'),
-
-     
-  ]);}
-
-
-
+    ]);
+  }
 
   // Save the file in a temporary directory
   Directory tempDir = await getTemporaryDirectory();
@@ -558,21 +561,20 @@ excelLib.TextCellValue('SNo:'),
   File file = File(filePath);
 
   // Write data to file
-  await file.writeAsBytes( excel.encode() as Uint8List);
+  await file.writeAsBytes(excel.encode() as Uint8List);
 
   // Open the file so the user can view it
   await OpenFile.open(filePath);
 }
 
 class _InvoiceCard extends StatelessWidget {
-  
-   final formatter = NumberFormat('#,###');
+  final formatter = NumberFormat('#,###');
   final InvoiceData invoice;
   final CustDetData custDet;
 
   _InvoiceCard({required this.invoice, required this.custDet});
 
- @override
+  @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
@@ -588,15 +590,19 @@ class _InvoiceCard extends StatelessWidget {
             const SizedBox(height: 5),
             _buildInvoiceRow('Invoice N°:', invoice.invoiceSno),
             const SizedBox(height: 5),
-            _buildInvoiceRow('Payment type:', _buildPaymentTypeContainer(invoice)),
+            _buildInvoiceRow(
+                'Payment type:', _buildPaymentTypeContainer(invoice)),
             const SizedBox(height: 5),
             _buildInvoiceRow('Status:', invoice.status),
             const SizedBox(height: 5),
-            _buildInvoiceRow('Total Amount:', "${formatter.format(invoice.requestedAmount)} ${invoice.currencyCode}"),
+            _buildInvoiceRow('Total Amount:',
+                "${formatter.format(invoice.requestedAmount)} ${invoice.currencyCode}"),
             const SizedBox(height: 5),
-            _buildInvoiceRow('Paid Amount:', "${formatter.format(invoice.paidAmount)} ${invoice.currencyCode}"),
+            _buildInvoiceRow('Paid Amount:',
+                "${formatter.format(invoice.paidAmount)} ${invoice.currencyCode}"),
             const SizedBox(height: 5),
-            _buildInvoiceRow('Balance:', "${formatter.format(invoice.balance)} ${invoice.currencyCode}"),
+            _buildInvoiceRow('Balance:',
+                "${formatter.format(invoice.balance)} ${invoice.currencyCode}"),
             const SizedBox(height: 5),
             _buildInvoiceRow('Control N°:', invoice.controlNumber),
             const SizedBox(height: 5),
@@ -606,25 +612,28 @@ class _InvoiceCard extends StatelessWidget {
             const SizedBox(height: 5),
             _buildInvoiceRow('Receipt N°:', invoice.receiptNo),
             const SizedBox(height: 5),
-            _buildInvoiceRow('Action(s):', _buildIconActionButton(Icons.visibility, '', () {
-            // Define the action to view details
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AllTransactionsPage(
-                    invoiceSno: invoice.invoiceSno,
-                                
+            _buildInvoiceRow(
+              'Action(s):',
+              _buildIconActionButton(Icons.visibility, '', () {
+                // Define the action to view details
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AllTransactionsPage(
+                      invoiceSno: invoice.invoiceSno,
                     ),
                   ),
                 );
-            }, const Color.fromARGB(255, 128, 116, 12)),),
+              }, const Color.fromARGB(255, 128, 116, 12)),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPressed, Color iconColor) {
+  Widget _buildIconActionButton(
+      IconData icon, String label, VoidCallback onPressed, Color iconColor) {
     return Column(
       children: [
         Container(
@@ -632,10 +641,10 @@ class _InvoiceCard extends StatelessWidget {
             shape: BoxShape.rectangle,
             border: Border.all(color: iconColor, width: 2),
             borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(16),        // Flat edge
-              topRight: Radius.circular(16),       // Curved edge
-              bottomLeft: Radius.circular(16),     // Curved edge
-              bottomRight: Radius.circular(16),     // Flat edge
+              topLeft: Radius.circular(16), // Flat edge
+              topRight: Radius.circular(16), // Curved edge
+              bottomLeft: Radius.circular(16), // Curved edge
+              bottomRight: Radius.circular(16), // Flat edge
             ), // Apply caved corner effect
           ),
           child: IconButton(
@@ -649,12 +658,12 @@ class _InvoiceCard extends StatelessWidget {
   }
 
   String formatDate(String dateStr) {
-  DateTime dateTime = DateTime.parse(dateStr);
-  return DateFormat('EEE MMM dd yyyy').format(dateTime);
-}
+    DateTime dateTime = DateTime.parse(dateStr);
+    return DateFormat('EEE MMM dd yyyy').format(dateTime);
+  }
 
   Widget _buildInvoiceRow(String label, dynamic value) {
-    return Row( 
+    return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label),
@@ -663,22 +672,25 @@ class _InvoiceCard extends StatelessWidget {
     );
   }
 
-   Widget _buildPaymentTypeContainer(InvoiceData invoice) {
-       return Container(
+  Widget _buildPaymentTypeContainer(InvoiceData invoice) {
+    return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: invoice.paymentType == 'Fixed' ? const Color.fromARGB(47, 240, 154, 255) : const Color.fromARGB(61, 105, 240, 175),
+        color: invoice.paymentType == 'Fixed'
+            ? const Color.fromARGB(47, 240, 154, 255)
+            : const Color.fromARGB(61, 105, 240, 175),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         invoice.paymentType,
-        style: TextStyle(color: invoice.paymentType == 'Fixed' ? const Color.fromARGB(255, 112, 45, 199) : const Color.fromARGB(255, 16, 116, 61)),
+        style: TextStyle(
+            color: invoice.paymentType == 'Fixed'
+                ? const Color.fromARGB(255, 112, 45, 199)
+                : const Color.fromARGB(255, 16, 116, 61)),
       ),
     );
   }
 }
-
-
 
 class InvoiceData {
   final int sno;
@@ -724,7 +736,6 @@ class InvoiceData {
     required this.balance,
     required this.receiptNo,
   });
-  
 
   factory InvoiceData.fromJson(Map<String, dynamic> json) {
     return InvoiceData(
@@ -752,7 +763,6 @@ class InvoiceData {
   }
 }
 
-
 class CustDetData {
   final int custSno;
   final int companySno;
@@ -778,4 +788,3 @@ class CustDetData {
     );
   }
 }
-

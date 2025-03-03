@@ -440,10 +440,10 @@ class _InvoiceCardState extends State<_InvoiceCard> {
             // Define the action to view details
           }, const Color.fromARGB(255, 128, 116, 12)),
 
-          _buildIconActionButton(Icons.download, 'Download', () {
-            // Define the action to download PDF
-            // _downloadInvoicePDF(widget.invoice.compid.toString(), widget.invoice.invMasSno.toString());
-          }, Colors.black),
+          // _buildIconActionButton(Icons.download, 'Download', () {
+          //   // Define the action to download PDF
+          //   // _downloadInvoicePDF(widget.invoice.compid.toString(), widget.invoice.invMasSno.toString());
+          // }, Colors.black),
           
         ],
       ),

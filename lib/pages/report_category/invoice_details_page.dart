@@ -1,11 +1,25 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, unnecessary_string_interpolations, library_prefixes, deprecated_member_use, no_leading_underscores_for_local_identifiers
+
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:learingdart/core/api/endpoint_api.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:excel/excel.dart' as excelLib;
+import 'package:pdf/widgets.dart'as pw;
+
+String formatDate(String dateStr) {
+  DateTime dateTime = DateTime.parse(dateStr);
+  return DateFormat('EEE MMM dd yyyy').format(dateTime);
+}
 
 class InvoiceDetailsPage extends StatefulWidget {
   const InvoiceDetailsPage({super.key});
@@ -144,6 +158,11 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
       });
     }
   }
+
+  // Future<pw.Font> _loadFont() async {
+  //   final fontData = await rootBundle.load('assets/fonts/Roboto-Regular.ttf');
+  //   return pw.Font.ttf(fontData);
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -293,7 +312,14 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
     return Row(
       children: [
         ElevatedButton.icon(
-          onPressed: () {},
+          onPressed: () async {
+            try {
+              await fetchInvoices();
+              await createAndDownloadExcel(invoices);
+            } catch (e) {
+              print('Error downloading data: $e');
+            }
+          },
           icon: const Icon(Icons.download, color: Colors.white),
           label: const Text(''),
           style: ElevatedButton.styleFrom(
@@ -305,7 +331,15 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
           ),
         const SizedBox(width: 16),
         ElevatedButton.icon(
-          onPressed: () {},
+          onPressed: () async {
+            try{
+              await fetchInvoices();
+              await downloadInvoiceDetailsPDF(context, invoices);
+            } catch (e) {
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(content: Text('Error: $e')));
+            }
+          },
           icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
           label: const Text(''),
           style: ElevatedButton.styleFrom(
@@ -336,6 +370,211 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
       },
     );
   }
+}
+
+Future <void> downloadInvoiceDetailsPDF(BuildContext context, List<InvoiceData> invoices) async {
+  final pdf = pw.Document();
+  final formatter = NumberFormat('#,###');
+
+  pw.Widget _buildTableCell(String text, {bool isHeader = false}) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.all(8.0),
+      child: pw.Text(
+        text,
+        style: pw.TextStyle(
+          fontWeight: isHeader ? pw.FontWeight.bold : pw.FontWeight.normal,
+        ),
+      ),
+    );
+  }
+
+  if (invoices.isEmpty) {
+    showDialog(context: context,
+     builder: (context) => AlertDialog(
+      title: const Text('No data found'),
+      content: const Text('No data to export to PDF'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('OK'),
+        ),
+      ],
+     ),
+    );
+    return;
+  }
+  pdf.addPage(
+    pw.Page(
+      build: (pw.Context context) {
+        return pw.Padding(
+          padding: pw.EdgeInsets.all(5),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              // Title
+              pw.Text(
+                'Payment Details',
+                style: pw.TextStyle(
+                  fontSize: 20,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+
+              pw.SizedBox(height: 20),
+
+              // Table with header and data rows
+              pw.Table(
+                border: pw.TableBorder.all(width: 1),
+                columnWidths: {
+                  // Adjust column widths to fit the page
+                  0: pw.FlexColumnWidth(1.5), // Payment Date
+                  1: pw.FlexColumnWidth(2.5), // Customer
+                  2: pw.FlexColumnWidth(1.5), // Invoice N°
+                  3: pw.FlexColumnWidth(1.5), // Payment Type
+                  4: pw.FlexColumnWidth(1.5), // Status
+                  5: pw.FlexColumnWidth(1.5), // Total Amount
+                   6: pw.FlexColumnWidth(1.5), // Paid Amount
+                  7: pw.FlexColumnWidth(1.5), // Balance
+                  8: pw.FlexColumnWidth(1.5), // Control N°
+                  9: pw.FlexColumnWidth(1.5), // Delivery Status
+                  10: pw.FlexColumnWidth(1.5), // Status
+                  11: pw.FlexColumnWidth(1.5), // expiry date
+                  12: pw.FlexColumnWidth(1.5), // Audit By
+                  13: pw.FlexColumnWidth(1.5), // Invoice Date
+                },
+                children: [
+                  // Header Row
+                  pw.TableRow(
+                    decoration: pw.BoxDecoration(color: PdfColors.grey300),
+                    children: [
+                      _buildTableCell('Posted Date', isHeader: true),
+                      _buildTableCell('Customer Name', isHeader: true),
+                      _buildTableCell('Invoice N°', isHeader: true),
+                      _buildTableCell('Control N°', isHeader: true),
+                      _buildTableCell('Payment Type', isHeader: true),
+                      _buildTableCell('Delivery Status', isHeader: true),
+                      _buildTableCell('Status', isHeader: true),
+                      _buildTableCell('Total ', isHeader: true),
+                      _buildTableCell('Currency', isHeader: true),
+                       _buildTableCell('Audit By', isHeader: true),
+                      _buildTableCell('Invoice Date', isHeader: true),
+                      _buildTableCell('Company Name', isHeader: true),
+                      _buildTableCell('Due Date', isHeader: true),
+                      _buildTableCell('Invoice Expired Date', isHeader: true),
+                    ],
+                  ),
+
+                  // Data Rows (One row per invoice)
+                  for (var invoice in invoices)
+                    pw.TableRow(
+                      children: [
+                        _buildTableCell(formatDate(invoice.pdate)),
+                        _buildTableCell(invoice.customerName),
+                        _buildTableCell(invoice.invoiceNumber),
+                        _buildTableCell(invoice.controlNumber),
+                        _buildTableCell(invoice.paymentType),
+                        _buildTableCell(invoice.deliveryStatus),
+                        _buildTableCell(invoice.status),
+                        _buildTableCell('\$${invoice.total}'),
+                        _buildTableCell(invoice.currencyCode),
+                         _buildTableCell(invoice.auditBy),
+                        _buildTableCell(invoice.invoiceDate),
+                        _buildTableCell(invoice.companyName),
+                        _buildTableCell(invoice.dueDate),
+                        _buildTableCell(invoice.invoiceExpiredDate),
+                      ],
+                    ),
+                ],
+              ),
+
+              pw.Spacer(),
+
+              // Footer Message
+              pw.Align(
+                alignment: pw.Alignment.centerRight,
+                child: pw.Text(
+                  'Thank you for your payment!',
+                  style: pw.TextStyle(
+                    fontSize: 16,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    ),
+  );
+      
+
+  final output = await getTemporaryDirectory();
+  final file = File('${output.path}/invoice_details.pdf');
+  await file.writeAsBytes(await pdf.save());
+
+  await OpenFile.open(file.path);
+}
+
+Future<void> createAndDownloadExcel(List<InvoiceData> invoices) async {
+  // Create a new Excel document
+  final excel = excelLib.Excel.createExcel();
+  final sheet = excel['Invoice Details'];
+
+  // Add headers
+  sheet.appendRow([
+    excelLib.TextCellValue('S/N'),
+    excelLib.TextCellValue('Posted Date'),
+    excelLib.TextCellValue('Customer Name'),
+    excelLib.TextCellValue('Invoice Number'),
+    excelLib.TextCellValue('Control Number'),
+    excelLib.TextCellValue('Payment Type'),
+    excelLib.TextCellValue('Delivery Status'),
+    excelLib.TextCellValue('Status'),
+    excelLib.TextCellValue('Total'),
+    excelLib.TextCellValue('Currency Code'),
+    excelLib.TextCellValue('Audit By'),
+    excelLib.TextCellValue('Invoice Date'),
+    excelLib.TextCellValue('Company Name'),
+    excelLib.TextCellValue('Due Date'),
+    excelLib.TextCellValue('Invoice Expired Date'),
+    
+    
+  ]);
+
+  // Add data
+  for (final invoice in invoices) {
+    var index = invoices.indexOf(invoice);
+
+    sheet.appendRow([
+      excelLib.IntCellValue(index + 1),
+      excelLib.TextCellValue('${invoice.pdate}'),
+      excelLib.TextCellValue('${invoice.customerName}'),
+      excelLib.TextCellValue('${invoice.invoiceNumber}'),
+      excelLib.TextCellValue('${invoice.controlNumber}'),
+      excelLib.TextCellValue('${invoice.paymentType}'),
+      excelLib.TextCellValue('${invoice.deliveryStatus}'),
+      excelLib.TextCellValue('${invoice.status}'),
+      excelLib.TextCellValue ('${invoice.total}'),
+      excelLib.TextCellValue('${invoice.currencyCode}'),
+      excelLib.TextCellValue('${invoice.auditBy}'),
+      excelLib.TextCellValue('${invoice.invoiceDate}'),
+      excelLib.TextCellValue('${invoice.companyName}'),
+      excelLib.TextCellValue('${invoice.dueDate}'),
+      excelLib.TextCellValue('${invoice.invoiceExpiredDate}'),
+      
+    ]);
+  }
+
+  // Save the file in a temporary directory
+  Directory tempDir = await getTemporaryDirectory();
+  String filePath = '${tempDir.path}/InvoiceDetails.xlsx';
+  File file = File(filePath);
+
+  // Write data to file
+  await file.writeAsBytes(excel.encode() as Uint8List);
+
+  // Open the file so the user can view it
+  await OpenFile.open(filePath);
 }
 
 class _InvoiceCard extends StatelessWidget {

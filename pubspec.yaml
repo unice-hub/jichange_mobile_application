@@ -52,6 +52,7 @@ dependencies:
   excel: ^4.0.6
   printing: ^5.13.4
   open_file: ^3.5.10
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
