@@ -201,7 +201,7 @@ class _InvoiceCard extends StatelessWidget {
             const SizedBox(height: 5),
             _buildInvoiceRow(
               '',
-              _buildIconActionButton(Icons.visibility, '', () {}, const Color.fromARGB(255, 128, 116, 12)),
+              _buildIconActionButton(Icons.download, '', () {}, const Color.fromARGB(255, 128, 116, 12)),
             ),
           ],
         ),

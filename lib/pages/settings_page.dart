@@ -456,7 +456,7 @@ void _showConfirmDialog(BuildContext context, String title, String message) {
                       Text('Username: ${personalInfo?['Username'] ?? 'N/A'}'),
                       Text('Email: ${personalInfo?['Email'] ?? 'N/A'}'),
                       Text('Phone: ${personalInfo?['Mobile'] ?? 'N/A'}'),
-                      Text('Role: ${personalInfo?['Userpos'] ?? 'N/A'}'),
+                      // Text('Role: ${personalInfo?['Userpos'] ?? 'N/A'}'),
                     ],
                   ),
                 ),
