@@ -457,7 +457,7 @@ backgroundColor: Theme.of(context).colorScheme.surface,
   final InvoiceData invoice;
   // final formatter = NumberFormat('#,###');
 
-  _InvoiceCard({super.key, required this.invoice});
+  _InvoiceCard({required this.invoice});
   
 
     @override

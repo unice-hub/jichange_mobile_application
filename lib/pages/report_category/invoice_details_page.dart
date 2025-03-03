@@ -1,11 +1,26 @@
 // ignore_for_file: avoid_print
 
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:excel/excel.dart' as excelLib;
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:learingdart/core/api/endpoint_api.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:open_file/open_file.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+
+
+String formatDate(String dateStr) {
+  DateTime dateTime = DateTime.parse(dateStr);
+  return DateFormat('yyyy-MM-dd').format(dateTime);
+}
 
 class InvoiceDetailsPage extends StatefulWidget {
   const InvoiceDetailsPage({super.key});
@@ -293,7 +308,14 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
     return Row(
       children: [
         ElevatedButton.icon(
-          onPressed: () {},
+          onPressed: () async {
+    //          try {
+    //   await fetchInvoices(); // Fetch data from API
+    // await  createAndDownloadExcel(invoices);
+    // } catch (e) {
+    //   print("Error downloading invoice: $e");
+    // }
+         },
           icon: const Icon(Icons.download, color: Colors.white),
           label: const Text(''),
           style: ElevatedButton.styleFrom(
@@ -305,7 +327,15 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
           ),
         const SizedBox(width: 16),
         ElevatedButton.icon(
-          onPressed: () {},
+          onPressed: () async{
+            //  try {
+            
+            //   await fetchInvoices(); // Fetch invoices
+            //   await downloadInvoiceDetailsPDF(context, invoices); // Pass the fetched invoices to the PDF download function
+            // } catch (e) {
+            //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+            // }
+          },
           icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
           label: const Text(''),
           style: ElevatedButton.styleFrom(
@@ -338,12 +368,215 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
   }
 }
 
+Future<void> downloadInvoiceDetailsPDF(
+    BuildContext context, List<InvoiceData> invoices) async {
+  final pdf = pw.Document();
+
+  // Debug: Print invoice data
+  print('Invoices: ${invoices.length}');
+  for (var invoice in invoices) {
+    print('Invoice: ${invoice.invoiceNumber}, Customer: ${invoice.customerName}');
+  }
+
+  // Check if invoices list is empty
+  if (invoices.isEmpty) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: const Text('No invoices found.'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+    return;
+  }
+
+  // Add a single page for all invoices
+pdf.addPage(
+  pw.Page(
+    build: (pw.Context context) {
+      return pw.Padding(
+        padding: pw.EdgeInsets.all(5),
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            // Title
+            pw.Text(
+              'Invoice Details',
+              style: pw.TextStyle(
+                fontSize: 20,
+                fontWeight: pw.FontWeight.bold,
+              ),
+            ),
+
+            pw.SizedBox(height: 20),
+
+            // Table with header and data rows
+            pw.Table(
+              border: pw.TableBorder.all(width: 1),
+              columnWidths: {
+                // Adjust column widths to fit the page
+                0: pw.FlexColumnWidth(1.5), // Payment Date
+                1: pw.FlexColumnWidth(2.5), // Customer
+                2: pw.FlexColumnWidth(1.5), // Invoice N°
+                3: pw.FlexColumnWidth(1.5), // Payment Type
+                4: pw.FlexColumnWidth(1.5), // Status
+                5: pw.FlexColumnWidth(1.5), // Total Amount
+                // 6: pw.FlexColumnWidth(1.5), // Paid Amount
+                7: pw.FlexColumnWidth(1.5), // Balance
+                8: pw.FlexColumnWidth(1.5), // Control N°
+              },
+              children: [
+                // Header Row
+                pw.TableRow(
+                  decoration: pw.BoxDecoration(color: PdfColors.grey300),
+                  children: [
+                    _buildTableCell('Date Posted', isHeader: true),
+                    _buildTableCell('Customer Name', isHeader: true),
+                    _buildTableCell('Invoice N°', isHeader: true),
+                    _buildTableCell('Control N°', isHeader: true),
+                    _buildTableCell('Payment Type', isHeader: true),
+                    _buildTableCell('Status', isHeader: true),
+                    _buildTableCell('Total Amount', isHeader: true),
+                    // _buildTableCell('Paid Amount', isHeader: true),
+                    _buildTableCell('Invoice Date', isHeader: true),
+                    _buildTableCell('Due Date', isHeader: true),
+                    _buildTableCell('Expiry Date', isHeader: true),
+                  ],
+                ),
+
+                // Data Rows (One row per invoice)
+                for (var invoice in invoices)
+                  pw.TableRow(
+                    children: [
+                        _buildTableCell(formatDate(invoice.pdate)),
+                      _buildTableCell(invoice.customerName),
+                      _buildTableCell(invoice.invoiceNumber),
+                      _buildTableCell(invoice.controlNumber),
+                      _buildTableCell(invoice.paymentType),
+                      _buildTableCell(invoice.status),
+                      _buildTableCell('\$${invoice.total}'),
+                      // _buildTableCell('\$${invoice.paidAmount}'),
+                      _buildTableCell(invoice.invoiceDate),
+                      _buildTableCell(invoice.dueDate),
+                      _buildTableCell(invoice.invoiceExpiredDate),
+                    ],
+                  ),
+              ],
+            ),
+
+            pw.Spacer(),
+
+            // Footer Message
+            pw.Align(
+              alignment: pw.Alignment.centerRight,
+              child: pw.Text(
+                'Thank you for your payment!',
+                style: pw.TextStyle(
+                  fontSize: 16,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  ),
+);
+  // Debug: Save and print PDF bytes
+  final pdfBytes = await pdf.save();
+  print('PDF generated successfully with ${pdfBytes.length} bytes');
+
+  // Share the PDF
+  await Printing.sharePdf(
+    bytes: pdfBytes,
+    filename: 'invoices.pdf',
+  );
+}
+
+// Function to build table cells with optional header styling
+pw.Widget _buildTableCell(String text, {bool isHeader = false}) {
+  return pw.Padding(
+    padding: pw.EdgeInsets.symmetric(
+      vertical: 5,
+      horizontal: 3,
+    ),
+    child: pw.Text(
+      text,
+      style: pw.TextStyle(
+        fontWeight: isHeader ? pw.FontWeight.bold : pw.FontWeight.normal,
+        fontSize: isHeader ? 14 : 10,
+      ),
+    ),
+  );
+}
+
+Future<void> createAndDownloadExcel(List<dynamic> invoices) async {
+  // Create an Excel document
+  var excel =  excelLib.Excel.createExcel();
+  var sheet = excel['Sheet1']; // Name of the sheet
+
+  // Add headers
+  sheet.appendRow([
+excelLib.TextCellValue('SNo:'),
+ excelLib.TextCellValue('Payment Date:'),
+     excelLib.TextCellValue('Customer'),
+     excelLib.TextCellValue('Invoice N°'),
+     excelLib.TextCellValue('Payment type'),
+      excelLib.TextCellValue('Status'),
+      excelLib.TextCellValue('Total Amount'),
+      excelLib.TextCellValue('Paid Amount'),
+      excelLib.TextCellValue('Balance'),
+      excelLib.TextCellValue('Control N°'),
+
+     
+  ]);
+
+ for (var invoice in invoices) {
+  var index= invoices.indexOf(invoice);
+  // Add data rows
+  sheet.appendRow([
+     excelLib.IntCellValue(index+1),
+      excelLib.TextCellValue('${invoice.paymentDate}'),
+      excelLib.TextCellValue('${invoice.customerName}'),
+      excelLib.TextCellValue('${invoice.invoiceSno}'),
+      excelLib.TextCellValue('${invoice.paymentType}'),
+      excelLib.TextCellValue('${invoice.status}'),
+      excelLib.TextCellValue('${invoice.TotalAmount}'),
+      excelLib.TextCellValue('${invoice.paidAmount}'),
+      excelLib.TextCellValue('${invoice.balance}'),
+      excelLib.TextCellValue('${invoice.controlNumber}'),
+
+     
+  ]);}
+
+
+
+
+  // Save the file in a temporary directory
+  Directory tempDir = await getTemporaryDirectory();
+  String filePath = '${tempDir.path}/PaymentDetails.xlsx';
+  File file = File(filePath);
+
+  // Write data to file
+  await file.writeAsBytes( excel.encode() as Uint8List);
+
+  // Open the file so the user can view it
+  await OpenFile.open(filePath);
+}
+
 class _InvoiceCard extends StatelessWidget {
   final formatter = NumberFormat('#,###');
   final InvoiceData invoice;
   final CustDetData custDet;
 
-  _InvoiceCard({super.key, required this.invoice, required this.custDet});
+  _InvoiceCard({required this.invoice, required this.custDet});
 
  @override
   Widget build(BuildContext context) {
@@ -432,6 +665,7 @@ class InvoiceData {
   final String currencyCode;
   final double total;
   final String controlNumber;
+  final double balance;
   final String? goodsStatus;
   final String? remarks;
   final String? mobile;
@@ -454,6 +688,7 @@ class InvoiceData {
     required this.currencyCode,
     required this.total,
     required this.controlNumber,
+    required this.balance,
     this.goodsStatus,
     this.remarks,
     this.mobile,
@@ -476,7 +711,7 @@ class InvoiceData {
       invoiceExpiredDate: json['Invoice_Expired_Date']?.split('T')[0] ?? '',
       status: json['Status'] ?? '',
       currencyCode: json['Currency_Code'] ?? '',
-      total: (json['Total'] ?? 0).toDouble(),
+      balance: (json['Balance'] ?? 0).toDouble(),
       controlNumber: json['Control_No'] ?? '',
       goodsStatus: json['goods_status'],
       remarks: json['Remarks'],
@@ -485,9 +720,11 @@ class InvoiceData {
       pdate:json['p_date']?.split('T')[0] ?? '',
       deliveryStatus: json['delivery_status']?? 'Unsent',
       auditBy: json['AuditBy']?? '',
-      chusMasNo: json['Chus_Mas_No'],
+      chusMasNo: json['Chus_Mas_No'], total: (json['Total'] ?? 0).toDouble(),
     );
   }
+  
+  String? get paymentdate => null;
 }
 
 class CustDetData {

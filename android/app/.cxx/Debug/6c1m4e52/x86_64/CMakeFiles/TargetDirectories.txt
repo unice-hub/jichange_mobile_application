@@ -1,0 +1,2 @@
+C:/Users/EJ/Downloads/jichange_mobile_application/android/app/.cxx/Debug/6c1m4e52/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/EJ/Downloads/jichange_mobile_application/android/app/.cxx/Debug/6c1m4e52/x86_64/CMakeFiles/rebuild_cache.dir

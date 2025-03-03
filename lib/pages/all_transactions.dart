@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:learingdart/core/api/endpoint_api.dart';
+import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pdf/widgets.dart' as pw;
+
+import 'package:pdf/pdf.dart';
 
 class AllTransactionsPage extends StatefulWidget {
   final String invoiceSno;
@@ -158,7 +162,7 @@ class _InvoiceCard extends StatelessWidget {
   final InvoiceData invoice;
   final formatter = NumberFormat('#,###');
 
-   _InvoiceCard({super.key, required this.invoice});
+   _InvoiceCard({required this.invoice});
 
   @override
   Widget build(BuildContext context) {
@@ -201,7 +205,9 @@ class _InvoiceCard extends StatelessWidget {
             const SizedBox(height: 5),
             _buildInvoiceRow(
               '',
-              _buildIconActionButton(Icons.visibility, '', () {}, const Color.fromARGB(255, 128, 116, 12)),
+              _buildIconActionButton(Icons.download, '', () async {
+              await  downloadPaymentDetailsPDF(context,invoice);
+              }, const Color.fromARGB(255, 128, 116, 12)),
             ),
           ],
         ),
@@ -246,6 +252,109 @@ class _InvoiceCard extends StatelessWidget {
       ],
     );
   }
+    Future<void> downloadPaymentDetailsPDF( BuildContext context, InvoiceData invoice) async {
+  final pdf = pw.Document();
+
+  const url = ApiEndpoints.downloadInvoice; // Endpoint for downloading invoice
+
+// if (invoices.isEmpty) {
+//    showDialog(
+//       context: context,
+//       builder: (context) => AlertDialog(
+//         title: const Text('Error'),
+//         content: Text('No invoices found.'),
+//         actions: <Widget>[
+//           TextButton(
+//             onPressed: () => Navigator.pop(context),
+//             child: const Text('OK'),
+//           ),
+//         ],
+//       ),
+//     );
+//     return;
+//   }
+
+  
+     pdf.addPage(
+  pw.Page(
+  build: (pw.Context context) {
+    return pw.Padding(
+      padding: pw.EdgeInsets.all(16),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text('Invoice Details',
+              style: pw.TextStyle(
+                  fontSize: 20, fontWeight: pw.FontWeight.bold)),
+
+          pw.SizedBox(height: 20),
+
+          pw.Table(
+            border: pw.TableBorder.all(width: 1),
+            columnWidths: {
+              0: pw.FlexColumnWidth(2),
+              1: pw.FlexColumnWidth(3),
+            },
+            children: [
+              _buildTableRow('Payment Date', invoice.paymentDate ?? 'N/A'),
+              _buildTableRow('Customer', invoice.customerName ?? 'N/A'),
+              _buildTableRow('Invoice N°', invoice.paymentTransNo),
+              _buildTableRow('Payment Type', invoice.paymentType ?? 'N/A'),
+              _buildTableRow('Status', invoice.status ?? 'N/A'),
+              _buildTableRow('Total Amount', '\$${invoice.requestedAmount ?? '0'}'),
+              _buildTableRow('Balance', '\$${invoice.balance ?? '0'}'),
+              _buildTableRow('Currency', invoice.currencyCode ?? 'N/A'),
+              _buildTableRow('Receipt No', invoice.receiptNo ?? 'N/A'),
+              _buildTableRow('Payer', invoice.payerName ?? 'N/A'),
+              _buildTableRow('Method', invoice.transChannel ?? 'N/A'),
+              _buildTableRow('Description', invoice.paymentDesc),
+              _buildTableRow('Company', invoice.companyName),
+            
+            ],
+          ),
+
+          pw.Spacer(),
+
+          pw.Align(
+            alignment: pw.Alignment.centerRight,
+            child: pw.Text('Thank you for your payment!',
+                style: pw.TextStyle(
+                    fontSize: 16, fontWeight: pw.FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  },
+),
+
+
+    );
+
+
+  await Printing.sharePdf(
+    bytes: await pdf.save(),
+    filename: 'invoices.pdf',
+  );
+}
+// Function to build table rows neatly
+pw.TableRow _buildTableRow(String title, String value) {
+  return pw.TableRow(
+    decoration: pw.BoxDecoration(
+      color: PdfColors.grey200, // Light background for contrast
+    ),
+    children: [
+      pw.Padding(
+        padding: pw.EdgeInsets.all(8),
+        child: pw.Text(title,
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+      ),
+      pw.Padding(
+        padding: pw.EdgeInsets.all(8),
+        child: pw.Text(value),
+      ),
+    ],
+  );
+}
 }
 
 class InvoiceData {

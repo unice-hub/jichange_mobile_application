@@ -409,7 +409,7 @@ class _InvoiceCard extends StatelessWidget {
   final CustDetData custDet;
   final InvoiceNumberData invoiceNo;
 
-  const _InvoiceCard({super.key, required this.invoice, required this.custDet, required this.invoiceNo});
+  const _InvoiceCard({required this.invoice, required this.custDet, required this.invoiceNo});
 
  @override
   Widget build(BuildContext context) {

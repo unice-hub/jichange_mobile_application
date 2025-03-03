@@ -275,7 +275,7 @@ String formatDate(String dateStr) {
 class _InvoiceCard extends StatefulWidget {
   final InvoiceData invoice;
 
-  const _InvoiceCard({super.key, required this.invoice});
+  const _InvoiceCard({required this.invoice});
 
   @override
   _InvoiceCardState createState() => _InvoiceCardState();
