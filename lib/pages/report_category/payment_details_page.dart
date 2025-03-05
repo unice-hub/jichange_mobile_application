@@ -431,10 +431,10 @@ Future<void> downloadPaymentDetailsPDF(
                   3: pw.FlexColumnWidth(1.5), // Payment Type
                   4: pw.FlexColumnWidth(1.5), // Status
                   5: pw.FlexColumnWidth(1.5), // Total Amount
-                  // 6: pw.FlexColumnWidth(1.5), // Paid Amount
+                  6: pw.FlexColumnWidth(1.5), // Paid Amount
                   7: pw.FlexColumnWidth(1.5), // Balance
-                  8: pw.FlexColumnWidth(1.5), // Control N°
-                  // 9: pw.FlexColumnWidth(1.5), // Control N°
+                  
+                  
                 },
                 children: [
                   // Header Row
@@ -448,7 +448,6 @@ Future<void> downloadPaymentDetailsPDF(
                       _buildTableCell('Status', isHeader: true),
                       _buildTableCell('Total Amount', isHeader: true),
                        _buildTableCell('Currency', isHeader: true),
-                      // _buildTableCell('Balance', isHeader: true),
                       _buildTableCell('Control N°', isHeader: true),
                     ],
                   ),
@@ -464,7 +463,6 @@ Future<void> downloadPaymentDetailsPDF(
                         _buildTableCell(invoice.status),
                         _buildTableCell('\$${invoice.requestedAmount}'),
                          _buildTableCell('\$${invoice.currencyCode}'),
-                        // _buildTableCell('\$${invoice.balance}'),
                         _buildTableCell(invoice.controlNumber),
                       ],
                     ),

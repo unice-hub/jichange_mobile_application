@@ -12,6 +12,7 @@ import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:excel/excel.dart' as excelLib;
 import 'package:pdf/widgets.dart'as pw;
@@ -159,10 +160,6 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
     }
   }
 
-  // Future<pw.Font> _loadFont() async {
-  //   final fontData = await rootBundle.load('assets/fonts/Roboto-Regular.ttf');
-  //   return pw.Font.ttf(fontData);
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -360,7 +357,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
       itemCount: invoices.length + 2,
       itemBuilder: (context, index) {
         // final customer = index < customers.length ? customers[index] : null;
-        print('Index:$index,Invoices length:${invoices.length}');
+        // print('Index:$index,Invoices length:${invoices.length}');
         
         if (index >= 0 && index < invoices.length && index < customers.length){
           return _InvoiceCard(invoice: invoices[index], custDet: customers[index],);
@@ -372,9 +369,21 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
   }
 }
 
-Future <void> downloadInvoiceDetailsPDF(BuildContext context, List<InvoiceData> invoices) async {
+Future<void> downloadInvoiceDetailsPDF(BuildContext context, List<InvoiceData> invoices) async {
   final pdf = pw.Document();
-  final formatter = NumberFormat('#,###');
+
+  Future<pw.Font> _loadFont() async {
+    try {
+      final fontData = await rootBundle.load('assets/fonts/Roboto/static/Roboto-Regular.ttf');
+      return pw.Font.ttf(fontData.buffer.asByteData());
+    } catch (e) {
+      print('Error loading font: $e');
+      return pw.Font.courier(); // Fallback to a default font
+    }
+  }
+
+  // Load custom font
+  final ttf = await _loadFont();
 
   pw.Widget _buildTableCell(String text, {bool isHeader = false}) {
     return pw.Padding(
@@ -382,138 +391,157 @@ Future <void> downloadInvoiceDetailsPDF(BuildContext context, List<InvoiceData> 
       child: pw.Text(
         text,
         style: pw.TextStyle(
+          font: ttf, // Use the custom font
           fontWeight: isHeader ? pw.FontWeight.bold : pw.FontWeight.normal,
         ),
       ),
     );
   }
 
+  
+
+  // Check if invoices list is empty
   if (invoices.isEmpty) {
-    showDialog(context: context,
-     builder: (context) => AlertDialog(
-      title: const Text('No data found'),
-      content: const Text('No data to export to PDF'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('OK'),
-        ),
-      ],
-     ),
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('No data found'),
+        content: const Text('No data to export to PDF'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
     );
     return;
   }
-  pdf.addPage(
-    pw.Page(
-      build: (pw.Context context) {
-        return pw.Padding(
-          padding: pw.EdgeInsets.all(5),
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              // Title
-              pw.Text(
-                'Payment Details',
-                style: pw.TextStyle(
-                  fontSize: 20,
-                  fontWeight: pw.FontWeight.bold,
+
+  // Define the number of rows per page
+  const int rowsPerPage = 10; // Adjust this value based on your layout
+
+  // Split invoices into chunks for multiple pages
+  for (var i = 0; i < invoices.length; i += rowsPerPage) {
+    final chunk = invoices.sublist(i, i + rowsPerPage > invoices.length ? invoices.length : i + rowsPerPage);
+
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          return pw.Padding(
+            padding: pw.EdgeInsets.all(10),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                // Title
+                pw.Text(
+                  'Invoice Details',
+                  style: pw.TextStyle(
+                    font: ttf, // Use the custom font
+                    fontSize: 20,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
                 ),
-              ),
+                pw.SizedBox(height: 10),
 
-              pw.SizedBox(height: 20),
-
-              // Table with header and data rows
-              pw.Table(
-                border: pw.TableBorder.all(width: 1),
-                columnWidths: {
-                  // Adjust column widths to fit the page
-                  0: pw.FlexColumnWidth(1.5), // Payment Date
-                  1: pw.FlexColumnWidth(2.5), // Customer
-                  2: pw.FlexColumnWidth(1.5), // Invoice N°
-                  3: pw.FlexColumnWidth(1.5), // Payment Type
-                  4: pw.FlexColumnWidth(1.5), // Status
-                  5: pw.FlexColumnWidth(1.5), // Total Amount
-                   6: pw.FlexColumnWidth(1.5), // Paid Amount
-                  7: pw.FlexColumnWidth(1.5), // Balance
-                  8: pw.FlexColumnWidth(1.5), // Control N°
-                  9: pw.FlexColumnWidth(1.5), // Delivery Status
-                  10: pw.FlexColumnWidth(1.5), // Status
-                  11: pw.FlexColumnWidth(1.5), // expiry date
-                  12: pw.FlexColumnWidth(1.5), // Audit By
-                  13: pw.FlexColumnWidth(1.5), // Invoice Date
-                },
-                children: [
-                  // Header Row
-                  pw.TableRow(
-                    decoration: pw.BoxDecoration(color: PdfColors.grey300),
-                    children: [
-                      _buildTableCell('Posted Date', isHeader: true),
+                // Table
+                pw.Table(
+                  border: pw.TableBorder.all(width: 1),
+                  columnWidths: {
+                    0: pw.FlexColumnWidth(1.5), // Posted Date
+                    1: pw.FlexColumnWidth(2.5), // Customer Name
+                    2: pw.FlexColumnWidth(1.5), // Invoice N°
+                    3: pw.FlexColumnWidth(1.5), // Status
+                    4: pw.FlexColumnWidth(1.5), // Payment Type
+                    5: pw.FlexColumnWidth(1.5), // Control N°
+                    6: pw.FlexColumnWidth(1.5), // Reason
+                  },
+                  children: [
+                    // Header Row
+                    pw.TableRow(
+                      decoration: pw.BoxDecoration(color: PdfColors.grey300),
+                      children: [
+                        _buildTableCell('Posted Date', isHeader: true),
                       _buildTableCell('Customer Name', isHeader: true),
                       _buildTableCell('Invoice N°', isHeader: true),
                       _buildTableCell('Control N°', isHeader: true),
                       _buildTableCell('Payment Type', isHeader: true),
                       _buildTableCell('Delivery Status', isHeader: true),
                       _buildTableCell('Status', isHeader: true),
-                      _buildTableCell('Total ', isHeader: true),
-                      _buildTableCell('Currency', isHeader: true),
-                       _buildTableCell('Audit By', isHeader: true),
-                      _buildTableCell('Invoice Date', isHeader: true),
-                      _buildTableCell('Company Name', isHeader: true),
-                      _buildTableCell('Due Date', isHeader: true),
-                      _buildTableCell('Invoice Expired Date', isHeader: true),
-                    ],
-                  ),
-
-                  // Data Rows (One row per invoice)
-                  for (var invoice in invoices)
-                    pw.TableRow(
-                      children: [
-                        _buildTableCell(formatDate(invoice.pdate)),
-                        _buildTableCell(invoice.customerName),
-                        _buildTableCell(invoice.invoiceNumber),
-                        _buildTableCell(invoice.controlNumber),
-                        _buildTableCell(invoice.paymentType),
-                        _buildTableCell(invoice.deliveryStatus),
-                        _buildTableCell(invoice.status),
-                        _buildTableCell('\$${invoice.total}'),
-                        _buildTableCell(invoice.currencyCode),
-                         _buildTableCell(invoice.auditBy),
-                        _buildTableCell(invoice.invoiceDate),
-                        _buildTableCell(invoice.companyName),
-                        _buildTableCell(invoice.dueDate),
-                        _buildTableCell(invoice.invoiceExpiredDate),
                       ],
                     ),
-                ],
-              ),
 
-              pw.Spacer(),
-
-              // Footer Message
-              pw.Align(
-                alignment: pw.Alignment.centerRight,
-                child: pw.Text(
-                  'Thank you for your payment!',
-                  style: pw.TextStyle(
-                    fontSize: 16,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
+                    // Data Rows
+                    for (var invoice in chunk)
+                      pw.TableRow(
+                        children: [
+                          _buildTableCell(_formatDate(invoice.pdate)),
+                          _buildTableCell(invoice.customerName),
+                          _buildTableCell(invoice.invoiceNumber),
+                          _buildTableCell(invoice.controlNumber),
+                          _buildTableCell(invoice.paymentType),
+                          _buildTableCell(invoice.deliveryStatus),
+                          _buildTableCell(_formatDate(invoice.status)),
+                        ],
+                      ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-        );
-      },
-    ),
+
+                // Footer (only on the last page)
+                if (i + rowsPerPage >= invoices.length)
+                  pw.Column(
+                    children: [
+                      pw.SizedBox(height: 20),
+                      pw.Align(
+                        alignment: pw.Alignment.centerRight,
+                        child: pw.Text(
+                          'Thank you for your payment!',
+                          style: pw.TextStyle(
+                            font: ttf, // Use the custom font
+                            fontSize: 16,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // Save and share the PDF
+  final pdfBytes = await pdf.save();
+  print('PDF generated successfully with ${pdfBytes.length} bytes');
+
+  // Save to file for debugging
+  final directory = await getApplicationDocumentsDirectory();
+  final file = File('${directory.path}/Invoice_Details.pdf');
+  await file.writeAsBytes(pdfBytes);
+  print('PDF saved to: ${file.path}');
+
+  // Share the PDF
+  await Printing.sharePdf(
+    bytes: pdfBytes,
+    filename: 'Invoice_Details.pdf',
   );
-      
-
-  final output = await getTemporaryDirectory();
-  final file = File('${output.path}/invoice_details.pdf');
-  await file.writeAsBytes(await pdf.save());
-
-  await OpenFile.open(file.path);
 }
+
+// Helper function to format date
+String _formatDate(String? dateStr) {
+  if (dateStr == null || dateStr.isEmpty) return 'N/A';
+  try {
+    DateTime dateTime = DateTime.parse(dateStr);
+    return DateFormat('yyyy-MM-dd').format(dateTime);
+  } catch (e) {
+    print('Error formatting date: $e');
+    return 'Invalid Date';
+  }
+}
+
 
 Future<void> createAndDownloadExcel(List<InvoiceData> invoices) async {
   // Create a new Excel document

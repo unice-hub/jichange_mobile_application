@@ -1,9 +1,18 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:excel/excel.dart' as excelLib;
 import 'package:learingdart/core/api/endpoint_api.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class CompletedPaymentsPage extends StatefulWidget {
   const CompletedPaymentsPage({super.key});
@@ -354,7 +363,14 @@ Widget _buildExportButtons() {
     return Row(
       children: [
         ElevatedButton.icon(
-          onPressed: () {},
+          onPressed: () async{
+            try{
+            await fetchInvoices();
+            await createAndDownloadExcel(invoices);
+            }catch(e){
+              print('Error fetching data: $e');
+            }
+          },
           icon: const Icon(Icons.download, color: Colors.white),
           label: const Text(''),
           style: ElevatedButton.styleFrom(
@@ -366,7 +382,10 @@ Widget _buildExportButtons() {
           ),
         const SizedBox(width: 16),
         ElevatedButton.icon(
-          onPressed: () {},
+          onPressed: ()async{
+            await fetchInvoices();
+            await downloadCompletedPaymentsPDF(context, invoices);
+          },
           icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
           label: const Text(''),
           style: ElevatedButton.styleFrom(
@@ -399,6 +418,248 @@ Widget _buildExportButtons() {
       },
     );
   }
+}
+
+Future<void> downloadCompletedPaymentsPDF(BuildContext context, List<InvoiceData> invoices) async {
+  final pdf = pw.Document();
+
+  Future<pw.Font> _loadFont() async {
+    try {
+      final fontData = await rootBundle.load('assets/fonts/Roboto/static/Roboto-Regular.ttf');
+      return pw.Font.ttf(fontData.buffer.asByteData());
+    } catch (e) {
+      print('Error loading font: $e');
+      return pw.Font.courier(); // Fallback to a default font
+    }
+  }
+
+  // Load custom font
+  final ttf = await _loadFont();
+
+  pw.Widget _buildTableCell(String text, {bool isHeader = false}) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.all(6.0),
+      child: pw.Text(
+        text,
+        style: pw.TextStyle(
+          font: ttf, // Use the custom font
+          fontWeight: isHeader ? pw.FontWeight.bold : pw.FontWeight.normal,
+        ),
+      ),
+    );
+  }
+
+  
+
+  // Check if invoices list is empty
+  if (invoices.isEmpty) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('No data found'),
+        content: const Text('No data to export to PDF'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+    return;
+  }
+
+  // Define the number of rows per page
+  const int rowsPerPage = 5; // Adjust this value based on your layout
+
+  // Split invoices into chunks for multiple pages
+  for (var i = 0; i < invoices.length; i += rowsPerPage) {
+    final chunk = invoices.sublist(i, i + rowsPerPage > invoices.length ? invoices.length : i + rowsPerPage);
+
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          return pw.Padding(
+            padding: pw.EdgeInsets.all(8),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                // Title
+                pw.Text(
+                  'Completed Payments',
+                  style: pw.TextStyle(
+                    font: ttf, // Use the custom font
+                    fontSize: 20,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+                pw.SizedBox(height: 10),
+
+                // Table
+                pw.Table(
+                  border: pw.TableBorder.all(width: 1),
+                  columnWidths: {
+                    0: pw.FlexColumnWidth(1.5), // Payment Date
+                    1: pw.FlexColumnWidth(2.5), // Customer Name
+                    2: pw.FlexColumnWidth(1.5), // Invoice N°
+                    3: pw.FlexColumnWidth(1.5), // Status
+                    4: pw.FlexColumnWidth(1.5), // Receipt N°
+                    5: pw.FlexColumnWidth(1.5), // Control N°
+                    6: pw.FlexColumnWidth(1.5), // Transaction N°
+                    7: pw.FlexColumnWidth(1.5), // Amount
+                    8: pw.FlexColumnWidth(1.5), // Currency
+                    9: pw.FlexColumnWidth(1.5), // Payment Method
+                    10: pw.FlexColumnWidth(1.5), // Payment
+                    11: pw.FlexColumnWidth(1.5), // Payment Type
+
+                  },
+                  children: [
+                    // Header Row
+                    pw.TableRow(
+                      decoration: pw.BoxDecoration(color: PdfColors.grey300),
+                      children: [
+                        _buildTableCell('Payment Date', isHeader: true),
+                        _buildTableCell('Customer', isHeader: true),
+                        _buildTableCell('Invoice N°', isHeader: true),
+                        _buildTableCell('Control N°', isHeader: true),
+                        _buildTableCell('Payment Method', isHeader: true),
+                        _buildTableCell('Transcation N°', isHeader: true),
+                        _buildTableCell('Status', isHeader: true),
+                        _buildTableCell('Receipt N°', isHeader: true),
+                        _buildTableCell('Total Amount', isHeader: true),
+                        _buildTableCell('Currency', isHeader: true),
+                        _buildTableCell('Payment Type', isHeader: true),
+                      ],
+                    ),
+
+                    // Data Rows
+                    for (var invoice in chunk)
+                      pw.TableRow(
+                        children: [
+                          _buildTableCell(_formatDate(invoice.paymentDate)),
+                          _buildTableCell(invoice.customerName),
+                          _buildTableCell(invoice.invoiceSno),
+                          _buildTableCell(invoice.controlNo),
+                          _buildTableCell(invoice.transChannel),
+                          _buildTableCell(invoice.paymentTransNo),
+                          _buildTableCell(invoice.status),
+                          _buildTableCell(invoice.receiptNo),
+                          _buildTableCell('${invoice.requestedAmount}'),
+                          _buildTableCell(invoice.currencyCode),
+                          _buildTableCell(invoice.paymentType),
+                        ],
+                      ),
+                  ],
+                ),
+
+                // Footer (only on the last page)
+                if (i + rowsPerPage >= invoices.length)
+                  pw.Column(
+                    children: [
+                      pw.SizedBox(height: 20),
+                      pw.Align(
+                        alignment: pw.Alignment.centerRight,
+                        child: pw.Text(
+                          'Thank you for your payment!',
+                          style: pw.TextStyle(
+                            font: ttf, // Use the custom font
+                            fontSize: 16,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // Save and share the PDF
+  final pdfBytes = await pdf.save();
+  print('PDF generated successfully with ${pdfBytes.length} bytes');
+
+  // Save to file for debugging
+  final directory = await getApplicationDocumentsDirectory();
+  final file = File('${directory.path}/completed_payments.pdf');
+  await file.writeAsBytes(pdfBytes);
+  print('PDF saved to: ${file.path}');
+
+  // Share the PDF
+  await Printing.sharePdf(
+    bytes: pdfBytes,
+    filename: 'completed_payments.pdf',
+  );
+}
+
+// Helper function to format date
+String _formatDate(String? dateStr) {
+  if (dateStr == null || dateStr.isEmpty) return 'N/A';
+  try {
+    DateTime dateTime = DateTime.parse(dateStr);
+    return DateFormat('yyyy-MM-dd').format(dateTime);
+  } catch (e) {
+    print('Error formatting date: $e');
+    return 'Invalid Date';
+  }
+}
+
+
+Future<void> createAndDownloadExcel(List<InvoiceData> invoices) async {
+  final excel = excelLib.Excel.createExcel();
+  final sheet = excel['Completed Payments'];
+
+  sheet.appendRow([
+    excelLib.TextCellValue('S/N'),
+    excelLib.TextCellValue('Payment Date'),
+    excelLib.TextCellValue('Payer'),
+    excelLib.TextCellValue('Customer'),
+    excelLib.TextCellValue('Invoice N°'),
+    excelLib.TextCellValue('Control N°'),
+    excelLib.TextCellValue('Payment Method'),
+    excelLib.TextCellValue('Transaction N°'),
+    excelLib.TextCellValue('Status'),
+    excelLib.TextCellValue('Receipt N°'),
+    excelLib.TextCellValue('Total Amount'),
+    excelLib.TextCellValue('Currency'),
+    excelLib.TextCellValue('Payment type'),
+    
+  ]);
+
+  for (final invoice in invoices) {
+    var index = invoices.indexOf(invoice);
+
+    sheet.appendRow([
+     excelLib.IntCellValue(index + 1),
+     excelLib.TextCellValue(invoice.paymentDate),
+      excelLib.TextCellValue(invoice.payerName),
+      excelLib.TextCellValue(invoice.customerName),
+      excelLib.TextCellValue(invoice.invoiceSno),
+      excelLib.TextCellValue(invoice.controlNo),
+      excelLib.TextCellValue(invoice.transChannel),
+      excelLib.TextCellValue(invoice.paymentTransNo),
+      excelLib.TextCellValue(invoice.status),
+      excelLib.TextCellValue(invoice.receiptNo),
+      excelLib.DoubleCellValue(invoice.requestedAmount),
+      excelLib.TextCellValue(invoice.currencyCode),
+      excelLib.TextCellValue(invoice.paymentType),
+
+      
+    ]);
+  }
+Directory tempDir = await getTemporaryDirectory();
+  String filePath = '${tempDir.path}/Completed Payment.xlsx';
+  File file = File(filePath);
+
+  // Write data to file
+  await file.writeAsBytes(excel.encode() as Uint8List);
+
+  // Open the file so the user can view it
+  await OpenFile.open(filePath);
+  
 }
 
 class _InvoiceCard extends StatelessWidget {
