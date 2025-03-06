@@ -477,6 +477,7 @@ Future<void> downloadAmmendmentsDetailsPDF(BuildContext context, List<InvoiceDat
 
     pdf.addPage(
       pw.Page(
+        pageFormat:PdfPageFormat.a4.landscape,
         build: (pw.Context context) {
           return pw.Padding(
             padding: pw.EdgeInsets.all(10),
@@ -499,7 +500,7 @@ Future<void> downloadAmmendmentsDetailsPDF(BuildContext context, List<InvoiceDat
                   border: pw.TableBorder.all(width: 1),
                   columnWidths: {
                     0: pw.FlexColumnWidth(1.5), // Posted Date
-                    1: pw.FlexColumnWidth(2.5), // Customer Name
+                    1: pw.FlexColumnWidth(1.5), // Customer Name
                     2: pw.FlexColumnWidth(1.5), // Invoice N°
                     3: pw.FlexColumnWidth(1.5), // Status
                     4: pw.FlexColumnWidth(1.5), // Payment Type

@@ -403,6 +403,7 @@ Future<void> downloadPaymentDetailsPDF(
   // Add a single page for all invoices
   pdf.addPage(
     pw.Page(
+      pageFormat:PdfPageFormat.a4.landscape,
       build: (pw.Context context) {
         return pw.Padding(
           padding: pw.EdgeInsets.all(5),
@@ -461,8 +462,8 @@ Future<void> downloadPaymentDetailsPDF(
                         _buildTableCell(invoice.invoiceSno),
                         _buildTableCell(invoice.paymentType),
                         _buildTableCell(invoice.status),
-                        _buildTableCell('\$${invoice.requestedAmount}'),
-                         _buildTableCell('\$${invoice.currencyCode}'),
+                        _buildTableCell(invoice.requestedAmount.toString()),
+                         _buildTableCell(invoice.currencyCode),
                         _buildTableCell(invoice.controlNumber),
                       ],
                     ),

@@ -4,6 +4,9 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
 
 class AllTransactionsPage extends StatefulWidget {
   final String invoiceSno;
@@ -201,7 +204,9 @@ class _InvoiceCard extends StatelessWidget {
             const SizedBox(height: 5),
             _buildInvoiceRow(
               '',
-              _buildIconActionButton(Icons.download, '', () {}, const Color.fromARGB(255, 128, 116, 12)),
+              _buildIconActionButton(Icons.download, '', () async {
+                await downloadInvoicePDF(context, [invoice]);
+              }, const Color.fromARGB(255, 128, 116, 12)),
             ),
           ],
         ),
@@ -247,6 +252,166 @@ class _InvoiceCard extends StatelessWidget {
     );
   }
 }
+
+Future<void> downloadInvoicePDF(
+    BuildContext context, List<InvoiceData> invoices) async {
+  String _formatDate(String dateStr) {
+    try {
+      DateTime dateTime = DateTime.parse(dateStr);
+      return DateFormat('EEE MMM dd yyyy').format(dateTime);
+    } catch (e) {
+      return 'Invalid date';
+    }
+  }
+  final pdf = pw.Document();
+
+  
+
+  // Check if invoices list is empty
+  if (invoices.isEmpty) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: const Text('No invoices found.'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+    return;
+  }
+
+  // Add a single page for all invoices
+  pdf.addPage(
+    pw.Page(
+       pageFormat: PdfPageFormat.a4.landscape,
+      build: (pw.Context context) {
+        return pw.Padding(
+          padding: pw.EdgeInsets.all(5),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              // Title
+              pw.Text(
+                'Payment Invoice',
+                style: pw.TextStyle(
+                  fontSize: 20,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+
+              pw.SizedBox(height: 20),
+
+              // Table with header and data rows
+              pw.Table(
+                border: pw.TableBorder.all(width: 1),
+                columnWidths: {
+                  // Adjust column widths to fit the page
+                  0: pw.FlexColumnWidth(1.8), // Payment Date
+                  1: pw.FlexColumnWidth(2.5), // Customer
+                  2: pw.FlexColumnWidth(2.5), // Invoice N°
+                  3: pw.FlexColumnWidth(2.0), // Payment Type
+                  4: pw.FlexColumnWidth(1.8), // Status
+                  5: pw.FlexColumnWidth(1.8), // Total Amount
+                  6: pw.FlexColumnWidth(1.8), // Paid Amount
+                  7: pw.FlexColumnWidth(2.0), // Balance
+                  8: pw.FlexColumnWidth(1.5), // Control N°
+                  9: pw.FlexColumnWidth(2.0), // Currency
+                  10: pw.FlexColumnWidth(1.5), // Attachment(s)
+                  
+                },
+                children: [
+                  // Header Row
+                  pw.TableRow(
+                    decoration: pw.BoxDecoration(color: PdfColors.grey300),
+                    children: [
+                      _buildTableCell('Vendor', isHeader: true),
+                      _buildTableCell('Customer', isHeader: true),
+                      _buildTableCell('Description', isHeader: true),
+                      _buildTableCell('Transact Type', isHeader: true),
+                      _buildTableCell('Payer', isHeader: true),
+                      _buildTableCell('Method', isHeader: true),
+                      _buildTableCell('Total Amount', isHeader: true),
+                       _buildTableCell('Currency', isHeader: true),
+                      _buildTableCell('Status', isHeader: true),
+                      _buildTableCell('Receipt N°', isHeader: true),
+                      _buildTableCell('Payment Date', isHeader: true),
+                    ],
+                  ),
+
+                  // Data Rows (One row per invoice)
+                  for (var invoice in invoices)
+                    pw.TableRow(
+                      children: [
+                        _buildTableCell(invoice.companyName),
+                        _buildTableCell(invoice.customerName ?? 'N/A'),
+                        _buildTableCell(invoice.paymentDesc),
+                        _buildTableCell(invoice.transChannel ?? 'N/A'),
+                        _buildTableCell(invoice.payerName ??'N/A'),
+                        _buildTableCell(invoice.paymentType ?? 'N/A'),
+                        _buildTableCell(invoice.requestedAmount ?? 'N/A'),
+                        _buildTableCell(invoice.currencyCode ?? 'N/A'),
+                        _buildTableCell(invoice.status ?? 'N/A'),
+                        _buildTableCell(invoice.receiptNo ?? 'N/A'),
+                        _buildTableCell(_formatDate(invoice.paymentDate ?? 'N/A')),
+                        
+                      ],
+                    ),
+                ],
+              ),
+
+              pw.Spacer(),
+
+              // Footer Message
+              pw.Align(
+                alignment: pw.Alignment.centerRight,
+                child: pw.Text(
+                  'Thank you for your payment!',
+                  style: pw.TextStyle(
+                    fontSize: 16,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    ),
+  );
+  // Debug: Save and print PDF bytes
+  final pdfBytes = await pdf.save();
+  print('PDF generated successfully with ${pdfBytes.length} bytes');
+
+  // Share the PDF
+  await Printing.sharePdf(
+    bytes: pdfBytes,
+    filename: 'payment invoice.pdf',
+  );
+}
+
+// Function to build table cells with optional header styling
+pw.Widget _buildTableCell(String text, {bool isHeader = false}) {
+  return pw.Padding(
+    padding: pw.EdgeInsets.symmetric(
+      vertical: 5,
+      horizontal: 3,
+    ),
+    child: pw.Text(
+      text,
+      style: pw.TextStyle(
+        fontWeight: isHeader ? pw.FontWeight.bold : pw.FontWeight.normal,
+        fontSize: isHeader ? 14 : 10,
+      ),
+    ),
+  );
+}
+
+
 
 class InvoiceData {
   final String paymentTransNo;

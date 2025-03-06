@@ -1,6 +1,8 @@
 class ApiEndpoints {
-     static const String baseUrl = 'http://183.83.33.156:90/api';//define the static constant url
-  //  static const String baseUrl = 'http://192.168.100.50:98/api';//define the static constant url
+     // static const String baseUrl = 'http://59.97.23.99:90/api';//define the static constant url
+      static const String baseUrl = 'http://183.83.33.156:90/api';//define the static constant url
+    // static const String baseUrl = 'http://192.168.100.50:98/api';//define the static constant url
+    //static const String baseUrl = 'http://192.168.100.17:96/api';//define the static constant url
 
   static const String changePwd= '$baseUrl/Forgot/ChangePwd'; //change_password.dart
 

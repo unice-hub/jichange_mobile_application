@@ -478,6 +478,7 @@ Future<void> downloadCompletedPaymentsPDF(BuildContext context, List<InvoiceData
 
     pdf.addPage(
       pw.Page(
+        pageFormat: PdfPageFormat.a4.landscape,
         build: (pw.Context context) {
           return pw.Padding(
             padding: pw.EdgeInsets.all(8),
@@ -500,15 +501,15 @@ Future<void> downloadCompletedPaymentsPDF(BuildContext context, List<InvoiceData
                   border: pw.TableBorder.all(width: 1),
                   columnWidths: {
                     0: pw.FlexColumnWidth(1.5), // Payment Date
-                    1: pw.FlexColumnWidth(2.5), // Customer Name
-                    2: pw.FlexColumnWidth(1.5), // Invoice N°
-                    3: pw.FlexColumnWidth(1.5), // Status
+                    1: pw.FlexColumnWidth(2.0), // Customer Name
+                    2: pw.FlexColumnWidth(1.8), // Invoice N°
+                    3: pw.FlexColumnWidth(2.0), // Status
                     4: pw.FlexColumnWidth(1.5), // Receipt N°
-                    5: pw.FlexColumnWidth(1.5), // Control N°
+                    5: pw.FlexColumnWidth(2.7), // Control N°
                     6: pw.FlexColumnWidth(1.5), // Transaction N°
-                    7: pw.FlexColumnWidth(1.5), // Amount
-                    8: pw.FlexColumnWidth(1.5), // Currency
-                    9: pw.FlexColumnWidth(1.5), // Payment Method
+                    7: pw.FlexColumnWidth(2.0), // Amount
+                    8: pw.FlexColumnWidth(2.0), // Currency
+                    9: pw.FlexColumnWidth(1.8), // Payment Method
                     10: pw.FlexColumnWidth(1.5), // Payment
                     11: pw.FlexColumnWidth(1.5), // Payment Type
 
@@ -544,7 +545,7 @@ Future<void> downloadCompletedPaymentsPDF(BuildContext context, List<InvoiceData
                           _buildTableCell(invoice.paymentTransNo),
                           _buildTableCell(invoice.status),
                           _buildTableCell(invoice.receiptNo),
-                          _buildTableCell('${invoice.requestedAmount}'),
+                          _buildTableCell(invoice.requestedAmount.toString()),
                           _buildTableCell(invoice.currencyCode),
                           _buildTableCell(invoice.paymentType),
                         ],
