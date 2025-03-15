@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'pages/home_section.dart';
 import 'pages/customer_section.dart';
 import 'pages/vendor_users_section.dart';
@@ -12,7 +13,9 @@ import 'pages/settings_page.dart';
 import 'pages/create_invoice.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await requestStoragePermissions();
+   await requestStoragePermissions();
+  final prefs = await SharedPreferences.getInstance();
+  final bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
   runApp(const MyApp());
 }
 

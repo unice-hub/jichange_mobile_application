@@ -4,11 +4,11 @@ import 'package:learingdart/core/api/endpoint_api.dart';
 import 'package:learingdart/core/api/invoice_apis.dart';
 import 'package:learingdart/main.dart';
 import 'package:learingdart/pages/edit_invoice.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
+// import 'package:path_provider/path_provider.dart';
+// import 'package:permission_handler/permission_handler.dart';
 // import '../invoices_section.dart';
 import 'dart:convert';
-import 'dart:developer';
+// import 'dart:developer';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -432,8 +432,8 @@ class _InvoiceCardState extends State<_InvoiceCard> {
 
           _buildIconActionButton(Icons.cancel, 'Cancel', () {
             // Define the action to cancel
-            // _findInvoice(widget.invoice.compid.toString(), widget.invoice.invMasSno.toString());
-            // _showCancelPopup();
+            _findInvoice(widget.invoice.compid.toString(), widget.invoice.invMasSno.toString());
+            _showCancelPopup();
           }, Colors.red),
 
           _buildIconActionButton(Icons.visibility, 'View Details', () {
@@ -682,7 +682,6 @@ Future<void> approvelInvoice() async {
   }
 }
 
-String _token = 'Not logged in';
 
  @override
   void initState() {
@@ -693,7 +692,6 @@ String _token = 'Not logged in';
   Future<void> _loadSessionInfo() async {
       final prefs = await SharedPreferences.getInstance();
       setState(() {
-        _token = prefs.getString('token') ?? 'Not logged in';
       });
       
     }
@@ -846,94 +844,94 @@ Future<void> cancelInvoice() async {
     );
   }
 
-Future<void> _downloadInvoicePDF(String compid, String inv) async {
-  // Base URL of the API
-  const String baseUrl = ApiEndpoints.getFindInvoice;
+// Future<void> _downloadInvoicePDF(String compid, String inv) async {
+//   // Base URL of the API
+//   const String baseUrl = ApiEndpoints.getFindInvoice;
 
-  // Constructing the full URL with query parameters
-  String url = '$baseUrl?compid=$compid&inv=$inv';
+//   // Constructing the full URL with query parameters
+//   String url = '$baseUrl?compid=$compid&inv=$inv';
 
-  try {
-    // Request storage permission
-    if (await Permission.storage.request().isGranted) {
-      // Sending the GET request
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/pdf', // Expecting a PDF file
-          'Authorization': 'Bearer $_token',
-        },
-      );
+//   try {
+//     // Request storage permission
+//     if (await Permission.storage.request().isGranted) {
+//       // Sending the GET request
+//       final response = await http.get(
+//         Uri.parse(url),
+//         headers: {
+//           'Content-Type': 'application/json',
+//           'Accept': 'application/pdf', // Expecting a PDF file
+//           'Authorization': 'Bearer $_token',
+//         },
+//       );
 
-      // log(_token);
+//       // log(_token);
 
-      // Handling the response
-      if (response.statusCode == 200) {
-        // Get the directory to store the downloaded PDF
-        final Directory? directory = await getExternalStorageDirectory();
-        String filePath = '${directory?.path}/invoice_$inv.pdf';
+//       // Handling the response
+//       if (response.statusCode == 200) {
+//         // Get the directory to store the downloaded PDF
+//         final Directory? directory = await getExternalStorageDirectory();
+//         String filePath = '${directory?.path}/invoice_$inv.pdf';
 
-        // Save the PDF file
-        File file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
+//         // Save the PDF file
+//         File file = File(filePath);
+//         await file.writeAsBytes(response.bodyBytes);
 
-        log('PDF saved at $filePath');
-        _showSnackBar('Invoice PDF downloaded successfully.');
-      } else {
-        // Handle error
-        log('Error: ${response.statusCode}');
-        log('Response Body: ${response.body}');
-        _showSnackBar('Failed to download PDF. Status: ${response.statusCode}');
-      }
-    } else {
-      _showSnackBar('Storage permission denied');
-    }
-  } catch (e) {
-    // Handle any exception
-    if (e is http.ClientException) {
-          // Network error
-          _showErrorDialog('Network error. Please check your connection and try again.');
+//         log('PDF saved at $filePath');
+//         _showSnackBar('Invoice PDF downloaded successfully.');
+//       } else {
+//         // Handle error
+//         log('Error: ${response.statusCode}');
+//         log('Response Body: ${response.body}');
+//         _showSnackBar('Failed to download PDF. Status: ${response.statusCode}');
+//       }
+//     } else {
+//       _showSnackBar('Storage permission denied');
+//     }
+//   } catch (e) {
+//     // Handle any exception
+//     if (e is http.ClientException) {
+//           // Network error
+//           _showErrorDialog('Network error. Please check your connection and try again.');
 
-        } else {
-          // Other exceptions
-          _showErrorDialog('An unexpected error occurred. Please try again.');
+//         } else {
+//           // Other exceptions
+//           _showErrorDialog('An unexpected error occurred. Please try again.');
           
-        }
-      setState(() {
-        isLoading = false;
-      });
-  }
-}
+//         }
+//       setState(() {
+//         isLoading = false;
+//       });
+//   }
+// }
 
-Future<void> requestStoragePermission() async {
-  var status = await Permission.storage.status;
-  if (!status.isGranted) {
-    await Permission.storage.request();
-  }
-}
+// Future<void> requestStoragePermission() async {
+//   var status = await Permission.storage.status;
+//   if (!status.isGranted) {
+//     await Permission.storage.request();
+//   }
+// }
 
-Future<void> downloadInvoice() async {
-  await requestStoragePermission();
-  // Proceed to download the PDF...
-}
+// Future<void> downloadInvoice() async {
+//   await requestStoragePermission();
+//   // Proceed to download the PDF...
+// }
 
-void downloadFile(String url) async {
-  final directory = await getExternalStorageDirectory();
-  final String filePath = '${directory?.path}/invoice.pdf';
+// void downloadFile(String url) async {
+//   final directory = await getExternalStorageDirectory();
+//   final String filePath = '${directory?.path}/invoice.pdf';
 
-  // Start the download
-  final response = await HttpClient().getUrl(Uri.parse(url));
-  final file = File(filePath);
+//   // Start the download
+//   final response = await HttpClient().getUrl(Uri.parse(url));
+//   final file = File(filePath);
 
-  // Write the response to the file
-  final bytes = await response.close().then((response) => response.fold<List<int>>([], (List<int> bytes, List<int> chunk) {
-    bytes.addAll(chunk);
-    return bytes;
-  }));
-  await file.writeAsBytes(bytes);
+//   // Write the response to the file
+//   final bytes = await response.close().then((response) => response.fold<List<int>>([], (List<int> bytes, List<int> chunk) {
+//     bytes.addAll(chunk);
+//     return bytes;
+//   }));
+//   await file.writeAsBytes(bytes);
 
-}
+// }
 
 Widget _buildIconActionButton(IconData icon, String label, VoidCallback onPressed, Color iconColor) {
   return Column(

@@ -10,6 +10,7 @@ class SettingsPage extends StatefulWidget {
 
   const SettingsPage({super.key, required this.onThemeChanged});
 
+
   @override
   State<SettingsPage> createState() => _SettingsPageState();
 }
@@ -535,3 +536,9 @@ void _showConfirmDialog(BuildContext context, String title, String message) {
     );
   }
 }
+
+// Future<void> clearSession() async {
+//   final prefs = await SharedPreferences.getInstance();
+//   await prefs.remove('isLoggedIn');
+ 
+// }

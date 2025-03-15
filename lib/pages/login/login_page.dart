@@ -1,6 +1,3 @@
-
-// ignore_for_file: avoid_print
-
 import 'dart:convert'; // For encoding and decoding JSON
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http; // For making HTTP requests
@@ -25,7 +22,6 @@ class _LoginPageState extends State<LoginPage> {
 
   // Method to handle login API call and save session
   Future<void> loginUser() async {
-
     showDialog(
       context: context,
       barrierDismissible: false, // Prevent closing the dialog by tapping outside
@@ -43,8 +39,8 @@ class _LoginPageState extends State<LoginPage> {
       _isLoading = true;
     });
 
-    final url = Uri.parse(ApiEndpoints.logins);//endpoint for the login
-      print('URL: $url');
+    final url = Uri.parse(ApiEndpoints.logins); //endpoint for the login
+    print('URL: $url');
 
     final headers = {
       'Content-Type': 'application/json',
@@ -57,24 +53,21 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       final response = await http.post(url, headers: headers, body: body);
-       //print('Response: $response.statusCode');
+      //print('Response: $response.statusCode');
       if (response.statusCode == 200) {
         var responseData = jsonDecode(response.body);
-       
 
         // Check if login was unsuccessful due to incorrect username or password
         if (responseData['response']?['check'] == "Username or password is incorrect") {
           Navigator.of(context).pop();
           _showErrorDialog('Username or password is incorrect.');
           return;
-        }
-        else if(responseData['response']?['userType'] != "Comp")
-        {
+        } else if (responseData['response']?['userType'] != "Comp") {
           Navigator.of(context).pop();
-          _showErrorDialog('Please log in as a vender.');
+          _showErrorDialog('Please log in as a vendor.');
           return;
         }
-         // Extract session data
+        // Extract session data
         String token = responseData['response']['Token'];
         String userType = responseData['response']['userType'];
         String userName = responseData['response']['Uname'];
@@ -83,14 +76,7 @@ class _LoginPageState extends State<LoginPage> {
         int braid = responseData['response']['braid'];
         String role = responseData['response']['role'];
         String designation = responseData['response']['desig'];
-        
-        // // print('Login successful, Token: $token');
-        // print('Login successful, InstID: $instID');
-        // print('Login successful, InstID: $userType');
-        // print('Login successful, InstID: $braid');
-        // print('Login successful, InstID: $userName');
 
-       
         // Store the session data in SharedPreferences for session management
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
@@ -101,41 +87,35 @@ class _LoginPageState extends State<LoginPage> {
         await prefs.setInt('braid', braid);
         await prefs.setString('role', role);
         await prefs.setString('designation', designation);
-        
+
         // Navigate to Home Page
         if (!mounted) return;
         //pop the loading  circle
         Navigator.of(context).pop();
 
-        //navigat to home page
+        //navigate to home page
         Navigator.pushNamed(context, '/home');
-        
       } else if (response.statusCode == 401) {
-
         //pop the loading  circle
         Navigator.of(context).pop();
 
         // Handle unauthorized (wrong username/password)
         _showErrorDialog('Incorrect username or password. Please try again.');
-
-      }else if (response.statusCode >= 500){
-        
+      } else if (response.statusCode >= 500) {
         //pop the loading  circle
         Navigator.of(context).pop();
 
         // Handle server errors
         _showErrorDialog('Server error. Please try again later.');
-
       } else {
         //pop the loading  circle
         Navigator.of(context).pop();
 
-       // Handle other errors
+        // Handle other errors
         _showErrorDialog('Login failed. Please check your credentials and try again.');
       }
-   
-     print('URL: ${response.request?.url}');
 
+      print('URL: ${response.request?.url}');
     } catch (e) {
       if (e is http.ClientException) {
         //pop the loading  circle
@@ -143,16 +123,12 @@ class _LoginPageState extends State<LoginPage> {
 
         // Network error
         _showErrorDialog('Network error. Please check your connection and try again.');
-        // Navigator.pushNamed(context, '/home');
-       
-
       } else {
         //pop the loading  circle
         Navigator.of(context).pop();
 
         // Other exceptions
         _showErrorDialog('An unexpected error occurred. Please try again.');
-        
       }
     } finally {
       setState(() {
@@ -160,58 +136,52 @@ class _LoginPageState extends State<LoginPage> {
       });
     }
   }
-  
 
   // Method to handle Control Number Details API call
   Future<void> _fetchControlNumberDetails(String controlNumber) async {
-  final url = Uri.parse(ApiEndpoints.controlNumber);//endpoint for control number
-  final headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  };
-  final body = jsonEncode({'control': controlNumber});
+    final url = Uri.parse(ApiEndpoints.controlNumber); //endpoint for control number
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    };
+    final body = jsonEncode({'control': controlNumber});
 
-  try {
-    final response = await http.post(url, headers: headers, body: body);
+    try {
+      final response = await http.post(url, headers: headers, body: body);
 
-    if (response.statusCode == 200) {
-      var responseData = jsonDecode(response.body);
-      
-      // Check if the control number is incorrect based on the response
-      if (responseData['response'] == 0) {
-        // If control number is wrong, show an error dialog
+      if (response.statusCode == 200) {
+        var responseData = jsonDecode(response.body);
+
+        // Check if the control number is incorrect based on the response
+        if (responseData['response'] == 0) {
+          // If control number is wrong, show an error dialog
+          _showErrorDialog('Failed to get control number details. Please check your control number and try again.');
+          return;
+        }
+
+        // If control number is correct, handle and display the details
+        final details = responseData['response'];
+        _showControlNumberDetailsDialog(details);
+      } else if (response.statusCode == 401) {
+        // Handle unauthorized (wrong control number)
+        _showErrorDialog('Incorrect Control Number. Please try again.');
+      } else if (response.statusCode >= 500) {
+        // Handle server errors
+        _showErrorDialog('Server error. Please try again later.');
+      } else {
+        // Handle other errors
         _showErrorDialog('Failed to get control number details. Please check your control number and try again.');
-        return;
       }
-
-      // If control number is correct, handle and display the details
-      final details = responseData['response'];
-      _showControlNumberDetailsDialog(details);
-
-    } else if (response.statusCode == 401) {
-      // Handle unauthorized (wrong control number)
-      _showErrorDialog('Incorrect Control Number. Please try again.');
-      
-    } else if (response.statusCode >= 500) {
-      // Handle server errors
-      _showErrorDialog('Server error. Please try again later.');
-
-    } else {
-      // Handle other errors
-      _showErrorDialog('Failed to get control number details. Please check your control number and try again.');
-    }
-  } catch (e) {
-    if (e is http.ClientException) {
+    } catch (e) {
+      if (e is http.ClientException) {
         // Network error
         _showErrorDialog('Network error. Please check your connection and try again.');
-
       } else {
         // Other exceptions
         _showErrorDialog('An unexpected error occurred. Please try again.');
-        
       }
+    }
   }
-}
 
   // Show Control Number Details as a BottomSheet
   void _showControlNumberDetails(BuildContext context) {
@@ -334,9 +304,12 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        automaticallyImplyLeading: false,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(0.0),
+        child: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          automaticallyImplyLeading: false,
+        ),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -391,6 +364,9 @@ class _LoginPageState extends State<LoginPage> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your username';
                     }
+                    if (value.contains(' ')) {
+                      return 'Username should not contain spaces';
+                    }
                     return null;
                   },
                 ),
@@ -410,6 +386,9 @@ class _LoginPageState extends State<LoginPage> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your password';
                     }
+                    if (value.contains(' ')) {
+                      return 'Password should not contain spaces';
+                    }
                     return null;
                   },
                 ),
@@ -423,8 +402,7 @@ class _LoginPageState extends State<LoginPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) =>
-                                const ForgotPasswordPage()),
+                            builder: (context) => const ForgotPasswordPage()),
                       );
                     },
                     child: const Text('Forgot password?'),
@@ -437,22 +415,15 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: _isLoading ? null : loginUser,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16.0),
-                    backgroundColor:
-                        Theme.of(context).colorScheme.primary,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  // child: _isLoading
-                      // ? const CircularProgressIndicator(
-                      //     color: Colors.white,
-                      //   )
-                       
-                      child: const Text(
-                          'SIGN IN',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        
+                  child: const Text(
+                    'SIGN IN',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
                 const SizedBox(height: 16.0),
 
@@ -462,7 +433,6 @@ class _LoginPageState extends State<LoginPage> {
                   children: <Widget>[
                     OutlinedButton(
                       onPressed: () => _showControlNumberDetails(context),
-                  // child: const Text('Control No Details'),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                             vertical: 16.0, horizontal: 24.0),
@@ -515,5 +485,3 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
-
-

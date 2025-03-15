@@ -476,18 +476,15 @@ void _showShippingPopup() {
 
 void _confirmApprovellation() {
   Navigator.pop(context); // Close the confirmation popup
-  deliverlInvoice();
+  deliverInvoice();
 }
 
- Future<void> deliverlInvoice() async {
+ Future<void> deliverInvoice() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      // int instituteID = prefs.getInt('instID') ?? 0;
       int userID = prefs.getInt('userID') ?? 0;
 
-      // Body of the API request
       final Map<String, int> body = {
-        // "compid": instituteID
         "sno": widget.invoice.invMasSno,
         "user_id": userID
       };
@@ -502,12 +499,11 @@ void _confirmApprovellation() {
 
       // Check if the response is valid
       if (addDCode['response'] != null) {
-        // _showErrorDialog("successful.");
-        // _showQuickAlert(context, 'Success', 'successful', true);
-
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invoice submitted successfully!')),
         );
+
+
 
         // Navigate to MainPage with ceated invoice tab as the initial tab
         Navigator.of(context).pushAndRemoveUntil(
@@ -540,6 +536,8 @@ void _confirmApprovellation() {
       });
     }
   }
+
+
 
   void _showQuickAlert(BuildContext context, String title, String message, bool isSuccess) {
     showDialog(
